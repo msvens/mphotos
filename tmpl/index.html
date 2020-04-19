@@ -15,15 +15,15 @@
             </form>
             <h2>Photo Folder</h2>
                 <ul>
-                    <li><a href="http://localhost:8060/api/photos/folder">Get Folder</a></li>
-                    <li><a href="http://localhost:8060/api/photos/folder/check">Check for new photos on drive</a></li>
+                    <li><a href="/api/photos/folder">Get Folder</a></li>
+                    <li><a href="/api/photos/folder/check">Check for new photos on drive</a></li>
                 </ul>
             <form action="/api/photos/folder" method="Post">
                 <div><input name="name" text="<file name>"></input></div>
                 <div><input type="submit" value="Set Folder"></div>
             </form>
             <h2>Photos</h2>
-            <a href="http://localhost:8060/api/photos">List Local Photos</a>
+            <a href="/api/photos">List Local Photos</a>
             <form action="/api/photos" method="Post">
                 <div><input type="submit" value="Update Photos"></div>
             </form>
