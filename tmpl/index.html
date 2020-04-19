@@ -1,0 +1,34 @@
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link href="/api/static/css/master.css" rel="stylesheet" type="text/css" />
+        <title>Mellowtech Photos</title>
+    </head>
+
+    <body>
+        <h1>Welcome to Mellowtech Photos</h1>
+        {{if .IsLoggedIn}}
+            <h2>Search For File</h2>
+            <form action="/api/drive/list" method="GET">
+                <div><input name="name" text="<file name>"></input></div>
+                <div><input type="submit" value="Search"></div>
+            </form>
+            <h2>Photo Folder</h2>
+                <ul>
+                    <li><a href="http://localhost:8060/api/photos/folder">Get Folder</a></li>
+                    <li><a href="http://localhost:8060/api/photos/folder/check">Check for new photos on drive</a></li>
+                </ul>
+            <form action="/api/photos/folder" method="Post">
+                <div><input name="name" text="<file name>"></input></div>
+                <div><input type="submit" value="Set Folder"></div>
+            </form>
+            <h2>Photos</h2>
+            <a href="http://localhost:8060/api/photos">List Local Photos</a>
+            <form action="/api/photos" method="Post">
+                <div><input type="submit" value="Update Photos"></div>
+            </form>
+        {{else}}
+            You need to <a href="/api/auth/login">login</a> before you call the api</p>
+        {{end}}
+    </body>
+</html>

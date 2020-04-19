@@ -1,0 +1,22 @@
+server:
+  prefix: /api
+  port: 8050
+  host: localhost
+
+service:
+  root: .mphotos #default
+  imgDir: img #image path
+  thumbDir: thumb #thumbnail path
+
+db:
+  host: localhost
+  port: 5432
+  user: user
+  password: password
+  name: name
+
+google:
+  redirectUrl: http://some/redirect/url
+  clientId: clientId
+  clientSecret: clientSecret
+

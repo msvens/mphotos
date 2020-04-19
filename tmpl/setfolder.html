@@ -1,0 +1,19 @@
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link href="/api/static/css/master.css" rel="stylesheet" type="text/css" />
+        <title>Mellowtech Photos</title>
+    </head>
+
+    <body>
+        <h1>Set Photo Folder</h1>
+        {{if .IsLoggedIn}}
+            <form action="/api/photos/folder" method="Post">
+                <div><input name="name" text="<file name>"></input></div>
+                <div><input type="submit" value="Set Folder"></div>
+            </form>
+        {{else}}
+            You need to <a href="/api/auth/login">login</a> before you can search the api</p>
+        {{end}}
+    </body>
+</html>

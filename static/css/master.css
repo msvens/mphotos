@@ -1,0 +1,134 @@
+@CHARSET "UTF-8";
+
+body{
+    #font-family: "Lucida Grande", Verdana, Sans-Serif;
+    font-family: helvetica, sans-serif;
+    line-height: 1.5em;
+    font-size: 0.9em;
+    #background-color:#F2F2F2;
+    font-weight: 400;
+}
+
+h1{
+    font-family: Helvetica, sans-serif;
+    font-size: 1.1em;
+    font-weight: 400;
+    text-transform: uppercase;
+
+}
+
+h2{
+    font-family: Helvetica, sans-serif;
+    font-size: 1.0em;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 0px;
+    margin-top: 30px;
+    color: green;
+    letter-spacing: 0.3em;
+}
+
+
+
+
+a{
+    /*color: #222222;*/
+    color: green;
+}
+
+hr{
+    border-color: green;
+    border-style: solid;
+    border-size: 1px;
+    height: 1px;
+    border: 0px;
+    margin: 0px;
+    color: green;
+    background-color: #696969;
+    margin-bottom: 1em;
+}
+
+#head{
+    padding-bottom: 35px;
+    padding-top: 30px;
+    width: 600px;
+    margin: 20px auto 0px auto;
+    text-align: center;
+}
+
+#body{
+    margin: 0px auto;
+    width: 600px;
+}
+
+p{
+    margin-left: 0em;
+}
+
+td{
+    vertical-align: top;
+}
+
+.space{
+
+}
+
+
+/*******MENU****************/
+.topmenu{
+    border-top: 4px solid gray;
+    margin-bottom: 30px;
+    margin-top: 5px;
+    width: 375px;
+    #margin-left:auto;
+    margin-right:auto;
+    padding: .2em;
+}
+
+.topmenu .sel{
+    color: green;
+}
+
+.topmenu a{
+    font-family: helvetica, sans-serif;
+    text-transform: uppercase;
+    #font-size: 0.8em;
+    text-decoration: none;
+    color: #222222;
+    margin-right: 10px;
+}
+.topmenu a:hover{
+    color: #212121;
+    background: #e6e6e6;
+}
+
+/******************CV*********************/
+.cvhead{
+    margin-top: 40px;
+    margin-bottom: 40px;
+    font-size: 0.8em;
+    /*margin-left: 10px;*/
+}
+.cvhead ul{
+    list-style-type: none;
+    margin: 0px;
+}
+.cvpict{
+    float: left;
+    margin-right: 30px;
+}
+.cvhead img{
+    border-color: #d3d3d3;
+    border-width: thin;
+    border-style: solid;
+    height: 160px;
+}
+.cvbio{
+    float: left;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.cvinfo{
+    float: left;
+}
