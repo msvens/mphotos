@@ -14,14 +14,14 @@ import (
 )
 
 var (
-	gconfig *oauth2.Config
+	gconfig   *oauth2.Config
 	tokenFile string
 )
 
-func initAuth() {
+func InitGoogleAuth() {
 
 	tokenFile = config.ServicePath("token.json")
-	fmt.Println("this is token file: "+tokenFile+" "+config.DbName())
+	fmt.Println("this is token file: " + tokenFile + " " + config.DbName())
 	//ClientId/Secret will be moved out from this file
 
 	gconfig = &oauth2.Config{
@@ -29,7 +29,7 @@ func initAuth() {
 		ClientSecret: config.GoogleClientSecret(),
 		Endpoint:     google.Endpoint,
 		RedirectURL:  config.GoogleRedirectUrl(),
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email",mdrive.ReadOnlyScope()},
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", mdrive.ReadOnlyScope()},
 	}
 }
 
@@ -69,10 +69,8 @@ func SaveToken(path string, token *oauth2.Token) {
 	json.NewEncoder(f).Encode(token)
 }
 
-
-
 // /login
-func HandleGoogleLogin(w http.ResponseWriter, r *http.Request){
+func HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	token, err := TokenFromFile(tokenFile)
 	if err != nil {
 		url := gconfig.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
@@ -90,7 +88,7 @@ func HandleGoogleLogin(w http.ResponseWriter, r *http.Request){
 
 }
 
-func HandleGoogleCallback(w http.ResponseWriter, r * http.Request) {
+func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	//content, err := getUserInfo(r)
 	token, err := GetToken(r)
 	if err != nil {

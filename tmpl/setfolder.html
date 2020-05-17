@@ -8,7 +8,7 @@
     <body>
         <h1>Set Photo Folder</h1>
         {{if .IsLoggedIn}}
-            <form action="/api/photos/folder" method="Post">
+            <form action="/api/drive" method="Post">
                 <div><input name="name" text="<file name>"></input></div>
                 <div><input type="submit" value="Set Folder"></div>
             </form>

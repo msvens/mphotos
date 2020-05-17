@@ -33,8 +33,6 @@ func testConfig() error {
 
 }
 
-
-
 func DbHost() string {
 	return viper.GetString("db.host")
 }
@@ -84,13 +82,37 @@ func ServiceRoot() string {
 }
 
 func ServicePath(fileName string) string {
-	return filepath.Join(ServiceRoot(),fileName)
+	return filepath.Join(ServiceRoot(), fileName)
 }
 
 func ServiceImgDir() string {
 	return viper.GetString("service.imgDir")
 }
 
+func ServicePassword() string {
+	return viper.GetString("service.password")
+}
+
 func ServiceThumbDir() string {
 	return viper.GetString("service.thumbDir")
+}
+
+func SessionAuthcKey() string {
+	return viper.GetString("session.authKey")
+}
+
+func SessionCookieName() string {
+	return viper.GetString("session.cookieName")
+}
+
+func SessionEncKey() string {
+	return viper.GetString("session.encKey")
+}
+
+func SessionAuthcKeyOld() string {
+	return viper.GetString("session.authKeyOld")
+}
+
+func SessionEncKeyOld() string {
+	return viper.GetString("session.encKeyOld")
 }

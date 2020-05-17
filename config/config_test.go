@@ -35,12 +35,36 @@ func TestConfigFile(t *testing.T) {
 		t.Errorf("expected localhost got %v", ServerHost())
 	}
 
+	//session config:
+	if SessionCookieName() != "mphotos-session" {
+		t.Errorf("expected mphotos-session got %v", SessionCookieName())
+	}
+
+	if SessionAuthcKey() != "authKey" {
+		t.Errorf("expected authKey got %v", SessionAuthcKey())
+	}
+
+	if SessionAuthcKeyOld() != "authKeyOld" {
+		t.Errorf("expected authKeyOld got %v", SessionAuthcKeyOld())
+	}
+
+	if SessionEncKey() != "encKey" {
+		t.Errorf("expected encKey got %v", SessionEncKey())
+	}
+
+	if SessionEncKeyOld() != "encKeyOld" {
+		t.Errorf("expected encKeyOld got %v", SessionEncKeyOld())
+	}
+
 	//service config:
 	if ServiceRoot() != ".mphotos" {
 		t.Errorf("expected .mphotos got %v", ServiceRoot())
 	}
 	if ServiceImgDir() != "img" {
 		t.Errorf("expected img got %v", ServiceImgDir())
+	}
+	if ServicePassword() != "password" {
+		t.Errorf("expected password got %v", ServicePassword())
 	}
 	if ServiceThumbDir() != "thumb" {
 		t.Errorf("expected thumb got %v", ServiceThumbDir())
@@ -56,7 +80,5 @@ func TestConfigFile(t *testing.T) {
 	if GoogleRedirectUrl() != "http://some/redirect/url" {
 		t.Errorf("expected http://some/redirect/url got %v", GoogleRedirectUrl())
 	}
-
-
 
 }

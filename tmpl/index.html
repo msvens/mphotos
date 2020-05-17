@@ -8,17 +8,33 @@
     <body>
         <h1>Welcome to Mellowtech Photos</h1>
         {{if .IsLoggedIn}}
+            <h2>User</h2>
+            <a href="/api/user">User</a>
+            <form action="/api/user" method="POST">
+                <div><input name="bio"/></div>
+                <input type="hidden" value="bio" name="columns"/>
+                <div><input type="submit" value="Update Bio"></div>
+            </form>
+            <h2>Login to Api</h2>
+                <form action="/api/login" method="POST">
+                    <div><input name="password" text="password"></input></div>
+                    <div><input type="submit" value="Login"></div>
+                </form>
+            <h2>Logout from api</h2>
+            <a href="/api/logout">Logout</a>
+            <h2>Logged in</h2>
+            <a href="/api/loggedin">Loggedin</a>
             <h2>Search For File</h2>
-            <form action="/api/drive/list" method="GET">
+            <form action="/api/drive/search" method="GET">
                 <div><input name="name" text="<file name>"></input></div>
                 <div><input type="submit" value="Search"></div>
             </form>
             <h2>Photo Folder</h2>
                 <ul>
-                    <li><a href="/api/photos/folder">Get Folder</a></li>
-                    <li><a href="/api/photos/folder/check">Check for new photos on drive</a></li>
+                    <li><a href="/api/drive">List files on drive folder</a></li></li>
+                    <li><a href="/api/drive/check">Check for new photos on drive</a></li>
                 </ul>
-            <form action="/api/photos/folder" method="Post">
+            <form action="/api/drive" method="Post">
                 <div><input name="name" text="<file name>"></input></div>
                 <div><input type="submit" value="Set Folder"></div>
             </form>

@@ -7,6 +7,15 @@ service:
   root: .mphotos #default
   imgDir: img #image path
   thumbDir: thumb #thumbnail path
+  password: password
+
+session:
+  authKey: authKey #64 bytes recommended
+  encKey: encKey #32bytes recommended
+  authKeyOld: authKeyOld
+  encKeyOld: encKeyOld
+  cookieName: mphotos-session
+
 
 db:
   host: localhost
@@ -19,4 +28,3 @@ google:
   redirectUrl: http://some/redirect/url
   clientId: clientId
   clientSecret: clientSecret
-

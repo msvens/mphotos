@@ -14,6 +14,7 @@ var templates *template.Template
 type Page struct {
 	IsLoggedIn bool
 }
+
 func init() {
 	config.InitConfig()
 	templates = template.Must(template.ParseFiles("tmpl/index.html", "tmpl/search.html", "tmpl/setfolder.html"))
@@ -26,6 +27,8 @@ func main() {
 	flag.Parse()
 
 	r := mux.NewRouter()
+	InitApi(r, "/api")
+
 	r.Path("/api").HandlerFunc(handleRoot)
 	r.Path("/api/ui/search").HandlerFunc(handleSearch)
 	r.Path("/api/ui/setfolder").HandlerFunc(handleSetFolder)
@@ -38,12 +41,11 @@ func main() {
 	r.PathPrefix("/api/static/").Handler(http.StripPrefix("/api/static/", http.FileServer(http.Dir(dir))))
 
 	//auth
-	initAuth()
+	InitGoogleAuth()
 	err := AuthFromFile()
 	if err != nil {
 		log.Println(err)
 	}
-	InitApi(r, "/api")
 	http.ListenAndServe(":8050", r)
 }
 

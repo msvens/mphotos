@@ -66,21 +66,19 @@ func (dbs *DbService) Close() error {
 	return dbs.Db.Close()
 }
 
-
-
-func (dbs *DbService) AddPhoto(p *Photo,exif *mexif.ExifCompact) error {
+func (dbs *DbService) AddPhoto(p *Photo, exif *mexif.ExifCompact) error {
 
 	_, err := dbs.Db.Exec(insPhotoStmt, p.DriveId, p.Md5, p.FileName, p.Title, p.Keywords, p.Description, p.DriveDate, p.OriginalDate,
-		p.CameraMake, p.CameraModel, p.LensMake, p.LensModel, p.Iso, p.FNumber, p.Exposure)
+		p.CameraMake, p.CameraModel, p.LensMake, p.LensModel, p.Iso, p.FNumber, p.Exposure, p.Width, p.Height)
 	if err != nil {
 		return err
 	}
-	data, err := json.Marshal(exif);
+	data, err := json.Marshal(exif)
 	if err != nil {
 		return err
 	}
-	_, err = dbs.Db.Exec(insExifStmt,p.DriveId, string(data))
-	return err;
+	_, err = dbs.Db.Exec(insExifStmt, p.DriveId, string(data))
+	return err
 }
 
 func (dbs *DbService) Contains(driveId string) bool {
@@ -89,6 +87,20 @@ func (dbs *DbService) Contains(driveId string) bool {
 	} else {
 		return false
 	}
+}
+
+func (dbs *DbService) Delete(driveId string) (bool, error) {
+
+	if _, err := dbs.Db.Exec(deleteStmt, driveId); err != nil {
+		return false, err
+	}
+	if res, err := dbs.Db.Exec(deleteExifStmt, driveId); err != nil {
+		return false, err
+	} else {
+		cnt, _ := res.RowsAffected()
+		return cnt > 0, nil
+	}
+
 }
 
 func (dbs *DbService) GetExif(driveId string) (*Exif, error) {
@@ -106,7 +118,7 @@ func (dbs *DbService) GetExif(driveId string) (*Exif, error) {
 
 func (dbs *DbService) GetId(driveId string) (*Photo, error) {
 	resp := Photo{}
-	r :=dbs.Db.QueryRow(getIdStmt, driveId)
+	r := dbs.Db.QueryRow(getIdStmt, driveId)
 	if err := scanRow(&resp, r); err != nil {
 		return nil, err
 	} else {
@@ -114,17 +126,90 @@ func (dbs *DbService) GetId(driveId string) (*Photo, error) {
 	}
 }
 
-func (dbs *DbService) List() ([]*Photo, error) {
-	rows, err := dbs.Db.Query(getStmt)
-	var p *Photo
-	if err != nil {
+func (dbs *DbService) GetUser() (*User, error) {
+	resp := User{}
+	r := dbs.Db.QueryRow(getUserStmt)
+	if err := r.Scan(&resp.Name, &resp.Bio, &resp.Pic, &resp.DriveFolderId, &resp.DriveFolderName); err != nil {
 		return nil, err
 	}
+	return &resp, nil
+}
 
+func (dbs *DbService) UpdateUser(u *User) (*User, error) {
+	if _, err := dbs.Db.Exec(updateUserStmt, u.Name, u.Bio, u.Pic); err != nil {
+		return nil, err
+	}
+	return dbs.GetUser()
+}
+
+func (dbs *DbService) UpdateUserBio(bio string) (*User, error) {
+	if _, err := dbs.Db.Exec(updateUserBioStmt, bio); err != nil {
+		return nil, err
+	}
+	return dbs.GetUser()
+}
+
+func (dbs *DbService) UpdateUserName(name string) (*User, error) {
+	if _, err := dbs.Db.Exec(updateUserNameStmt, name); err != nil {
+		return nil, err
+	}
+	return dbs.GetUser()
+}
+
+func (dbs *DbService) UpdateUserPic(pic string) (*User, error) {
+	if _, err := dbs.Db.Exec(updateUserPicStmt, pic); err != nil {
+		return nil, err
+	}
+	return dbs.GetUser()
+}
+
+func (dbs *DbService) UpdateUserDriveFolder(id string, name string) (*User, error) {
+	if _, err := dbs.Db.Exec(updateUserDriveFolder, id, name); err != nil {
+		return nil, err
+	}
+	return dbs.GetUser()
+}
+
+func (dbs *DbService) GetAllPhotos() ([]*Photo, error) {
+	if rows, err := dbs.Db.Query(getAll); err != nil {
+		return nil, err
+	} else {
+		return scanR(rows)
+	}
+}
+
+func (dbs *DbService) GetByOriginalDate(limit int, offset int) ([]*Photo, error) {
+	if rows, err := dbs.Db.Query(getByOriginalDate, limit, offset); err != nil {
+		return nil, err
+	} else {
+		return scanR(rows)
+	}
+}
+
+func (dbs *DbService) GetByDriveDate(limit int, offset int) ([]*Photo, error) {
+	if rows, err := dbs.Db.Query(getByDriveDate, limit, offset); err != nil {
+		return nil, err
+	} else {
+		return scanR(rows)
+	}
+}
+
+func (dbs *DbService) GetLatest() (*Photo, error) {
+	resp := Photo{}
+	r := dbs.Db.QueryRow(getByDriveDate, 1, 0)
+	if err := scanRow(&resp, r); err != nil {
+		return nil, err
+	} else {
+		return &resp, nil
+	}
+}
+
+func scanR(rows *sql.Rows) ([]*Photo, error) {
+	var p *Photo
 	var photos []*Photo
-	for ; rows.Next(); {
+	for rows.Next() {
 		p = &Photo{}
-		if err = scanRows(p, rows); err == nil {
+		if err := scanRows(p, rows); err == nil {
 			photos = append(photos, p)
 		} else {
 			return nil, err
@@ -136,7 +221,7 @@ func (dbs *DbService) List() ([]*Photo, error) {
 func scanRows(p *Photo, r *sql.Rows) error {
 	err := r.Scan(&p.DriveId, &p.Md5, &p.FileName, &p.Title, &p.Keywords, &p.Description, &p.DriveDate,
 		&p.OriginalDate, &p.CameraMake, &p.CameraModel, &p.LensMake, &p.LensModel,
-		&p.Iso, &p.FNumber, &p.Exposure)
+		&p.Iso, &p.FNumber, &p.Exposure, &p.Width, &p.Height)
 
 	switch err {
 	case sql.ErrNoRows:
@@ -151,7 +236,7 @@ func scanRows(p *Photo, r *sql.Rows) error {
 func scanRow(p *Photo, r *sql.Row) error {
 	err := r.Scan(&p.DriveId, &p.Md5, &p.FileName, &p.Title, &p.Keywords, &p.Description, &p.DriveDate,
 		&p.OriginalDate, &p.CameraMake, &p.CameraModel, &p.LensMake, &p.LensModel,
-		&p.Iso, &p.FNumber, &p.Exposure)
+		&p.Iso, &p.FNumber, &p.Exposure, &p.Width, &p.Height)
 
 	switch err {
 	case sql.ErrNoRows:
@@ -162,6 +247,3 @@ func scanRow(p *Photo, r *sql.Row) error {
 		return err
 	}
 }
-
-
-
