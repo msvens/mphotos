@@ -339,7 +339,8 @@ func (ps *PhotoService) downloadPhoto(photo *Photo) error {
 	}
 
 	//create thumbnail
-	args := []string{ps.GetImgPath(photo.FileName), "-s", "640", "-m", "centre", "-o", ps.GetThumbPath(photo.FileName)}
+	//args := []string{ps.GetImgPath(photo.FileName), "-s", "640", "-m", "centre", "-o", ps.GetThumbPath(photo.FileName)}
+	args := []string{ps.GetImgPath(photo.FileName), "-s", "640", "-c", "-o", ps.GetThumbPath(photo.FileName)}
 	log.Println("creating thumbnail", strings.Join(args, " "))
 	cmd := exec.Command("vipsthumbnail", args...)
 
