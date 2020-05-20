@@ -69,7 +69,7 @@ func (dbs *DbService) Close() error {
 func (dbs *DbService) AddPhoto(p *Photo, exif *mexif.ExifCompact) error {
 
 	_, err := dbs.Db.Exec(insPhotoStmt, p.DriveId, p.Md5, p.FileName, p.Title, p.Keywords, p.Description, p.DriveDate, p.OriginalDate,
-		p.CameraMake, p.CameraModel, p.LensMake, p.LensModel, p.Iso, p.FNumber, p.Exposure, p.Width, p.Height)
+		p.CameraMake, p.CameraModel, p.LensMake, p.LensModel, p.FocalLength, p.FocalLength35, p.Iso, p.FNumber, p.Exposure, p.Width, p.Height)
 	if err != nil {
 		return err
 	}
@@ -220,7 +220,7 @@ func scanR(rows *sql.Rows) ([]*Photo, error) {
 
 func scanRows(p *Photo, r *sql.Rows) error {
 	err := r.Scan(&p.DriveId, &p.Md5, &p.FileName, &p.Title, &p.Keywords, &p.Description, &p.DriveDate,
-		&p.OriginalDate, &p.CameraMake, &p.CameraModel, &p.LensMake, &p.LensModel,
+		&p.OriginalDate, &p.CameraMake, &p.CameraModel, &p.LensMake, &p.LensModel, &p.FocalLength, &p.FocalLength35,
 		&p.Iso, &p.FNumber, &p.Exposure, &p.Width, &p.Height)
 
 	switch err {
@@ -235,7 +235,7 @@ func scanRows(p *Photo, r *sql.Rows) error {
 
 func scanRow(p *Photo, r *sql.Row) error {
 	err := r.Scan(&p.DriveId, &p.Md5, &p.FileName, &p.Title, &p.Keywords, &p.Description, &p.DriveDate,
-		&p.OriginalDate, &p.CameraMake, &p.CameraModel, &p.LensMake, &p.LensModel,
+		&p.OriginalDate, &p.CameraMake, &p.CameraModel, &p.LensMake, &p.LensModel, &p.FocalLength, &p.FocalLength35,
 		&p.Iso, &p.FNumber, &p.Exposure, &p.Width, &p.Height)
 
 	switch err {

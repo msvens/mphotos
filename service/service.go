@@ -257,7 +257,7 @@ func (ps *PhotoService) AddPhoto(f *drive.File, tool *mexif.MExifTool) (bool, er
 	}
 	photo := Photo{}
 	photo.DriveId = f.Id
-	photo.Title = f.Name
+	//photo.Title = f.Name
 	photo.Md5 = f.Md5Checksum
 	photo.FileName = f.Id + ".jpg"
 	if t, err := mdrive.ParseTime(f.CreatedTime); err == nil {
@@ -273,6 +273,8 @@ func (ps *PhotoService) AddPhoto(f *drive.File, tool *mexif.MExifTool) (bool, er
 	if exif, err = tool.ExifCompact(ps.GetImgPath(photo.FileName)); err == nil {
 		photo.CameraMake = exif.CameraMake
 		photo.CameraModel = exif.CameraModel
+		photo.FocalLength = exif.FocalLength
+		photo.FocalLength35 = exif.FocalLengthIn35mmFormat
 		photo.LensMake = exif.LensMake
 		photo.LensModel = exif.LensModel
 		photo.Exposure = exif.ExposureTime
@@ -280,9 +282,7 @@ func (ps *PhotoService) AddPhoto(f *drive.File, tool *mexif.MExifTool) (bool, er
 		photo.Height = exif.ImageHeight
 		photo.FNumber = exif.FNumber
 		photo.Iso = exif.ISO
-		if exif.Title != "" {
-			photo.Title = exif.Title
-		}
+		photo.Title = exif.Title
 		if len(exif.Keywords) > 0 {
 			photo.Keywords = strings.Join(exif.Keywords, ",")
 		}

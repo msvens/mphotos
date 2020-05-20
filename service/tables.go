@@ -15,10 +15,12 @@ type Photo struct {
 	DriveDate    time.Time `json:"driveDate"`
 	OriginalDate time.Time `json:"originalDate"`
 
-	CameraMake  string `json:"cameraMake"`
-	CameraModel string `json:"cameraModel"`
-	LensMake    string `json:"lensMake,omitempty"`
-	LensModel   string `json:"lensModel,omitempty"`
+	CameraMake    string `json:"cameraMake"`
+	CameraModel   string `json:"cameraModel"`
+	LensMake      string `json:"lensMake,omitempty"`
+	LensModel     string `json:"lensModel,omitempty"`
+	FocalLength   string `json:"focalLength"`
+	FocalLength35 string `json:"focalLength35"`
 
 	Iso      uint    `json:"iso"`
 	Exposure string  `json:"exposure"`
@@ -54,6 +56,8 @@ CREATE TABLE IF NOT EXISTS photos (
 	cameraModel TEXT NOT NULL,
 	lensMake TEXT,
 	lensModel TEXT,
+	focalLength TEXT,
+	focalLength35 TEXT,
  	iso INTEGER NOT NULL,
 	fNumber REAL NOT NULL,
 	exposure TEXT NOT NULL,
@@ -118,11 +122,13 @@ INSERT INTO photos (
 	cameraModel,
 	lensMake,
 	lensModel,
+	focalLength,
+    focalLength35,
 	iso,
 	fNumber,
 	exposure,
 	width,
-	height) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17);
+	height) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19);
 `
 	insUserStmt = "INSERT INTO user (name, bio, pic, driveFolderId) VALUES ($1, $2, $3, $4)"
 )
