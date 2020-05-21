@@ -21,7 +21,7 @@ var (
 func InitGoogleAuth() {
 
 	tokenFile = config.ServicePath("token.json")
-	fmt.Println("this is token file: " + tokenFile + " " + config.DbName())
+	//fmt.Println("this is token file: " + tokenFile + " " + config.DbName())
 	//ClientId/Secret will be moved out from this file
 
 	gconfig = &oauth2.Config{

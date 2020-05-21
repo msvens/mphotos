@@ -77,13 +77,13 @@ const UserId = 23657
 const createUserTable = `
 CREATE TABLE IF NOT EXISTS users (
 	id INT PRIMARY KEY,
-	name TEXT,
-	bio TEXT,
-	pic TEXT,
-	driveFolderId TEXT,
-	driveFolderName TEXT
+	name TEXT NOT NULL,
+	bio TEXT NOT NULL,
+	pic TEXT NOT NULL,
+	driveFolderId TEXT NOT NULL,
+	driveFolderName TEXT NOT NULL
 );
-INSERT INTO users (id, name, bio, pic, driveFolderId) VALUES (23657, '', '', '', '') ON CONFLICT (id) DO NOTHING;
+INSERT INTO users (id, name, bio, pic, driveFolderId, driveFolderName) VALUES (23657, '', '', '', '','') ON CONFLICT (id) DO NOTHING;
 `
 
 const dropPhotoTable = "DROP TABLE IF EXISTS photos;"

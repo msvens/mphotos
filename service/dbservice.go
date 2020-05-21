@@ -8,6 +8,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/msvens/mexif"
 	"github.com/msvens/mphotos/config"
+	"log"
 )
 
 type DbService struct {
@@ -30,6 +31,7 @@ func (dbs *DbService) Connect() error {
 		config.DbHost(), config.DbPort(), config.DbUser(), config.DbPassword(), config.DbName())
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
+		log.Fatal("could not connect to database", err)
 		return err
 	}
 	dbs.Db = db

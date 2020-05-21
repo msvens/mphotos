@@ -168,9 +168,9 @@ func InitApi(r *mux.Router, pp string) {
 	r.Path(pp + "/photos").Methods("DELETE").HandlerFunc(ah(DeletePhotos))
 
 	r.Path(pp + "/photos/{id}/orig").Methods("GET").HandlerFunc(DownloadPhoto)
-	r.Path(pp + "/photos/{id}/exif").Methods("GET").HandlerFunc(GetExif)
-	r.Path(pp + "/photos/latest").Methods("GET").HandlerFunc(GetLatestPhoto)
-	r.Path(pp + "/photos/{id}").Methods("GET").HandlerFunc(GetPhoto)
+	r.Path(pp + "/photos/{id}/exif").Methods("GET").HandlerFunc(h(GetExif))
+	r.Path(pp + "/photos/latest").Methods("GET").HandlerFunc(h(GetLatestPhoto))
+	r.Path(pp + "/photos/{id}").Methods("GET").HandlerFunc(h(GetPhoto))
 	r.Path(pp + "/photos/{id}").Methods("DELETE").HandlerFunc(ah(DeletePhoto))
 
 	r.Path(pp + "/user").Methods("GET").HandlerFunc(hw(GetUser))
@@ -190,33 +190,31 @@ func SetPhotoService(drvService *mdrive.DriveService) {
 
 /******API FUNCTIONS***********************************/
 
-func GetExif(w http.ResponseWriter, r *http.Request) {
+func GetExif(r *http.Request) (interface{}, error) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	if exif, found := ps.GetExif(id); found {
-		psResponse(exif, nil, w)
+		return exif, nil
 	} else {
-		psResponse(nil, service.NewError(service.ApiErrorBadRequest, "exif does not exist"), w)
+		return nil, service.NewError(service.ApiErrorBadRequest, "exif does not exist")
 	}
 }
 
-func GetLatestPhoto(w http.ResponseWriter, r *http.Request) {
-	photo, found := ps.GetLatestPhoto()
-	if !found {
-		psResponse(nil, service.NewError(service.ApiErrorNotFound, "photo does not exist"), w)
+func GetLatestPhoto(r *http.Request) (interface{}, error) {
+	if photo, found := ps.GetLatestPhoto(); found {
+		return photo, nil
 	} else {
-		psResponse(photo, nil, w)
+		return nil, service.NewError(service.ApiErrorNotFound, "photo does not exist")
 	}
 }
 
-func GetPhoto(w http.ResponseWriter, r *http.Request) {
+func GetPhoto(r *http.Request) (interface{}, error) {
 	vars := mux.Vars(r)
 	id := vars["id"]
-	photo, found := ps.GetPhoto(id)
-	if !found {
-		psResponse(nil, service.NewError(service.ApiErrorNotFound, "photo does not exist"), w)
+	if photo, found := ps.GetPhoto(id); found {
+		return photo, nil
 	} else {
-		psResponse(photo, nil, w)
+		return nil, service.NewError(service.ApiErrorNotFound, "photo does not exist")
 	}
 }
 
