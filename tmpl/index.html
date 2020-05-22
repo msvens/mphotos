@@ -7,7 +7,15 @@
 
     <body>
         <h1>Welcome to Mellowtech Photos</h1>
-        {{if .IsLoggedIn}}
+        {{if not .IsPhotosLoggedIn}}
+        <h2>Login to Api</h2>
+        <form action="/api/login" method="POST">
+            <div><input name="password" text="password"></input></div>
+            <div><input type="submit" value="Login"></div>
+        </form>
+        {{else if not .IsGoogleLoggedIn}}
+        You need to <a href="/api/auth/login">login</a> before you call the api</p>
+        {{else}}
             <h2>User</h2>
             <a href="/api/user">User</a>
             <form action="/api/user" method="POST">
@@ -43,8 +51,6 @@
             <form action="/api/photos" method="Post">
                 <div><input type="submit" value="Update Photos"></div>
             </form>
-        {{else}}
-            You need to <a href="/api/auth/login">login</a> before you call the api</p>
         {{end}}
     </body>
 </html>

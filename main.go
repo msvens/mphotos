@@ -12,12 +12,13 @@ import (
 var templates *template.Template
 
 type Page struct {
-	IsLoggedIn bool
+	IsGoogleLoggedIn bool
+	IsPhotosLoggedIn bool
 }
 
 func init() {
 	config.InitConfig()
-	templates = template.Must(template.ParseFiles("tmpl/index.html", "tmpl/search.html", "tmpl/setfolder.html"))
+	templates = template.Must(template.ParseFiles("tmpl/index.html"))
 }
 
 func main() {
@@ -30,8 +31,6 @@ func main() {
 	InitApi(r, "/api")
 
 	r.Path("/api").HandlerFunc(handleRoot)
-	r.Path("/api/ui/search").HandlerFunc(handleSearch)
-	r.Path("/api/ui/setfolder").HandlerFunc(handleSetFolder)
 
 	//auth
 	r.Path("/api/auth/login").HandlerFunc(HandleGoogleLogin)
@@ -49,23 +48,13 @@ func main() {
 	http.ListenAndServe(":8050", r)
 }
 
-func handleSetFolder(w http.ResponseWriter, r *http.Request) {
-	err := templates.ExecuteTemplate(w, "setfolder.html", &Page{IsLoggedIn()})
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func handleSearch(w http.ResponseWriter, r *http.Request) {
-	err := templates.ExecuteTemplate(w, "search.html", &Page{IsLoggedIn()})
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
 func handleRoot(w http.ResponseWriter, r *http.Request) {
-	err := templates.ExecuteTemplate(w, "index.html", &Page{IsLoggedIn()})
+	err := templates.ExecuteTemplate(w, "index.html", newPage(w, r))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func newPage(w http.ResponseWriter, r *http.Request) *Page {
+	return &Page{IsGoogleLoggedIn: isGoogleLoggedIn(), IsPhotosLoggedIn: isPhotosLogin(w, r)}
 }

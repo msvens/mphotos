@@ -87,11 +87,15 @@ func checkAndWrite(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
-func isLogin(w http.ResponseWriter, r *http.Request) bool {
+func isPhotosLogin(w http.ResponseWriter, r *http.Request) bool {
 	if err := checkLogin(w, r); err == nil {
 		return true
 	}
 	return false
+}
+
+func isGoogleLoggedIn() bool {
+	return ps != nil
 }
 
 func getSessionUser(s *sessions.Session) AuthUser {
@@ -178,10 +182,6 @@ func InitApi(r *mux.Router, pp string) {
 
 	r.Path(pp + "/images/{name}").Methods("Get").HandlerFunc(GetImage)
 	r.Path(pp + "/thumbs/{name}").Methods("Get").HandlerFunc(GetThumb)
-}
-
-func IsLoggedIn() bool {
-	return ps != nil
 }
 
 func SetPhotoService(drvService *mdrive.DriveService) {
@@ -291,7 +291,7 @@ func GetPhotos(r *http.Request) (interface{}, error) {
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	auth := isLogin(w, r)
+	auth := isPhotosLogin(w, r)
 	if u, err := ps.GetUser(); err == nil {
 		if !auth {
 			u.DriveFolderId = ""
@@ -335,7 +335,7 @@ func Logout(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 }
 
 func LoggedIn(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	return AuthUser{isLogin(w, r)}, nil
+	return AuthUser{isPhotosLogin(w, r)}, nil
 }
 
 func DeletePhoto(r *http.Request) (interface{}, error) {
