@@ -8,7 +8,8 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/msvens/mexif"
 	"github.com/msvens/mphotos/config"
-	"log"
+	"go.uber.org/zap"
+	"strings"
 )
 
 type DbService struct {
@@ -31,7 +32,7 @@ func (dbs *DbService) Connect() error {
 		config.DbHost(), config.DbPort(), config.DbUser(), config.DbPassword(), config.DbName())
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
-		log.Fatal("could not connect to database", err)
+		logger.Errorw("could not connect to database", zap.Error(err))
 		return err
 	}
 	dbs.Db = db
@@ -135,6 +136,27 @@ func (dbs *DbService) GetUser() (*User, error) {
 		return nil, err
 	}
 	return &resp, nil
+}
+
+func (dbs *DbService) UpdatePhotoDescription(description string, driveId string) (*Photo, error) {
+	if _, err := dbs.Db.Exec(updatePhotoDescriptionStmt, description, driveId); err != nil {
+		return nil, err
+	}
+	return dbs.GetId(driveId)
+}
+
+func (dbs *DbService) UpdatePhotoKeywords(keywords []string, driveId string) (*Photo, error) {
+	if _, err := dbs.Db.Exec(updatePhotoDescriptionStmt, strings.Join(keywords, ","), driveId); err != nil {
+		return nil, err
+	}
+	return dbs.GetId(driveId)
+}
+
+func (dbs *DbService) UpdatePhotoTitle(title string, driveId string) (*Photo, error) {
+	if _, err := dbs.Db.Exec(updatePhotoTitleStmt, title, driveId); err != nil {
+		return nil, err
+	}
+	return dbs.GetId(driveId)
 }
 
 func (dbs *DbService) UpdateUser(u *User) (*User, error) {

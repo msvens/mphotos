@@ -51,6 +51,14 @@ func NewError(code int, message string) *ApiError {
 	return &ApiError{Code: code, Message: message}
 }
 
+func NewBadRequest(message string) *ApiError {
+	return NewError(ApiErrorBadRequest, message)
+}
+
+func NewBackendError(message string) *ApiError {
+	return NewError(ApiErrorBackendError, message)
+}
+
 func ResolveError(err error) *ApiError {
 	e, ok := err.(*ApiError)
 	if ok {

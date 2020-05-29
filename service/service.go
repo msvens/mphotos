@@ -4,13 +4,15 @@ import (
 	"github.com/msvens/mdrive"
 	"github.com/msvens/mexif"
 	"github.com/msvens/mphotos/config"
+	"go.uber.org/zap"
 	"google.golang.org/api/drive/v3"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 )
+
+var logger *zap.SugaredLogger
 
 const (
 	folderFileName = "gdriveFolder.json"
@@ -28,34 +30,44 @@ type PhotoService struct {
 	dbs *DbService
 }
 
-func NewPhotosService(driveSrv *mdrive.DriveService) *PhotoService {
+func NewPhotosService(driveSrv *mdrive.DriveService) (*PhotoService, error) {
+	l, _ := zap.NewDevelopment()
+	logger = l.Sugar()
 	//srvPath = config.ServiceRoot()
 	ps := PhotoService{}
 	ps.rootDir = config.ServiceRoot()
 	ps.imgDir = config.ServicePath("img")
 	ps.thumbDir = config.ServicePath("thumb")
 	if err := ps.createPaths(); err != nil {
-		log.Println("could not create image folders")
+		logger.Errorw("could not create image folders", "error", err)
+		return nil, err
 	}
 	ps.DriveSrv = driveSrv
 	ps.folderPath = ps.rootDir + "/" + folderFileName
-	/*f, err := readDriveFolder(ps.folderPath)
-	if err != nil {
-		log.Println("could not read photo folder: ", ps.folderPath, err)
-	} else {
-		ps.driveFolder = f
-	}*/
+
 	//Open db
 	var err error
 	if ps.dbs, err = NewDbService(); err != nil {
-		log.Println(err)
+		logger.Errorw("could not create dbservice", "error", err)
+		return nil, err
 	} else {
 		if err = ps.dbs.CreateTables(); err != nil {
-			log.Println(err)
+			logger.Errorw("could not create db talbes", "error", err)
+			return nil, err
 		}
 
 	}
-	return &ps
+	wg.Add(1)
+	go worker(jobChan)
+	logger.Info("PhotoService started")
+	return &ps, nil
+}
+
+func (ps *PhotoService) Shutdown() error {
+	close(jobChan)
+	wg.Wait()
+	logger.Sync()
+	return nil
 }
 
 func (ps *PhotoService) createPaths() error {
@@ -73,7 +85,7 @@ func (ps *PhotoService) GetExif(id string) (*Exif, bool) {
 	if exif, err := ps.dbs.GetExif(id); err == nil {
 		return exif, true
 	} else {
-		log.Println(err)
+		logger.Errorw("could get exif", "error", err)
 		return nil, false
 	}
 }
@@ -82,7 +94,7 @@ func (ps *PhotoService) GetPhoto(id string) (*Photo, bool) {
 	if p, err := ps.dbs.GetId(id); err == nil {
 		return p, true
 	} else {
-		log.Println(err)
+		logger.Errorw("could not get photo", "error", err)
 		return nil, false
 	}
 }
@@ -91,7 +103,7 @@ func (ps *PhotoService) GetLatestPhoto() (*Photo, bool) {
 	if p, err := ps.dbs.GetLatest(); err == nil {
 		return p, true
 	} else {
-		log.Println(err)
+		logger.Info(err)
 		return nil, false
 	}
 }
@@ -112,6 +124,37 @@ func (ps *PhotoService) GetPhotos(driveDate bool, limit int, offset int) (*Photo
 
 func (ps *PhotoService) GetUser() (*User, error) {
 	return ps.dbs.GetUser()
+}
+
+func (ps *PhotoService) UpdatePhoto(fields map[string][]string, id string) (*Photo, error) {
+	var err error
+	var photo *Photo
+
+	if len(fields) < 1 {
+		return nil, NewError(ApiErrorBadRequest, "no fields to set")
+	}
+	if _, found := ps.GetPhoto(id); !found {
+		return nil, NewError(ApiErrorNotFound, "photo not found")
+	}
+
+	for k, v := range fields {
+		logger.Infow("Update Photo", k, v)
+		switch k {
+		case "title":
+			photo, err = ps.dbs.UpdatePhotoTitle(v[0], id)
+		case "keywords":
+			photo, err = ps.dbs.UpdatePhotoKeywords(v, id)
+		case "description":
+			photo, err = ps.dbs.UpdatePhotoDescription(v[0], id)
+		default:
+			logger.Errorw("Update Photo unknown field", k, v)
+		}
+		if err != nil {
+			logger.Errorw("Update Photo", zap.Error(err))
+			return nil, err
+		}
+	}
+	return photo, nil
 }
 
 func (ps *PhotoService) UpdateUser(user *User, cols []string) (*User, error) {
@@ -146,19 +189,15 @@ func (ps *PhotoService) GetThumbPath(fileName string) string {
 	return filepath.Join(ps.thumbDir, fileName)
 }
 
-func (ps *PhotoService) UpdateDriveFolder(id string, name string) (*User, error) {
-	if id == "" {
-		if f, err := ps.DriveSrv.GetByName(name, true, false, fileFields); err != nil {
-			return nil, err
-		} else {
-			return ps.dbs.UpdateUserDriveFolder(f.Id, f.Name)
-		}
+func (ps *PhotoService) UpdateDriveFolder(name string) (*User, error) {
+	logger.Infow("Update drive folder", "name", name)
+	if name == "" {
+		return nil, NewBadRequest("name is empty")
+	}
+	if f, err := ps.DriveSrv.GetByName(name, true, false, fileFields); err != nil {
+		return nil, err
 	} else {
-		if f, err := ps.DriveSrv.Get(id); err != nil {
-			return nil, err
-		} else {
-			return ps.dbs.UpdateUserDriveFolder(f.Id, f.Name)
-		}
+		return ps.dbs.UpdateUserDriveFolder(f.Id, f.Name)
 	}
 }
 
@@ -233,6 +272,8 @@ func (ps *PhotoService) AddPhotos() (*DriveFiles, error) {
 		return nil, err
 	}
 
+	defer tool.Close()
+
 	var files []*drive.File
 	for _, f := range fl {
 		added, err := ps.AddPhoto(f, tool)
@@ -242,10 +283,6 @@ func (ps *PhotoService) AddPhotos() (*DriveFiles, error) {
 		if added {
 			files = append(files, f)
 		}
-	}
-	err = tool.Close()
-	if err != nil {
-		log.Println(err)
 	}
 	return ToDriveFiles(files), nil
 }
@@ -265,7 +302,7 @@ func (ps *PhotoService) AddPhoto(f *drive.File, tool *mexif.MExifTool) (bool, er
 	}
 
 	if err = ps.downloadPhoto(&photo); err != nil {
-		log.Println("error downloading: ", err)
+		logger.Errorw("error downloading photo", zap.Error(err))
 		return false, err
 	}
 	var exif *mexif.ExifCompact
@@ -292,14 +329,15 @@ func (ps *PhotoService) AddPhoto(f *drive.File, tool *mexif.MExifTool) (bool, er
 	}
 
 	if err = ps.dbs.AddPhoto(&photo, exif); err != nil {
-		log.Println("error adding photo: ", err)
+		logger.Errorw("error adding photo: ", zap.Error(err))
 		return false, err
 	}
-	log.Println("added photo: ", photo.Title)
+	logger.Infow("added photo", "driveId", photo.DriveId)
 	return true, nil
 }
 
 func (ps *PhotoService) DeletePhotos(removeFiles bool) (*PhotoFiles, error) {
+	logger.Infow("Delete All Photos", "removeFiles", removeFiles)
 	if photos, err := ps.dbs.GetAllPhotos(); err != nil {
 		return nil, err
 	} else {
@@ -313,6 +351,7 @@ func (ps *PhotoService) DeletePhotos(removeFiles bool) (*PhotoFiles, error) {
 }
 
 func (ps *PhotoService) DeletePhoto(p *Photo, removeFiles bool) (*Photo, error) {
+	logger.Infow("Delete Photo", "id", p.DriveId, "removeFiles", removeFiles)
 	if del, err := ps.dbs.Delete(p.DriveId); err != nil {
 		return nil, err
 	} else if !del {
@@ -323,11 +362,12 @@ func (ps *PhotoService) DeletePhoto(p *Photo, removeFiles bool) (*Photo, error) 
 	}
 	//remove files
 	if err := os.Remove(ps.GetImgPath(p.FileName)); err != nil {
-		return nil, ResolveError(err)
+		logger.Errorw("Could not remove image", zap.Error(err))
 	}
 	if err := os.Remove(ps.GetThumbPath(p.FileName)); err != nil {
-		return nil, ResolveError(err)
+		logger.Errorw("Could not remove thumbnail", zap.Error(err))
 	}
+	logger.Infow("Photo deleted", "id", p.DriveId)
 	return p, nil
 
 }
@@ -341,10 +381,11 @@ func (ps *PhotoService) downloadPhoto(photo *Photo) error {
 	//create thumbnail
 	//args := []string{ps.GetImgPath(photo.FileName), "-s", "640", "-m", "centre", "-o", ps.GetThumbPath(photo.FileName)}
 	args := []string{ps.GetImgPath(photo.FileName), "-s", "640", "-c", "-o", ps.GetThumbPath(photo.FileName)}
-	log.Println("creating thumbnail", strings.Join(args, " "))
+	logger.Infow("creating thumbnail", "args: ", strings.Join(args, " "))
 	cmd := exec.Command("vipsthumbnail", args...)
 
 	if err := cmd.Start(); err != nil {
+		logger.Errorw("could not create thumbnail", zap.Error(err))
 		return NewError(ApiErrorBackendError, err.Error())
 	}
 

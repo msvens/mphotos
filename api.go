@@ -2,141 +2,24 @@ package main
 
 import (
 	"encoding/gob"
-	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/msvens/mdrive"
 	"github.com/msvens/mphotos/config"
 	"github.com/msvens/mphotos/service"
+	"go.uber.org/zap"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 )
 
-type HttpHandler func(http.ResponseWriter, *http.Request)
-type ReqHandler func(r *http.Request) (interface{}, error)
-type ReqRespHandler func(w http.ResponseWriter, r *http.Request) (interface{}, error)
-
-type PSResponse struct {
-	Err  *service.ApiError `json:"error,omitempty"`
-	Data interface{}       `json:"data,omitempty"`
-}
-
-type AuthUser struct {
-	Authenticated bool `json:"authenticated"`
-}
-
 var (
 	ps         *service.PhotoService
 	store      *sessions.CookieStore
 	cookieName string
 )
-
-//ah decorates a function with session checks and outputs mphotos json
-//ah should be used for any function that you need to be logged in to the api for
-func ah(f ReqHandler) HttpHandler {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if checkAndWrite(w, r) {
-			data, err := f(r)
-			psResponse(data, err, w)
-		}
-	}
-}
-
-//h decorates a function to output result as mphotos json format
-func h(f ReqHandler) HttpHandler {
-	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := f(r)
-		psResponse(data, err, w)
-	}
-}
-
-//hw decorates a function to output result as mphotos json format
-func hw(f ReqRespHandler) HttpHandler {
-	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := f(w, r)
-		psResponse(data, err, w)
-	}
-}
-
-func checkLogin(w http.ResponseWriter, r *http.Request) error {
-	session, err := store.Get(r, cookieName)
-	if err != nil {
-		return service.NewError(service.ApiErrorBackendError, err.Error())
-	}
-	user := getSessionUser(session)
-	if !user.Authenticated {
-		err = session.Save(r, w)
-		if err != nil {
-			return service.NewError(service.ApiErrorBackendError, err.Error())
-		}
-		return service.NewError(service.ApiErrorInvalidCredentials, "user not authenticated to api")
-	}
-	return nil
-}
-
-func checkAndWrite(w http.ResponseWriter, r *http.Request) bool {
-	if err := checkLogin(w, r); err != nil {
-		psResponse(nil, err, w)
-		return false
-	}
-	return true
-}
-
-func isPhotosLogin(w http.ResponseWriter, r *http.Request) bool {
-	if err := checkLogin(w, r); err == nil {
-		return true
-	}
-	return false
-}
-
-func isGoogleLoggedIn() bool {
-	return ps != nil
-}
-
-func getSessionUser(s *sessions.Session) AuthUser {
-	val := s.Values["user"]
-	var user = AuthUser{}
-	user, ok := val.(AuthUser)
-	if !ok {
-		return AuthUser{Authenticated: false}
-	}
-	return user
-}
-
-func setJson(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json")
-}
-
-func psResponse(data interface{}, err error, w http.ResponseWriter) {
-	setJson(w)
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	var resp PSResponse
-	if err != nil {
-		resp = PSResponse{service.ResolveError(err), nil}
-	} else {
-		resp = PSResponse{nil, data}
-	}
-	e := enc.Encode(resp)
-	if e != nil {
-		log.Println(e)
-	}
-}
-
-func getFolderId(r *http.Request) string {
-	vars := mux.Vars(r)
-	folderId := vars["id"]
-	if folderId == "" {
-		return ps.DriveSrv.Root.Id
-	} else {
-		return folderId
-	}
-}
 
 func InitApi(r *mux.Router, pp string) {
 
@@ -169,12 +52,15 @@ func InitApi(r *mux.Router, pp string) {
 
 	r.Path(pp + "/photos").Methods("GET").HandlerFunc(h(GetPhotos))
 	r.Path(pp+"/photos").Methods("PUT", "POST").HandlerFunc(ah(UpdatePhotos))
+	r.Path(pp+"/photos/job/schedule").Methods("PUT", "POST").HandlerFunc(ah(ScheduleJob))
+	r.Path(pp + "/photos/job/{id}").Methods("GET").HandlerFunc(ah(StatusJob))
 	r.Path(pp + "/photos").Methods("DELETE").HandlerFunc(ah(DeletePhotos))
 
 	r.Path(pp + "/photos/{id}/orig").Methods("GET").HandlerFunc(DownloadPhoto)
 	r.Path(pp + "/photos/{id}/exif").Methods("GET").HandlerFunc(h(GetExif))
 	r.Path(pp + "/photos/latest").Methods("GET").HandlerFunc(h(GetLatestPhoto))
 	r.Path(pp + "/photos/{id}").Methods("GET").HandlerFunc(h(GetPhoto))
+	r.Path(pp+"/photos/{id}").Methods("POST", "PUT").HandlerFunc(ah(UpdatePhoto))
 	r.Path(pp + "/photos/{id}").Methods("DELETE").HandlerFunc(ah(DeletePhoto))
 
 	r.Path(pp + "/user").Methods("GET").HandlerFunc(hw(GetUser))
@@ -185,11 +71,14 @@ func InitApi(r *mux.Router, pp string) {
 }
 
 func SetPhotoService(drvService *mdrive.DriveService) {
-	ps = service.NewPhotosService(drvService)
+	if s, err := service.NewPhotosService(drvService); err != nil {
+		logger.Panicw("could not create photos service", zap.Error(err))
+	} else {
+		ps = s
+	}
 }
 
 /******API FUNCTIONS***********************************/
-
 func GetExif(r *http.Request) (interface{}, error) {
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -200,7 +89,7 @@ func GetExif(r *http.Request) (interface{}, error) {
 	}
 }
 
-func GetLatestPhoto(r *http.Request) (interface{}, error) {
+func GetLatestPhoto(_ *http.Request) (interface{}, error) {
 	if photo, found := ps.GetLatestPhoto(); found {
 		return photo, nil
 	} else {
@@ -239,8 +128,7 @@ func DownloadPhoto(w http.ResponseWriter, r *http.Request) {
 	}
 	file, err := os.Open(ps.GetImgPath(p.FileName))
 	if err != nil {
-		fmt.Println("error in file download")
-		//File not found, send 404
+		logger.Infow("could not download file", zap.Error(err))
 		http.Error(w, "File not found.", http.StatusNotFound)
 		return
 	}
@@ -253,7 +141,6 @@ func DownloadPhoto(w http.ResponseWriter, r *http.Request) {
 	//Get content type of file
 	FileContentType := http.DetectContentType(FileHeader)
 
-	fmt.Println(FileContentType)
 	//Get the file size
 	FileStat, _ := file.Stat()                         //Get info from file
 	FileSize := strconv.FormatInt(FileStat.Size(), 10) //Get file size as a string
@@ -274,6 +161,7 @@ func DownloadPhoto(w http.ResponseWriter, r *http.Request) {
 func GetPhotos(r *http.Request) (interface{}, error) {
 
 	query := r.URL.Query()
+
 	limit := 1000
 	offset := 0
 	driveDate := true
@@ -291,7 +179,7 @@ func GetPhotos(r *http.Request) (interface{}, error) {
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	auth := isPhotosLogin(w, r)
+	auth := isLoggedIn(w, r)
 	if u, err := ps.GetUser(); err == nil {
 		if !auth {
 			u.DriveFolderId = ""
@@ -335,43 +223,42 @@ func Logout(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 }
 
 func LoggedIn(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	return AuthUser{isPhotosLogin(w, r)}, nil
+	return AuthUser{isLoggedIn(w, r)}, nil
 }
 
 func DeletePhoto(r *http.Request) (interface{}, error) {
-	return "", service.NewError(service.ApiErrorBackendError, "Function not yet implemented")
+	id := Var(r, "id")
+	photo, found := ps.GetPhoto(id)
+	if !found {
+		return nil, service.NewError(service.ApiErrorNotFound, "photo not found")
+	}
+	form(r)
+	_, found = r.Form["removeFiles"]
+	return ps.DeletePhoto(photo, found)
 }
 
-func CheckDriveFolder(r *http.Request) (interface{}, error) {
+func CheckDriveFolder(_ *http.Request) (interface{}, error) {
 	return ps.CheckPhotos()
 }
 
-func ListDrive(r *http.Request) (interface{}, error) {
+func ListDrive(_ *http.Request) (interface{}, error) {
 	return ps.ListDrive()
 }
 
 func SearchDrive(r *http.Request) (interface{}, error) {
 	name := r.URL.Query().Get("name")
-	return ps.SearchDrive(getFolderId(r), name)
+	id := r.URL.Query().Get("id")
+	return ps.SearchDrive(id, name)
 }
 
 func UpdateDriveFolder(r *http.Request) (interface{}, error) {
-
-	/*
-		err :=r.ParseForm()
-		if err != nil {
-			return nil, service.NewError(service.ApiErrorBadRequest, err.Error())
-		}*/
-	folderName := r.FormValue("name")
-	if folderName == "" {
-		return nil, service.NewError(service.ApiErrorBadRequest, "missing form value name")
-	}
-	return ps.UpdateDriveFolder("", folderName)
+	form(r)
+	return ps.UpdateDriveFolder(r.Form.Get("name"))
 }
 
 func DeletePhotos(r *http.Request) (interface{}, error) {
-	fmt.Println("in delete")
-	rem := r.FormValue("removeFiles")
+	form(r)
+	rem := r.Form.Get("removeFiles")
 	removeFiles := false
 	if strings.ToLower(rem) == "true" {
 		removeFiles = true
@@ -379,24 +266,29 @@ func DeletePhotos(r *http.Request) (interface{}, error) {
 	return ps.DeletePhotos(removeFiles)
 }
 
-func UpdatePhotos(r *http.Request) (interface{}, error) {
+func StatusJob(r *http.Request) (interface{}, error) {
+	return ps.JobStatus(Var(r, "id"))
+}
+
+func ScheduleJob(_ *http.Request) (interface{}, error) {
+	return ps.ScheduleAddPhotos()
+}
+
+func UpdatePhotos(_ *http.Request) (interface{}, error) {
 	return ps.AddPhotos()
 }
 
+func UpdatePhoto(r *http.Request) (interface{}, error) {
+	form(r)
+	return ps.UpdatePhoto(r.Form, Var(r, "id"))
+}
+
 func UpdateUser(r *http.Request) (interface{}, error) {
-
-	/*
-		if err := r.ParseForm(); err != nil {
-			return nil, mdrive.NewError(mdrive.ErrorBadRequest, err.Error())
-		}*/
-
-	name := r.FormValue("name")
-	pic := r.FormValue("pic")
-	bio := r.FormValue("bio")
-	var u = service.User{Name: name, Bio: bio, Pic: pic}
+	form(r)
+	var u = service.User{Name: r.Form.Get("name"), Bio: r.Form.Get("bio"), Pic: r.Form.Get("pic")}
 	var fields []string
-	if r.FormValue("columns") != "" {
-		fields = strings.Split(r.FormValue("columns"), ",")
+	if r.Form.Get("columns") != "" {
+		fields = strings.Split(r.Form.Get("columns"), ",")
 	}
 	usr, err := ps.UpdateUser(&u, fields)
 	return usr, err

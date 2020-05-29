@@ -2,13 +2,13 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/msvens/mdrive"
 	"github.com/msvens/mphotos/config"
+	"github.com/msvens/mphotos/service"
+	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"log"
 	"net/http"
 	"os"
 )
@@ -21,8 +21,6 @@ var (
 func InitGoogleAuth() {
 
 	tokenFile = config.ServicePath("token.json")
-	//fmt.Println("this is token file: " + tokenFile + " " + config.DbName())
-	//ClientId/Secret will be moved out from this file
 
 	gconfig = &oauth2.Config{
 		ClientID:     config.GoogleClientId(),
@@ -46,24 +44,24 @@ func TokenFromFile(file string) (*oauth2.Token, error) {
 }
 
 func AuthFromFile() error {
-	token, err := TokenFromFile(tokenFile)
-	if err != nil {
+	if token, err := TokenFromFile(tokenFile); err != nil {
 		return err
+	} else {
+		if drv, err := mdrive.NewDriveService(token, gconfig); err != nil {
+			return err
+		} else {
+			SetPhotoService(drv)
+			return nil
+		}
 	}
-	//gtoken = token
-	drv, err := mdrive.NewDriveService(token, gconfig)
-	if err != nil {
-		return err
-	}
-	SetPhotoService(drv)
-	return err
 }
 
 func SaveToken(path string, token *oauth2.Token) {
-	fmt.Printf("Saving credential file to: %s\n", path)
+	logger.Info("saving credential file", "path", path)
 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		log.Fatalf("Unable to cache oauth token: %v", err)
+		logger.Errorw("unable to open tokenfile", zap.Error(err))
+		return
 	}
 	defer f.Close()
 	json.NewEncoder(f).Encode(token)
@@ -76,11 +74,11 @@ func HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 		url := gconfig.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 	} else {
-		fmt.Println("read token from file")
+		logger.Info("read token from file")
 		//gtoken = token
 		drv, err := mdrive.NewDriveService(token, gconfig)
 		if err != nil {
-			fmt.Println(err)
+			logger.Errorw("could not create mdrive service", zap.Error(err))
 		}
 		SetPhotoService(drv)
 		http.Redirect(w, r, "/api", http.StatusTemporaryRedirect)
@@ -89,34 +87,32 @@ func HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
-	//content, err := getUserInfo(r)
-	token, err := GetToken(r)
-	if err != nil {
-		fmt.Println(err)
+	if token, err := GetToken(r); err != nil {
+		logger.Errorw("", zap.Error(err))
 		http.Redirect(w, r, "/api", http.StatusTemporaryRedirect)
 		return
+	} else {
+		SaveToken(tokenFile, token)
+		if drv, err := mdrive.NewDriveService(token, gconfig); err != nil {
+			logger.Errorw("cannot create mdrive service", zap.Error(err))
+		} else {
+			SetPhotoService(drv)
+			http.Redirect(w, r, "/api", http.StatusTemporaryRedirect)
+		}
 	}
-	SaveToken(tokenFile, token)
-	//gtoken = token
-	drv, err := mdrive.NewDriveService(token, gconfig)
-	if err != nil {
-		fmt.Println(err)
-	}
-	SetPhotoService(drv)
-	http.Redirect(w, r, "/api", http.StatusTemporaryRedirect)
-	return
 }
 
 func GetToken(r *http.Request) (*oauth2.Token, error) {
 	state := r.FormValue("state")
 	code := r.FormValue("code")
 	if state != "state-token" {
-		return nil, fmt.Errorf("invalid oauth state: %s", state)
+		return nil, service.NewError(service.ApiErrorBadRequest, "invalid oauth state")
 	}
-	token, err := gconfig.Exchange(context.TODO(), code)
-	if err != nil {
-		return nil, fmt.Errorf("code exchange failed: %s", err.Error())
+	if token, err := gconfig.Exchange(context.TODO(), code); err != nil {
+		logger.Errorw("code exchage error", zap.Error(err))
+		return nil, service.NewError(service.ApiErrorInvalidCredentials, err.Error())
+	} else {
+		return token, nil
 	}
 
-	return token, nil
 }

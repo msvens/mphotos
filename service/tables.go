@@ -10,8 +10,8 @@ type Photo struct {
 	Md5          string    `json:"md5"`
 	FileName     string    `json:"fileName"`
 	Title        string    `json:"title"`
-	Keywords     string    `json:"keywords,omitempty"`
-	Description  string    `json:"description,omitempty"`
+	Keywords     string    `json:"keywords"`
+	Description  string    `json:"description"`
 	DriveDate    time.Time `json:"driveDate"`
 	OriginalDate time.Time `json:"originalDate"`
 
@@ -93,22 +93,25 @@ const dropExifTable = "DROP TABLE IF EXISTS exif;"
 const dropUserTable = "DROP TABLE IF EXISTS users;"
 
 const (
-	containsIdStmt        = "SELECT 1 FROM photos WHERE driveId = $1"
-	deleteStmt            = "DELETE FROM photos WHERE driveId = $1;"
-	deleteExifStmt        = "DELETE FROM exif WHERE driveId = $1"
-	getExifStmt           = "SELECT * FROM exif WHERE driveId = $1"
-	getIdStmt             = "SELECT * FROM photos WHERE driveid = $1"
-	getAll                = "SELECT * FROM photos"
-	getByDriveDate        = "SELECT * FROM photos ORDER BY drivedate DESC LIMIT $1 OFFSET $2"
-	getByOriginalDate     = "SELECT * FROM photos ORDER BY originaldate DESC LIMIT $1 OFFSET $2"
-	getUserStmt           = "SELECT name,bio,pic,driveFolderId,driveFolderName FROM users LIMIT 1"
-	updateUserBioStmt     = "UPDATE users SET bio = $1"
-	updateUserNameStmt    = "UPDATE users SET name = $1"
-	updateUserPicStmt     = "UPDATE users SET pic = $1"
-	updateUserDriveFolder = "UPDATE users SET (driveFolderId, driveFolderName) = ($1, $2)"
-	updateUserStmt        = "UPDATE users SET (name, bio, pic) = ($1, $2, $3)"
-	insExifStmt           = "INSERT INTO exif (driveId, data) VALUES ($1, $2)"
-	insPhotoStmt          = `
+	containsIdStmt             = "SELECT 1 FROM photos WHERE driveId = $1"
+	deleteStmt                 = "DELETE FROM photos WHERE driveId = $1;"
+	deleteExifStmt             = "DELETE FROM exif WHERE driveId = $1"
+	getExifStmt                = "SELECT * FROM exif WHERE driveId = $1"
+	getIdStmt                  = "SELECT * FROM photos WHERE driveid = $1"
+	getAll                     = "SELECT * FROM photos"
+	getByDriveDate             = "SELECT * FROM photos ORDER BY drivedate DESC LIMIT $1 OFFSET $2"
+	getByOriginalDate          = "SELECT * FROM photos ORDER BY originaldate DESC LIMIT $1 OFFSET $2"
+	getUserStmt                = "SELECT name,bio,pic,driveFolderId,driveFolderName FROM users LIMIT 1"
+	updatePhotoTitleStmt       = "UPDATE photos SET title = $1 WHERE driveId = $2"
+	updatePhotoDescriptionStmt = "UPDATE photos SET description = $1 WHERE driveId = $2"
+	updatePhotoKeywordsStmt    = "UPDATE photos SET keywords = $1 WHERE driveId = $2"
+	updateUserBioStmt          = "UPDATE users SET bio = $1"
+	updateUserNameStmt         = "UPDATE users SET name = $1"
+	updateUserPicStmt          = "UPDATE users SET pic = $1"
+	updateUserDriveFolder      = "UPDATE users SET (driveFolderId, driveFolderName) = ($1, $2)"
+	updateUserStmt             = "UPDATE users SET (name, bio, pic) = ($1, $2, $3)"
+	insExifStmt                = "INSERT INTO exif (driveId, data) VALUES ($1, $2)"
+	insPhotoStmt               = `
 INSERT INTO photos (
 	driveId,
 	md5, 

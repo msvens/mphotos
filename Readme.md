@@ -1,7 +1,7 @@
 # About
 
 mphotos is the backend service for [mphotos-app](https://www.github.com/msvens/mphotos-app).
-mphotos exposes and api for working with images and is tightly integrated with google drive.
+mphotos exposes an api for working with images and is tightly integrated with google drive.
 
 **Goal**: *Once your images have been upload to your google drive they should be accessible through your website*
 ## Features
