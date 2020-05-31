@@ -105,6 +105,7 @@ const (
 	updatePhotoTitleStmt       = "UPDATE photos SET title = $1 WHERE driveId = $2"
 	updatePhotoDescriptionStmt = "UPDATE photos SET description = $1 WHERE driveId = $2"
 	updatePhotoKeywordsStmt    = "UPDATE photos SET keywords = $1 WHERE driveId = $2"
+	updatePhotoStmt            = "UPDATE photos SET (title, description,keywords) = ($1, $2, $3) WHERE driveId = $4"
 	updateUserBioStmt          = "UPDATE users SET bio = $1"
 	updateUserNameStmt         = "UPDATE users SET name = $1"
 	updateUserPicStmt          = "UPDATE users SET pic = $1"

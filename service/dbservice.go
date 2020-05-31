@@ -138,6 +138,13 @@ func (dbs *DbService) GetUser() (*User, error) {
 	return &resp, nil
 }
 
+func (dbs *DbService) UpdatePhoto(title string, description string, keywords []string, driveId string) (*Photo, error) {
+	if _, err := dbs.Db.Exec(updatePhotoStmt, title, description, strings.Join(keywords, ","), driveId); err != nil {
+		return nil, err
+	}
+	return dbs.GetId(driveId)
+}
+
 func (dbs *DbService) UpdatePhotoDescription(description string, driveId string) (*Photo, error) {
 	if _, err := dbs.Db.Exec(updatePhotoDescriptionStmt, description, driveId); err != nil {
 		return nil, err
@@ -146,7 +153,7 @@ func (dbs *DbService) UpdatePhotoDescription(description string, driveId string)
 }
 
 func (dbs *DbService) UpdatePhotoKeywords(keywords []string, driveId string) (*Photo, error) {
-	if _, err := dbs.Db.Exec(updatePhotoDescriptionStmt, strings.Join(keywords, ","), driveId); err != nil {
+	if _, err := dbs.Db.Exec(updatePhotoKeywordsStmt, strings.Join(keywords, ","), driveId); err != nil {
 		return nil, err
 	}
 	return dbs.GetId(driveId)

@@ -106,11 +106,11 @@ func GetToken(r *http.Request) (*oauth2.Token, error) {
 	state := r.FormValue("state")
 	code := r.FormValue("code")
 	if state != "state-token" {
-		return nil, service.NewError(service.ApiErrorBadRequest, "invalid oauth state")
+		return nil, service.BadRequestError("invalid oauth state")
 	}
 	if token, err := gconfig.Exchange(context.TODO(), code); err != nil {
 		logger.Errorw("code exchage error", zap.Error(err))
-		return nil, service.NewError(service.ApiErrorInvalidCredentials, err.Error())
+		return nil, service.UnauthorizedError(err.Error())
 	} else {
 		return token, nil
 	}

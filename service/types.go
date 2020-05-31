@@ -5,17 +5,8 @@ import (
 	"github.com/msvens/mdrive"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/googleapi"
+	"net/http"
 	"time"
-)
-
-const (
-	ApiErrorBadRequest         = 400
-	ApiErrorInvalidCredentials = 401
-	ApiErrorLimitExceeded      = 403
-	ApiErrorNotFound           = 404
-	ApiErrorTooManyRequests    = 429
-	ApiErrorBackendError       = 500
-	ApiErrorUnknownError       = 501
 )
 
 type ApiError struct {
@@ -41,22 +32,28 @@ type PhotoFiles struct {
 	Photos []*Photo `json:"photos,omitempty"`
 }
 
-type types struct{}
-
 func (e *ApiError) Error() string {
 	return fmt.Sprintf("code: %d message: %s", e.Code, e.Message)
 }
 
-func NewError(code int, message string) *ApiError {
+func newError(code int, message string) *ApiError {
 	return &ApiError{Code: code, Message: message}
 }
 
-func NewBadRequest(message string) *ApiError {
-	return NewError(ApiErrorBadRequest, message)
+func UnauthorizedError(message string) *ApiError {
+	return newError(http.StatusUnauthorized, message)
 }
 
-func NewBackendError(message string) *ApiError {
-	return NewError(ApiErrorBackendError, message)
+func NotFoundError(message string) *ApiError {
+	return newError(http.StatusNotFound, message)
+}
+
+func BadRequestError(message string) *ApiError {
+	return newError(http.StatusBadRequest, message)
+}
+
+func InternalError(message string) *ApiError {
+	return newError(http.StatusInternalServerError, message)
 }
 
 func ResolveError(err error) *ApiError {
@@ -68,7 +65,7 @@ func ResolveError(err error) *ApiError {
 	if ok {
 		return &ApiError{e1.Code, e1.Message}
 	}
-	return &ApiError{ApiErrorBackendError, err.Error()}
+	return InternalError(err.Error())
 }
 
 func ToDriveFile(file *drive.File) *DriveFile {

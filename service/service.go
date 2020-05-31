@@ -108,13 +108,13 @@ func (ps *PhotoService) GetLatestPhoto() (*Photo, bool) {
 	}
 }
 
-func (ps *PhotoService) GetPhotos(driveDate bool, limit int, offset int) (*PhotoFiles, error) {
+func (ps *PhotoService) GetPhotos(originalDate bool, limit int, offset int) (*PhotoFiles, error) {
 	var err error
 	var photos []*Photo
-	if driveDate {
-		photos, err = ps.dbs.GetByDriveDate(limit, offset)
-	} else {
+	if originalDate {
 		photos, err = ps.dbs.GetByOriginalDate(limit, offset)
+	} else {
+		photos, err = ps.dbs.GetByDriveDate(limit, offset)
 	}
 	if err != nil {
 		return nil, err
@@ -126,59 +126,27 @@ func (ps *PhotoService) GetUser() (*User, error) {
 	return ps.dbs.GetUser()
 }
 
-func (ps *PhotoService) UpdatePhoto(fields map[string][]string, id string) (*Photo, error) {
-	var err error
-	var photo *Photo
-
-	if len(fields) < 1 {
-		return nil, NewError(ApiErrorBadRequest, "no fields to set")
-	}
-	if _, found := ps.GetPhoto(id); !found {
-		return nil, NewError(ApiErrorNotFound, "photo not found")
-	}
-
-	for k, v := range fields {
-		logger.Infow("Update Photo", k, v)
-		switch k {
-		case "title":
-			photo, err = ps.dbs.UpdatePhotoTitle(v[0], id)
-		case "keywords":
-			photo, err = ps.dbs.UpdatePhotoKeywords(v, id)
-		case "description":
-			photo, err = ps.dbs.UpdatePhotoDescription(v[0], id)
-		default:
-			logger.Errorw("Update Photo unknown field", k, v)
-		}
-		if err != nil {
-			logger.Errorw("Update Photo", zap.Error(err))
-			return nil, err
-		}
-	}
-	return photo, nil
+func (ps *PhotoService) UpdatePhoto(driveId string, title string, description string, keywords []string) (*Photo, error) {
+	return ps.dbs.UpdatePhoto(title, description, keywords, driveId)
 }
 
-func (ps *PhotoService) UpdateUser(user *User, cols []string) (*User, error) {
-	if len(cols) == 0 { //all fields should be updated
-		return ps.dbs.UpdateUser(user)
-	} else {
-		var err error
-		for _, col := range cols {
-			switch col {
-			case "bio":
-				_, err = ps.dbs.UpdateUserBio(user.Bio)
-			case "name":
-				_, err = ps.dbs.UpdateUserName(user.Name)
-			case "pic":
-				_, err = ps.dbs.UpdateUserPic(user.Pic)
-			default:
-				return nil, mdrive.NewError(mdrive.ErrorBadRequest, "no such field")
-			}
-			if err != nil {
-				return nil, err
-			}
-		}
-		return ps.GetUser()
+func (ps *PhotoService) UpdateUserDrive(name string) (*User, error) {
+	if name == "" {
+		return nil, BadRequestError("name is empty")
 	}
+	if f, err := ps.DriveSrv.GetByName(name, true, false, fileFields); err != nil {
+		return nil, err
+	} else {
+		return ps.dbs.UpdateUserDriveFolder(f.Id, f.Name)
+	}
+}
+
+func (ps *PhotoService) UpdateUserPic(picUrl string) (*User, error) {
+	return ps.dbs.UpdateUserPic(picUrl)
+}
+
+func (ps *PhotoService) UpdateUser(user *User) (*User, error) {
+	return ps.dbs.UpdateUser(user)
 }
 
 func (ps *PhotoService) GetImgPath(fileName string) string {
@@ -187,18 +155,6 @@ func (ps *PhotoService) GetImgPath(fileName string) string {
 
 func (ps *PhotoService) GetThumbPath(fileName string) string {
 	return filepath.Join(ps.thumbDir, fileName)
-}
-
-func (ps *PhotoService) UpdateDriveFolder(name string) (*User, error) {
-	logger.Infow("Update drive folder", "name", name)
-	if name == "" {
-		return nil, NewBadRequest("name is empty")
-	}
-	if f, err := ps.DriveSrv.GetByName(name, true, false, fileFields); err != nil {
-		return nil, err
-	} else {
-		return ps.dbs.UpdateUserDriveFolder(f.Id, f.Name)
-	}
 }
 
 func (ps *PhotoService) SearchDrive(id string, name string) (*DriveFiles, error) {
@@ -231,9 +187,9 @@ func (ps *PhotoService) ListDrive() (*DriveFiles, error) {
 
 func (ps *PhotoService) ListDriveFiles() ([]*drive.File, error) {
 	if u, err := ps.GetUser(); err != nil {
-		return nil, NewError(ApiErrorBackendError, "user not found")
+		return nil, InternalError("user not found")
 	} else if u.DriveFolderId == "" {
-		return nil, NewError(ApiErrorNotFound, "Drive folder has not been set")
+		return nil, NotFoundError("Drive folder has not been set")
 	} else {
 		return ps.SearchDriveFiles(u.DriveFolderId, "")
 	}
@@ -355,7 +311,7 @@ func (ps *PhotoService) DeletePhoto(p *Photo, removeFiles bool) (*Photo, error) 
 	if del, err := ps.dbs.Delete(p.DriveId); err != nil {
 		return nil, err
 	} else if !del {
-		return nil, NewError(ApiErrorNotFound, "Photo not found")
+		return nil, NotFoundError("Photo not found")
 	}
 	if !removeFiles {
 		return p, nil
@@ -386,7 +342,7 @@ func (ps *PhotoService) downloadPhoto(photo *Photo) error {
 
 	if err := cmd.Start(); err != nil {
 		logger.Errorw("could not create thumbnail", zap.Error(err))
-		return NewError(ApiErrorBackendError, err.Error())
+		return InternalError(err.Error())
 	}
 
 	return nil

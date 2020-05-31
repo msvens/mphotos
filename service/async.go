@@ -80,7 +80,7 @@ func (ps *PhotoService) JobStatus(id string) (*Job, error) {
 	if job, found := jobMap[id]; found {
 		return job, nil
 	} else {
-		return nil, NewError(ApiErrorNotFound, "job not found")
+		return nil, NotFoundError("job not found")
 	}
 }
 

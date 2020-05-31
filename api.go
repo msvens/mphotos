@@ -4,7 +4,6 @@ import (
 	"encoding/gob"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
-	"github.com/msvens/mdrive"
 	"github.com/msvens/mphotos/config"
 	"github.com/msvens/mphotos/service"
 	"go.uber.org/zap"
@@ -12,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 )
 
 var (
@@ -44,7 +42,6 @@ func InitApi(r *mux.Router, pp string) {
 	r.Path(pp + "/drive/search").Methods("GET").HandlerFunc(ah(SearchDrive))
 	r.Path(pp + "/drive").Methods("GET").HandlerFunc(ah(ListDrive))
 	r.Path(pp + "/drive/check").Methods("GET").HandlerFunc(ah(CheckDriveFolder))
-	r.Path(pp+"/drive").Methods("POST", "PUT").HandlerFunc(ah(UpdateDriveFolder))
 
 	r.Path(pp + "/login").Methods("POST").HandlerFunc(hw(Login))
 	r.Path(pp + "/logout").Methods("GET").HandlerFunc(hw(Logout))
@@ -65,27 +62,19 @@ func InitApi(r *mux.Router, pp string) {
 
 	r.Path(pp + "/user").Methods("GET").HandlerFunc(hw(GetUser))
 	r.Path(pp+"/user").Methods("POST", "PUT").HandlerFunc(ah(UpdateUser))
+	r.Path(pp + "/user/pic").Methods("PUT").HandlerFunc(ah(UpdateUserPic))
+	r.Path(pp + "/user/drive").Methods("PUT").HandlerFunc(ah(UpdateUserDrive))
 
 	r.Path(pp + "/images/{name}").Methods("Get").HandlerFunc(GetImage)
 	r.Path(pp + "/thumbs/{name}").Methods("Get").HandlerFunc(GetThumb)
 }
 
-func SetPhotoService(drvService *mdrive.DriveService) {
-	if s, err := service.NewPhotosService(drvService); err != nil {
-		logger.Panicw("could not create photos service", zap.Error(err))
-	} else {
-		ps = s
-	}
-}
-
 /******API FUNCTIONS***********************************/
 func GetExif(r *http.Request) (interface{}, error) {
-	vars := mux.Vars(r)
-	id := vars["id"]
-	if exif, found := ps.GetExif(id); found {
+	if exif, found := ps.GetExif(Var(r, "id")); found {
 		return exif, nil
 	} else {
-		return nil, service.NewError(service.ApiErrorBadRequest, "exif does not exist")
+		return nil, service.NotFoundError("exif does not exist")
 	}
 }
 
@@ -93,7 +82,7 @@ func GetLatestPhoto(_ *http.Request) (interface{}, error) {
 	if photo, found := ps.GetLatestPhoto(); found {
 		return photo, nil
 	} else {
-		return nil, service.NewError(service.ApiErrorNotFound, "photo does not exist")
+		return nil, service.NotFoundError("photo does not exist")
 	}
 }
 
@@ -103,7 +92,7 @@ func GetPhoto(r *http.Request) (interface{}, error) {
 	if photo, found := ps.GetPhoto(id); found {
 		return photo, nil
 	} else {
-		return nil, service.NewError(service.ApiErrorNotFound, "photo does not exist")
+		return nil, service.NotFoundError("photo does not exist")
 	}
 }
 
@@ -160,22 +149,10 @@ func DownloadPhoto(w http.ResponseWriter, r *http.Request) {
 
 func GetPhotos(r *http.Request) (interface{}, error) {
 
-	query := r.URL.Query()
-
-	limit := 1000
-	offset := 0
-	driveDate := true
-	if q := query.Get("limit"); q != "" {
-		limit, _ = strconv.Atoi(q)
-	}
-	if q := query.Get("offset"); q != "" {
-		offset, _ = strconv.Atoi(q)
-	}
-	if _, f := query["originalDate"]; f {
-		driveDate = false
-	}
-	return ps.GetPhotos(driveDate, limit, offset)
-
+	limit := QPInt(r, "limit", 1000)
+	offset := QPInt(r, "offset", 0)
+	originalDate := QPBool(r, "originalDate", false)
+	return ps.GetPhotos(originalDate, limit, offset)
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request) (interface{}, error) {
@@ -191,19 +168,45 @@ func GetUser(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	}
 }
 
+type LoginParams struct {
+	Password string `json:"password"`
+}
+
 func Login(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	session, err := store.Get(r, cookieName)
+	if err != nil {
+		return nil, service.InternalError(err.Error())
+	}
+	var loginParams LoginParams
+	if err = decodeJson(r, &loginParams); err != nil {
+		return nil, err
+	} else if loginParams.Password != config.ServicePassword() {
+		if e := session.Save(r, w); e != nil {
+			return nil, service.InternalError(err.Error())
+		}
+		return nil, service.UnauthorizedError("Incorret user password")
+	}
+	user := &AuthUser{true}
+	session.Values["user"] = user
+	if err := session.Save(r, w); err != nil {
+		return nil, service.InternalError(err.Error())
+	}
+	return user, nil
+}
+
+func Login2(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	if session, err := store.Get(r, cookieName); err != nil {
-		return nil, service.NewError(service.ApiErrorBackendError, err.Error())
+		return nil, service.InternalError(err.Error())
 	} else if r.FormValue("password") != config.ServicePassword() {
 		if err := session.Save(r, w); err != nil {
-			return nil, service.NewError(service.ApiErrorBackendError, err.Error())
+			return nil, service.InternalError(err.Error())
 		}
-		return nil, service.NewError(service.ApiErrorInvalidCredentials, "This code was incorrect")
+		return nil, service.UnauthorizedError("This code was incorrect")
 	} else {
 		user := &AuthUser{true}
 		session.Values["user"] = user
 		if err := session.Save(r, w); err != nil {
-			return nil, service.NewError(service.ApiErrorBackendError, err.Error())
+			return nil, service.InternalError(err.Error())
 		}
 		return user, nil
 	}
@@ -211,12 +214,12 @@ func Login(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 
 func Logout(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	if session, err := store.Get(r, cookieName); err != nil {
-		return nil, service.NewError(service.ApiErrorBackendError, err.Error())
+		return nil, service.InternalError(err.Error())
 	} else {
 		session.Values["user"] = AuthUser{}
 		session.Options.MaxAge = -1
 		if err := session.Save(r, w); err != nil {
-			return nil, service.NewError(service.ApiErrorBackendError, err.Error())
+			return nil, service.InternalError(err.Error())
 		}
 		return session.Values["user"], nil
 	}
@@ -226,15 +229,28 @@ func LoggedIn(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	return AuthUser{isLoggedIn(w, r)}, nil
 }
 
+type DeletePhotoParam struct {
+	RemoveFiles bool `json:removeFiles`
+}
+
 func DeletePhoto(r *http.Request) (interface{}, error) {
-	id := Var(r, "id")
-	photo, found := ps.GetPhoto(id)
+	photo, found := ps.GetPhoto(Var(r, "id"))
 	if !found {
-		return nil, service.NewError(service.ApiErrorNotFound, "photo not found")
+		return nil, service.NotFoundError("photo not found")
 	}
-	form(r)
-	_, found = r.Form["removeFiles"]
-	return ps.DeletePhoto(photo, found)
+	var params DeletePhotoParam
+	if err := decodeJson(r, &params); err != nil {
+		return nil, err
+	}
+	return ps.DeletePhoto(photo, params.RemoveFiles)
+}
+
+func DeletePhotos(r *http.Request) (interface{}, error) {
+	var params DeletePhotoParam
+	if err := decodeJson(r, &params); err != nil {
+		return nil, err
+	}
+	return ps.DeletePhotos(params.RemoveFiles)
 }
 
 func CheckDriveFolder(_ *http.Request) (interface{}, error) {
@@ -251,21 +267,6 @@ func SearchDrive(r *http.Request) (interface{}, error) {
 	return ps.SearchDrive(id, name)
 }
 
-func UpdateDriveFolder(r *http.Request) (interface{}, error) {
-	form(r)
-	return ps.UpdateDriveFolder(r.Form.Get("name"))
-}
-
-func DeletePhotos(r *http.Request) (interface{}, error) {
-	form(r)
-	rem := r.Form.Get("removeFiles")
-	removeFiles := false
-	if strings.ToLower(rem) == "true" {
-		removeFiles = true
-	}
-	return ps.DeletePhotos(removeFiles)
-}
-
 func StatusJob(r *http.Request) (interface{}, error) {
 	return ps.JobStatus(Var(r, "id"))
 }
@@ -279,18 +280,34 @@ func UpdatePhotos(_ *http.Request) (interface{}, error) {
 }
 
 func UpdatePhoto(r *http.Request) (interface{}, error) {
-	form(r)
-	return ps.UpdatePhoto(r.Form, Var(r, "id"))
+	var ep EditPhoto
+	if err := decodeJson(r, &ep); err != nil {
+		return nil, err
+	}
+	return ps.UpdatePhoto(ep.Id, ep.Title, ep.Description, ep.Keywords)
+}
+
+func UpdateUserPic(r *http.Request) (interface{}, error) {
+	var u service.User
+	if err := decodeJson(r, &u); err != nil {
+		return nil, err
+	}
+	return ps.UpdateUserPic(u.Pic)
+}
+
+func UpdateUserDrive(r *http.Request) (interface{}, error) {
+	var u service.User
+	if err := decodeJson(r, &u); err != nil {
+		return nil, err
+	}
+	return ps.UpdateUserDrive(u.DriveFolderName)
+	//return ps.UpdateUserDrive(r.Form.Get("name"))
 }
 
 func UpdateUser(r *http.Request) (interface{}, error) {
-	form(r)
-	var u = service.User{Name: r.Form.Get("name"), Bio: r.Form.Get("bio"), Pic: r.Form.Get("pic")}
-	var fields []string
-	if r.Form.Get("columns") != "" {
-		fields = strings.Split(r.Form.Get("columns"), ",")
+	var u service.User
+	if err := decodeJson(r, &u); err != nil {
+		return nil, err
 	}
-	usr, err := ps.UpdateUser(&u, fields)
-	return usr, err
-
+	return ps.UpdateUser(&u)
 }
