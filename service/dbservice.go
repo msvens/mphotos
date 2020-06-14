@@ -225,6 +225,14 @@ func (dbs *DbService) GetByDriveDate(limit int, offset int) ([]*Photo, error) {
 	}
 }
 
+func (dbs *DbService) GetByCameraModel(model string) ([]*Photo, error) {
+	if rows, err := dbs.Db.Query(getByCameraModel, model); err != nil {
+		return nil, err
+	} else {
+		return scanR(rows)
+	}
+}
+
 func (dbs *DbService) GetLatest() (*Photo, error) {
 	resp := Photo{}
 	r := dbs.Db.QueryRow(getByDriveDate, 1, 0)

@@ -122,6 +122,14 @@ func (ps *PhotoService) GetPhotos(originalDate bool, limit int, offset int) (*Ph
 	return &PhotoFiles{Length: len(photos), Photos: photos}, nil
 }
 
+func (ps *PhotoService) SearchByCameraModel(model string) (*PhotoFiles, error) {
+	if photos, err := ps.dbs.GetByCameraModel(model); err != nil {
+		return nil, err
+	} else {
+		return &PhotoFiles{Length: len(photos), Photos: photos}, nil
+	}
+}
+
 func (ps *PhotoService) GetUser() (*User, error) {
 	return ps.dbs.GetUser()
 }

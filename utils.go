@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
 	"github.com/gorilla/sessions"
 	"github.com/msvens/mdrive"
 	"github.com/msvens/mphotos/service"
@@ -53,14 +54,31 @@ func SetPhotoService(drvService *mdrive.DriveService) {
 }
 
 /*******************Response and Request writing and parsing********************/
-func decodeJson(r *http.Request, dst interface{}) error {
-	if !strings.Contains(r.Header.Get(contentType), contentJson) {
-		return service.BadRequestError("wrong content type: " + r.Header.Get(contentType))
+var decoder = schema.NewDecoder()
+
+// decodeRequest extracts the query string, form or json post as a go struct.
+// if the content type is Json it will try to decode post data as Json otherwise
+// it will use gorilla/schema to decode the PostForm
+func decodeRequest(r *http.Request, dst interface{}) error {
+	if strings.Contains(r.Header.Get(contentType), contentJson) {
+		return decodeJson(r, dst)
 	}
-	//no need to set maxBodySize...should be taken care of by proxyserver
+	err := r.ParseForm()
+	if err != nil {
+		return service.BadRequestError("could not parse form: " + err.Error())
+	}
+	err = decoder.Decode(dst, r.Form)
+	if err != nil {
+		return service.BadRequestError("could not decode form: " + err.Error())
+	}
+	return nil
+}
+
+func decodeJson(r *http.Request, dst interface{}) error {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
-	err := decoder.Decode(&dst)
+	//We assume it is is ptr
+	err := decoder.Decode(dst)
 	if err != nil {
 		logger.Infow("decode error", zap.Error(err))
 		var syntaxError *json.SyntaxError

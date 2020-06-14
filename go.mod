@@ -6,6 +6,7 @@ require (
 	github.com/go-errors/errors v1.0.2
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.4
+	github.com/gorilla/schema v1.1.0
 	github.com/gorilla/sessions v1.2.0
 	github.com/lib/pq v1.5.2
 	github.com/msvens/mdrive v0.0.0-20200418092321-e131e34910d3
