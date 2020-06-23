@@ -46,6 +46,11 @@ type EditPhoto struct {
 }
 
 func SetPhotoService(drvService *mdrive.DriveService) {
+	if ps != nil {
+		logger.Info("PhotoService Already existed only setting drvService")
+		ps.DriveSrv = drvService
+		return
+	}
 	if s, err := service.NewPhotosService(drvService); err != nil {
 		logger.Panicw("could not create photos service", zap.Error(err))
 	} else {
@@ -251,6 +256,11 @@ func isLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 
 // Checks if a google drive connection has been established
 func isGoogleConnected() bool {
-	//TODO: need a proper check for this
-	return ps != nil
+	if ps.DriveSrv == nil {
+		return false
+	} else if _, err := ps.DriveSrv.Get(ps.DriveSrv.Root.Id); err != nil {
+		logger.Errorw("could not retrieve root folder", zap.Error(err))
+		return false
+	}
+	return true
 }

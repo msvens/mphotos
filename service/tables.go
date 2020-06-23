@@ -42,6 +42,9 @@ type User struct {
 	DriveFolderName string `json:"driveFolderName,omitempty"`
 }
 
+type UXConfig struct {
+}
+
 const createPhotoTable = `
 CREATE TABLE IF NOT EXISTS photos (
 	driveId TEXT PRIMARY KEY,

@@ -45,9 +45,11 @@ func TokenFromFile(file string) (*oauth2.Token, error) {
 
 func AuthFromFile() error {
 	if token, err := TokenFromFile(tokenFile); err != nil {
+		SetPhotoService(nil)
 		return err
 	} else {
 		if drv, err := mdrive.NewDriveService(token, gconfig); err != nil {
+			SetPhotoService(nil)
 			return err
 		} else {
 			SetPhotoService(drv)
@@ -67,10 +69,11 @@ func SaveToken(path string, token *oauth2.Token) {
 	json.NewEncoder(f).Encode(token)
 }
 
-// /login
+//Login
 func HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	token, err := TokenFromFile(tokenFile)
 	if err != nil {
+		logger.Info("could not token from file, redirect to google")
 		url := gconfig.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 	} else {
@@ -81,15 +84,14 @@ func HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 			logger.Errorw("could not create mdrive service", zap.Error(err))
 		}
 		SetPhotoService(drv)
-		http.Redirect(w, r, "/api", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 	}
-
 }
 
 func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	if token, err := GetToken(r); err != nil {
 		logger.Errorw("", zap.Error(err))
-		http.Redirect(w, r, "/api", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	} else {
 		SaveToken(tokenFile, token)
@@ -97,7 +99,7 @@ func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 			logger.Errorw("cannot create mdrive service", zap.Error(err))
 		} else {
 			SetPhotoService(drv)
-			http.Redirect(w, r, "/api", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		}
 	}
 }

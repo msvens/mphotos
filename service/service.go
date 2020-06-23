@@ -52,7 +52,7 @@ func NewPhotosService(driveSrv *mdrive.DriveService) (*PhotoService, error) {
 		return nil, err
 	} else {
 		if err = ps.dbs.CreateTables(); err != nil {
-			logger.Errorw("could not create db talbes", "error", err)
+			logger.Errorw("could not create db tables", "error", err)
 			return nil, err
 		}
 

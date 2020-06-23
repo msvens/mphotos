@@ -41,6 +41,8 @@ func InitApi(r *mux.Router, pp string) {
 	//register routes
 	r.Path(pp + "/drive/search").Methods("GET").HandlerFunc(ah(SearchDrive))
 	r.Path(pp + "/drive").Methods("GET").HandlerFunc(ah(ListDrive))
+	r.Path(pp + "/drive/authenticated").Methods("GET").HandlerFunc(ah(Authenticated))
+	r.Path(pp + "/drive/auth").Methods("GET").HandlerFunc(HandleGoogleLogin)
 	r.Path(pp + "/drive/check").Methods("GET").HandlerFunc(ah(CheckDriveFolder))
 
 	r.Path(pp + "/login").Methods("POST").HandlerFunc(hw(Login))
@@ -71,6 +73,10 @@ func InitApi(r *mux.Router, pp string) {
 }
 
 /******API FUNCTIONS***********************************/
+func Authenticated(r *http.Request) (interface{}, error) {
+	return AuthUser{isGoogleConnected()}, nil
+}
+
 func GetExif(r *http.Request) (interface{}, error) {
 	if exif, found := ps.GetExif(Var(r, "id")); found {
 		return exif, nil
@@ -182,23 +188,7 @@ func GetPhotos(r *http.Request) (interface{}, error) {
 	} else {
 		return ps.GetPhotos(params.OriginalDate, params.Limit, params.Offset)
 	}
-	/*
-		limit := QPInt(r, "limit", 1000)
-		offset := QPInt(r, "offset", 0)
-		originalDate := QPBool(r, "originalDate", false)
-		return ps.GetPhotos(originalDate, limit, offset)
-	*/
 }
-
-/*
-func GetPhotos(r *http.Request) (interface{}, error) {
-
-	limit := QPInt(r, "limit", 1000)
-	offset := QPInt(r, "offset", 0)
-	originalDate := QPBool(r, "originalDate", false)
-	return ps.GetPhotos(originalDate, limit, offset)
-}
-*/
 
 func GetUser(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	auth := isLoggedIn(w, r)
@@ -239,6 +229,7 @@ func Login(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	return user, nil
 }
 
+/*
 func Login2(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	if session, err := store.Get(r, cookieName); err != nil {
 		return nil, service.InternalError(err.Error())
@@ -256,6 +247,7 @@ func Login2(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 		return user, nil
 	}
 }
+*/
 
 func Logout(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	if session, err := store.Get(r, cookieName); err != nil {
