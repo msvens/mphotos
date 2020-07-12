@@ -27,6 +27,15 @@ type Photo struct {
 	FNumber  float32 `json:"fNumber"`
 	Width    uint    `json:"width"`
 	Height   uint    `json:"height"`
+
+	Private bool   `json:"private"`
+	Album   string `json:"album"`
+	Likes   uint   `json:likes`
+}
+
+type Comments struct {
+	DriveId  string   `json:"driveId"`
+	Comments []string `json:"comments"`
 }
 
 type Exif struct {
@@ -65,7 +74,10 @@ CREATE TABLE IF NOT EXISTS photos (
 	fNumber REAL NOT NULL,
 	exposure TEXT NOT NULL,
 	width INTEGER NOT NULL,
-	height INTEGER NOT NULL
+	height INTEGER NOT NULL,
+	private BOOLEAN NOT NULL,
+	album TEXT NOT NULL,
+	stars INTEGER NOT NULL
 );
 `
 
@@ -136,7 +148,10 @@ INSERT INTO photos (
 	fNumber,
 	exposure,
 	width,
-	height) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19);
+	height,
+	private,
+	album,
+	likes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22);
 `
 	insUserStmt = "INSERT INTO user (name, bio, pic, driveFolderId) VALUES ($1, $2, $3, $4)"
 )

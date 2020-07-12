@@ -36,8 +36,8 @@ func TestConfigFile(t *testing.T) {
 	}
 
 	//session config:
-	if SessionCookieName() != "mphotos-session" {
-		t.Errorf("expected mphotos-session got %v", SessionCookieName())
+	if SessionCookieName() != "server-session" {
+		t.Errorf("expected server-session got %v", SessionCookieName())
 	}
 
 	if SessionAuthcKey() != "authKey" {
@@ -57,8 +57,8 @@ func TestConfigFile(t *testing.T) {
 	}
 
 	//service config:
-	if ServiceRoot() != ".mphotos" {
-		t.Errorf("expected .mphotos got %v", ServiceRoot())
+	if ServiceRoot() != ".server" {
+		t.Errorf("expected .server got %v", ServiceRoot())
 	}
 	if ServiceImgDir() != "img" {
 		t.Errorf("expected img got %v", ServiceImgDir())

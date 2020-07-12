@@ -1,10 +1,10 @@
-package main
+package server
 
 import (
 	"encoding/json"
 	"github.com/msvens/mdrive"
-	"github.com/msvens/mphotos/config"
-	"github.com/msvens/mphotos/service"
+	"github.com/msvens/mphotos/internal/config"
+	"github.com/msvens/mphotos/internal/service"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"

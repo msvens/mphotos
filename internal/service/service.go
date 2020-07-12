@@ -3,7 +3,7 @@ package service
 import (
 	"github.com/msvens/mdrive"
 	"github.com/msvens/mexif"
-	"github.com/msvens/mphotos/config"
+	"github.com/msvens/mphotos/internal/config"
 	"go.uber.org/zap"
 	"google.golang.org/api/drive/v3"
 	"os"
@@ -50,13 +50,14 @@ func NewPhotosService(driveSrv *mdrive.DriveService) (*PhotoService, error) {
 	if ps.dbs, err = NewDbService(); err != nil {
 		logger.Errorw("could not create dbservice", "error", err)
 		return nil, err
-	} else {
+	}
+	//Tables creating is moved to a separate command
+	/*else {
 		if err = ps.dbs.CreateTables(); err != nil {
 			logger.Errorw("could not create db tables", "error", err)
 			return nil, err
 		}
-
-	}
+	}*/
 	wg.Add(1)
 	go worker(jobChan)
 	logger.Info("PhotoService started")
@@ -291,6 +292,8 @@ func (ps *PhotoService) AddPhoto(f *drive.File, tool *mexif.MExifTool) (bool, er
 	} else {
 		return false, err
 	}
+	photo.Private = true
+	photo.Likes = 0
 
 	if err = ps.dbs.AddPhoto(&photo, exif); err != nil {
 		logger.Errorw("error adding photo: ", zap.Error(err))

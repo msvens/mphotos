@@ -7,7 +7,7 @@ import (
 	"github.com/go-errors/errors"
 	_ "github.com/lib/pq"
 	"github.com/msvens/mexif"
-	"github.com/msvens/mphotos/config"
+	"github.com/msvens/mphotos/internal/config"
 	"go.uber.org/zap"
 	"strings"
 )
@@ -33,6 +33,10 @@ func (dbs *DbService) Connect() error {
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		logger.Errorw("could not connect to database", zap.Error(err))
+		return err
+	}
+	err = db.Ping()
+	if err != nil {
 		return err
 	}
 	dbs.Db = db
@@ -72,7 +76,8 @@ func (dbs *DbService) Close() error {
 func (dbs *DbService) AddPhoto(p *Photo, exif *mexif.ExifCompact) error {
 
 	_, err := dbs.Db.Exec(insPhotoStmt, p.DriveId, p.Md5, p.FileName, p.Title, p.Keywords, p.Description, p.DriveDate, p.OriginalDate,
-		p.CameraMake, p.CameraModel, p.LensMake, p.LensModel, p.FocalLength, p.FocalLength35, p.Iso, p.FNumber, p.Exposure, p.Width, p.Height)
+		p.CameraMake, p.CameraModel, p.LensMake, p.LensModel, p.FocalLength, p.FocalLength35, p.Iso,
+		p.FNumber, p.Exposure, p.Width, p.Height, p.Private, p.Album, p.Likes)
 	if err != nil {
 		return err
 	}
@@ -260,7 +265,7 @@ func scanR(rows *sql.Rows) ([]*Photo, error) {
 func scanRows(p *Photo, r *sql.Rows) error {
 	err := r.Scan(&p.DriveId, &p.Md5, &p.FileName, &p.Title, &p.Keywords, &p.Description, &p.DriveDate,
 		&p.OriginalDate, &p.CameraMake, &p.CameraModel, &p.LensMake, &p.LensModel, &p.FocalLength, &p.FocalLength35,
-		&p.Iso, &p.FNumber, &p.Exposure, &p.Width, &p.Height)
+		&p.Iso, &p.FNumber, &p.Exposure, &p.Width, &p.Height, &p.Private, &p.Album, &p.Likes)
 
 	switch err {
 	case sql.ErrNoRows:
@@ -275,7 +280,7 @@ func scanRows(p *Photo, r *sql.Rows) error {
 func scanRow(p *Photo, r *sql.Row) error {
 	err := r.Scan(&p.DriveId, &p.Md5, &p.FileName, &p.Title, &p.Keywords, &p.Description, &p.DriveDate,
 		&p.OriginalDate, &p.CameraMake, &p.CameraModel, &p.LensMake, &p.LensModel, &p.FocalLength, &p.FocalLength35,
-		&p.Iso, &p.FNumber, &p.Exposure, &p.Width, &p.Height)
+		&p.Iso, &p.FNumber, &p.Exposure, &p.Width, &p.Height, &p.Private, &p.Album, &p.Likes)
 
 	switch err {
 	case sql.ErrNoRows:

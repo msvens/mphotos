@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/schema"
 	"github.com/gorilla/sessions"
 	"github.com/msvens/mdrive"
-	"github.com/msvens/mphotos/service"
+	"github.com/msvens/mphotos/internal/service"
 	"go.uber.org/zap"
 	"io"
 	"net/http"

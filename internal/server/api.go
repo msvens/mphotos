@@ -1,11 +1,11 @@
-package main
+package server
 
 import (
 	"encoding/gob"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
-	"github.com/msvens/mphotos/config"
-	"github.com/msvens/mphotos/service"
+	"github.com/msvens/mphotos/internal/config"
+	"github.com/msvens/mphotos/internal/service"
 	"go.uber.org/zap"
 	"io"
 	"net/http"

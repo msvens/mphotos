@@ -4,7 +4,7 @@ server:
   host: localhost
 
 service:
-  root: .mphotos #default
+  root: .server #default
   imgDir: img #image path
   thumbDir: thumb #thumbnail path
   password: password
@@ -14,7 +14,7 @@ session:
   encKey: encKey #32bytes recommended
   authKeyOld: authKeyOld
   encKeyOld: encKeyOld
-  cookieName: mphotos-session
+  cookieName: server-session
 
 
 db:
