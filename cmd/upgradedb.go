@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/msvens/mphotos/internal/config"
 	"github.com/msvens/mphotos/internal/service"
 
 	"github.com/spf13/cobra"
@@ -28,13 +29,15 @@ var upgradedbCmd = &cobra.Command{
 	Short: "Upgrade mphotos database",
 	Long:  `Upgrades the mphotos database to the latest version if possible`,
 	Run: func(cmd *cobra.Command, args []string) {
-		//config.InitConfig()
+		config.InitConfig()
 		dbs, err := service.NewDbService()
 		if err != nil {
 			fmt.Println(err)
 		} else {
 			fmt.Println("upgrading db")
-			dbs.UpgradeDb()
+			if err = dbs.UpgradeDb(); err != nil {
+				fmt.Println(err)
+			}
 
 		}
 

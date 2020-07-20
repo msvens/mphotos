@@ -32,6 +32,11 @@ type PhotoFiles struct {
 	Photos []*Photo `json:"photos,omitempty"`
 }
 
+type AlbumCollection struct {
+	Info   *Album      `json:info`
+	Photos *PhotoFiles `json:photos`
+}
+
 func (e *ApiError) Error() string {
 	return fmt.Sprintf("code: %d message: %s", e.Code, e.Message)
 }

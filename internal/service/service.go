@@ -91,8 +91,8 @@ func (ps *PhotoService) GetExif(id string) (*Exif, bool) {
 	}
 }
 
-func (ps *PhotoService) GetPhoto(id string) (*Photo, bool) {
-	if p, err := ps.dbs.GetId(id); err == nil {
+func (ps *PhotoService) GetPhoto(id string, private bool) (*Photo, bool) {
+	if p, err := ps.dbs.GetId(id, private); err == nil {
 		return p, true
 	} else {
 		logger.Errorw("could not get photo", "error", err)
@@ -100,8 +100,8 @@ func (ps *PhotoService) GetPhoto(id string) (*Photo, bool) {
 	}
 }
 
-func (ps *PhotoService) GetLatestPhoto() (*Photo, bool) {
-	if p, err := ps.dbs.GetLatest(); err == nil {
+func (ps *PhotoService) GetLatestPhoto(private bool) (*Photo, bool) {
+	if p, err := ps.dbs.GetLatest(private); err == nil {
 		return p, true
 	} else {
 		logger.Info(err)
@@ -109,13 +109,13 @@ func (ps *PhotoService) GetLatestPhoto() (*Photo, bool) {
 	}
 }
 
-func (ps *PhotoService) GetPhotos(originalDate bool, limit int, offset int) (*PhotoFiles, error) {
+func (ps *PhotoService) GetPhotos(originalDate bool, limit int, offset int, private bool) (*PhotoFiles, error) {
 	var err error
 	var photos []*Photo
 	if originalDate {
-		photos, err = ps.dbs.GetByOriginalDate(limit, offset)
+		photos, err = ps.dbs.GetByOriginalDate(limit, offset, private)
 	} else {
-		photos, err = ps.dbs.GetByDriveDate(limit, offset)
+		photos, err = ps.dbs.GetByDriveDate(limit, offset, private)
 	}
 	if err != nil {
 		return nil, err
@@ -123,20 +123,41 @@ func (ps *PhotoService) GetPhotos(originalDate bool, limit int, offset int) (*Ph
 	return &PhotoFiles{Length: len(photos), Photos: photos}, nil
 }
 
-func (ps *PhotoService) SearchByCameraModel(model string) (*PhotoFiles, error) {
-	if photos, err := ps.dbs.GetByCameraModel(model); err != nil {
+func (ps *PhotoService) SearchByCameraModel(model string, private bool) (*PhotoFiles, error) {
+	if photos, err := ps.dbs.GetByCameraModel(model, private); err != nil {
 		return nil, err
 	} else {
 		return &PhotoFiles{Length: len(photos), Photos: photos}, nil
 	}
 }
 
+func (ps *PhotoService) GetAlbumCollection(name string, private bool) (*AlbumCollection, error) {
+	if album, err := ps.dbs.GetAlbum(name); err != nil {
+		return nil, err
+	} else {
+		photos, err := ps.dbs.GetAlbumPhotos(name, private)
+		if err != nil {
+			return nil, err
+		}
+		return &AlbumCollection{Info: album, Photos: &PhotoFiles{len(photos), photos}}, nil
+	}
+}
+
+func (ps *PhotoService) GetAlbums() ([]*Album, error) {
+	return ps.dbs.GetAlbums()
+}
+
 func (ps *PhotoService) GetUser() (*User, error) {
 	return ps.dbs.GetUser()
 }
 
-func (ps *PhotoService) UpdatePhoto(driveId string, title string, description string, keywords []string) (*Photo, error) {
-	return ps.dbs.UpdatePhoto(title, description, keywords, driveId)
+func (ps *PhotoService) UpdatePhoto(driveId string, title string, description string,
+	keywords []string, albums []string) (*Photo, error) {
+	return ps.dbs.UpdatePhoto(title, description, keywords, albums, driveId)
+}
+
+func (ps *PhotoService) TogglePrivate(photo *Photo) (*Photo, error) {
+	return ps.dbs.UpdatePhotoPrivate(!photo.Private, photo.DriveId)
 }
 
 func (ps *PhotoService) UpdateUserDrive(name string) (*User, error) {
@@ -305,7 +326,7 @@ func (ps *PhotoService) AddPhoto(f *drive.File, tool *mexif.MExifTool) (bool, er
 
 func (ps *PhotoService) DeletePhotos(removeFiles bool) (*PhotoFiles, error) {
 	logger.Infow("Delete All Photos", "removeFiles", removeFiles)
-	if photos, err := ps.dbs.GetAllPhotos(); err != nil {
+	if photos, err := ps.dbs.GetAllPhotos(true); err != nil {
 		return nil, err
 	} else {
 		for _, p := range photos {

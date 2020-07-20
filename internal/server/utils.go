@@ -25,6 +25,7 @@ const (
 //Defined http handlers
 type HttpHandler func(http.ResponseWriter, *http.Request)
 type ReqHandler func(r *http.Request) (interface{}, error)
+type RLoginHandler func(r *http.Request, loggedIn bool) (interface{}, error)
 type ReqRespHandler func(w http.ResponseWriter, r *http.Request) (interface{}, error)
 
 // The general api json response containing either an error or data
@@ -36,13 +37,6 @@ type PSResponse struct {
 // True if the current user is authenticated
 type AuthUser struct {
 	Authenticated bool `json:"authenticated"`
-}
-
-type EditPhoto struct {
-	Id          string   `json:"id"`
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
-	Keywords    []string `json:"keywords"`
 }
 
 func SetPhotoService(drvService *mdrive.DriveService) {
@@ -179,9 +173,9 @@ func psResponse(data interface{}, err error, w http.ResponseWriter) {
 	}
 }
 
-// ah decorates a function with session checks and outputs a PSResponse.
-// Should be used for any function that you need to be logged in to the api for
-func ah(f ReqHandler) HttpHandler {
+// arh (AuthenticatedRequestHandler) will return an error response if
+// the user is not authenticated.
+func arh(f ReqHandler) HttpHandler {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debugw("AReq", "uri", r.RequestURI, "method", r.Method)
 		if checkAndWrite(w, r) {
@@ -191,8 +185,19 @@ func ah(f ReqHandler) HttpHandler {
 	}
 }
 
-// h decorates a function and outputs a PSResponse
-func h(f ReqHandler) HttpHandler {
+// lrh (LoggedInRequestHandler) will extract login information before processing
+// the request
+func lrh(f RLoginHandler) HttpHandler {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var loggedIn = isLoggedIn(w, r)
+		logger.Debugw("Req", "uri", r.RequestURI, "method", r.Method, "loggedin", loggedIn)
+		data, err := f(r, loggedIn)
+		psResponse(data, err, w)
+	}
+}
+
+// rh (RequestHandler) will disregard any authentication information
+func rh(f ReqHandler) HttpHandler {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debugw("Req", "uri", r.RequestURI, "method", r.Method)
 		data, err := f(r)
@@ -200,8 +205,8 @@ func h(f ReqHandler) HttpHandler {
 	}
 }
 
-// hw decorates a function and outputs a PSResponse
-func hw(f ReqRespHandler) HttpHandler {
+// rwh (RequestWriterHandlder) decorates a function and outputs a PSResponse
+func rwh(f ReqRespHandler) HttpHandler {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debugw("Req", "uri", r.RequestURI, "method", r.Method)
 		data, err := f(w, r)

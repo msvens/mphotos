@@ -53,6 +53,9 @@ func (dbs *DbService) CreateTables() error {
 	if _, err := dbs.Db.Exec(createUserTable); err != nil {
 		return err
 	}
+	if _, err := dbs.Db.Exec(createAlbumTable); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -64,6 +67,9 @@ func (dbs *DbService) DropTables() error {
 		return err
 	}
 	if _, err := dbs.Db.Exec(dropUserTable); err != nil {
+		return err
+	}
+	if _, err := dbs.Db.Exec(dropAlbumTable); err != nil {
 		return err
 	}
 	return nil
@@ -89,8 +95,24 @@ func (dbs *DbService) AddPhoto(p *Photo, exif *mexif.ExifCompact) error {
 	return err
 }
 
+func (dbs *DbService) AddAlbum(album *Album) error {
+	if _, err := dbs.Db.Exec(insAlbumStmt, album.Name, album.Description, album.CoverPic); err != nil {
+		return err
+	} else {
+		return nil
+	}
+}
+
 func (dbs *DbService) Contains(driveId string) bool {
 	if rows, err := dbs.Db.Query(containsIdStmt, driveId); err == nil {
+		return rows.Next()
+	} else {
+		return false
+	}
+}
+
+func (dbs *DbService) ContainsAlbum(name string) bool {
+	if rows, err := dbs.Db.Query(containsAlbumStmt, name); err == nil {
 		return rows.Next()
 	} else {
 		return false
@@ -108,7 +130,42 @@ func (dbs *DbService) Delete(driveId string) (bool, error) {
 		cnt, _ := res.RowsAffected()
 		return cnt > 0, nil
 	}
+}
 
+func (dbs *DbService) GetAlbum(name string) (*Album, error) {
+	resp := Album{}
+	if err := dbs.Db.QueryRow(getAlbumStmt, name).Scan(&resp.Name, &resp.Description, &resp.CoverPic); err != nil {
+		return nil, err
+	} else {
+		return &resp, nil
+	}
+}
+
+func (dbs *DbService) GetAlbums() ([]*Album, error) {
+	var albums []*Album
+	if rows, err := dbs.Db.Query(getAlbumsStmt); err != nil {
+		return nil, err
+	} else {
+		for rows.Next() {
+			var album = Album{}
+			rows.Scan(&album.Name, &album.Description, &album.CoverPic)
+			albums = append(albums, &album)
+		}
+	}
+	return albums, nil
+}
+
+func (dbs *DbService) GetAlbumPhotos(name string, private bool) ([]*Photo, error) {
+	var stmt = getAlbumPhotosPublicStmt
+	if private {
+		stmt = getAlbumPhotosStmt
+	}
+	nn := "%" + name + "%"
+	if rows, err := dbs.Db.Query(stmt, nn); err != nil {
+		return nil, err
+	} else {
+		return scanR(rows)
+	}
 }
 
 func (dbs *DbService) GetExif(driveId string) (*Exif, error) {
@@ -124,9 +181,13 @@ func (dbs *DbService) GetExif(driveId string) (*Exif, error) {
 
 }
 
-func (dbs *DbService) GetId(driveId string) (*Photo, error) {
+func (dbs *DbService) GetId(driveId string, private bool) (*Photo, error) {
 	resp := Photo{}
-	r := dbs.Db.QueryRow(getIdStmt, driveId)
+	var stmt = getIdStmtPublic
+	if private {
+		stmt = getIdStmt
+	}
+	r := dbs.Db.QueryRow(stmt, driveId)
 	if err := scanRow(&resp, r); err != nil {
 		return nil, err
 	} else {
@@ -143,32 +204,54 @@ func (dbs *DbService) GetUser() (*User, error) {
 	return &resp, nil
 }
 
-func (dbs *DbService) UpdatePhoto(title string, description string, keywords []string, driveId string) (*Photo, error) {
-	if _, err := dbs.Db.Exec(updatePhotoStmt, title, description, strings.Join(keywords, ","), driveId); err != nil {
+func (dbs *DbService) UpdatePhoto(title string, description string, keywords []string, albums []string, driveId string) (*Photo, error) {
+	if _, err := dbs.Db.Exec(updatePhotoStmt, title, description,
+		trimAndJoin(keywords), trimAndJoin(albums), driveId); err != nil {
 		return nil, err
 	}
-	return dbs.GetId(driveId)
+	return dbs.GetId(driveId, true)
 }
 
 func (dbs *DbService) UpdatePhotoDescription(description string, driveId string) (*Photo, error) {
 	if _, err := dbs.Db.Exec(updatePhotoDescriptionStmt, description, driveId); err != nil {
 		return nil, err
 	}
-	return dbs.GetId(driveId)
+	return dbs.GetId(driveId, true)
 }
 
 func (dbs *DbService) UpdatePhotoKeywords(keywords []string, driveId string) (*Photo, error) {
-	if _, err := dbs.Db.Exec(updatePhotoKeywordsStmt, strings.Join(keywords, ","), driveId); err != nil {
+	if _, err := dbs.Db.Exec(updatePhotoKeywordsStmt, trimAndJoin(keywords), driveId); err != nil {
 		return nil, err
 	}
-	return dbs.GetId(driveId)
+	return dbs.GetId(driveId, true)
 }
 
 func (dbs *DbService) UpdatePhotoTitle(title string, driveId string) (*Photo, error) {
 	if _, err := dbs.Db.Exec(updatePhotoTitleStmt, title, driveId); err != nil {
 		return nil, err
 	}
-	return dbs.GetId(driveId)
+	return dbs.GetId(driveId, true)
+}
+
+func (dbs *DbService) UpdatePhotoAlbum(albums []string, driveId string) (*Photo, error) {
+	if _, err := dbs.Db.Exec(updatePhotoAlbumStmt, trimAndJoin(albums), driveId); err != nil {
+		return nil, err
+	}
+	return dbs.GetId(driveId, true)
+}
+
+func (dbs *DbService) UpdatePhotoLikes(likes int, driveId string) (*Photo, error) {
+	if _, err := dbs.Db.Exec(updatePhotoLikesStmt, likes, driveId); err != nil {
+		return nil, err
+	}
+	return dbs.GetId(driveId, true)
+}
+
+func (dbs *DbService) UpdatePhotoPrivate(private bool, driveId string) (*Photo, error) {
+	if _, err := dbs.Db.Exec(updatePhotoPrivateStmt, private, driveId); err != nil {
+		return nil, err
+	}
+	return dbs.GetId(driveId, true)
 }
 
 func (dbs *DbService) UpdateUser(u *User) (*User, error) {
@@ -206,46 +289,87 @@ func (dbs *DbService) UpdateUserDriveFolder(id string, name string) (*User, erro
 	return dbs.GetUser()
 }
 
-func (dbs *DbService) GetAllPhotos() ([]*Photo, error) {
-	if rows, err := dbs.Db.Query(getAll); err != nil {
+func (dbs *DbService) GetAllPhotos(private bool) ([]*Photo, error) {
+	var stmt = getAllPublic
+	if private {
+		stmt = getAll
+	}
+	if rows, err := dbs.Db.Query(stmt); err != nil {
 		return nil, err
 	} else {
 		return scanR(rows)
 	}
 }
 
-func (dbs *DbService) GetByOriginalDate(limit int, offset int) ([]*Photo, error) {
-	if rows, err := dbs.Db.Query(getByOriginalDate, limit, offset); err != nil {
+func (dbs *DbService) GetByOriginalDate(limit int, offset int, private bool) ([]*Photo, error) {
+	var stmt = getByOriginalDatePublic
+	if private {
+		stmt = getByOriginalDate
+	}
+	if rows, err := dbs.Db.Query(stmt, limit, offset); err != nil {
 		return nil, err
 	} else {
 		return scanR(rows)
 	}
 }
 
-func (dbs *DbService) GetByDriveDate(limit int, offset int) ([]*Photo, error) {
-	if rows, err := dbs.Db.Query(getByDriveDate, limit, offset); err != nil {
+func (dbs *DbService) GetByDriveDate(limit int, offset int, private bool) ([]*Photo, error) {
+	var stmt = getByDriveDatePublic
+	if private {
+		stmt = getByDriveDate
+	}
+	if rows, err := dbs.Db.Query(stmt, limit, offset); err != nil {
 		return nil, err
 	} else {
 		return scanR(rows)
 	}
 }
 
-func (dbs *DbService) GetByCameraModel(model string) ([]*Photo, error) {
-	if rows, err := dbs.Db.Query(getByCameraModel, model); err != nil {
+func (dbs *DbService) GetByCameraModel(model string, private bool) ([]*Photo, error) {
+	var stmt = getByCameraModelPublic
+	if private {
+		stmt = getByCameraModel
+	}
+	if rows, err := dbs.Db.Query(stmt, model); err != nil {
 		return nil, err
 	} else {
 		return scanR(rows)
 	}
 }
 
-func (dbs *DbService) GetLatest() (*Photo, error) {
+func (dbs *DbService) GetLatest(private bool) (*Photo, error) {
 	resp := Photo{}
-	r := dbs.Db.QueryRow(getByDriveDate, 1, 0)
+	var stmt = getByDriveDatePublic
+	if private {
+		stmt = getByDriveDate
+	}
+	r := dbs.Db.QueryRow(stmt, 1, 0)
 	if err := scanRow(&resp, r); err != nil {
 		return nil, err
 	} else {
 		return &resp, nil
 	}
+}
+
+func split(str string) []string {
+	return strings.Split(str, ",")
+}
+
+func trimAndSplit(str string) []string {
+	strs := split(str)
+	var ret []string
+	for _, s := range strs {
+		ret = append(ret, strings.TrimSpace(s))
+	}
+	return ret
+}
+
+func trimAndJoin(strs []string) string {
+	var newString []string
+	for _, str := range strs {
+		newString = append(newString, strings.TrimSpace(str))
+	}
+	return strings.Join(newString, ",")
 }
 
 func scanR(rows *sql.Rows) ([]*Photo, error) {

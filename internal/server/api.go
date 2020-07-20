@@ -39,34 +39,38 @@ func InitApi(r *mux.Router, pp string) {
 	gob.Register(AuthUser{})
 
 	//register routes
-	r.Path(pp + "/drive/search").Methods("GET").HandlerFunc(ah(SearchDrive))
-	r.Path(pp + "/drive").Methods("GET").HandlerFunc(ah(ListDrive))
-	r.Path(pp + "/drive/authenticated").Methods("GET").HandlerFunc(ah(Authenticated))
+	r.Path(pp + "/drive/search").Methods("GET").HandlerFunc(arh(SearchDrive))
+	r.Path(pp + "/drive").Methods("GET").HandlerFunc(arh(ListDrive))
+	r.Path(pp + "/drive/authenticated").Methods("GET").HandlerFunc(arh(Authenticated))
 	r.Path(pp + "/drive/auth").Methods("GET").HandlerFunc(HandleGoogleLogin)
-	r.Path(pp + "/drive/check").Methods("GET").HandlerFunc(ah(CheckDriveFolder))
+	r.Path(pp + "/drive/check").Methods("GET").HandlerFunc(arh(CheckDriveFolder))
 
-	r.Path(pp + "/login").Methods("POST").HandlerFunc(hw(Login))
-	r.Path(pp + "/logout").Methods("GET").HandlerFunc(hw(Logout))
-	r.Path(pp + "/loggedin").Methods("GET").HandlerFunc(hw(LoggedIn))
+	r.Path(pp + "/login").Methods("POST").HandlerFunc(rwh(Login))
+	r.Path(pp + "/logout").Methods("GET").HandlerFunc(rwh(Logout))
+	r.Path(pp + "/loggedin").Methods("GET").HandlerFunc(lrh(LoggedIn))
 
-	r.Path(pp + "/photos").Methods("GET").HandlerFunc(h(GetPhotos))
-	r.Path(pp + "/photos/search").Methods("GET").HandlerFunc(h(SearchPhotos))
-	r.Path(pp+"/photos").Methods("PUT", "POST").HandlerFunc(ah(UpdatePhotos))
-	r.Path(pp+"/photos/job/schedule").Methods("PUT", "POST").HandlerFunc(ah(ScheduleJob))
-	r.Path(pp + "/photos/job/{id}").Methods("GET").HandlerFunc(ah(StatusJob))
-	r.Path(pp + "/photos").Methods("DELETE").HandlerFunc(ah(DeletePhotos))
+	r.Path(pp + "/albums").Methods("GET").HandlerFunc(rh(GetAlbums))
+	r.Path(pp + "/albums/{name}").Methods("GET").HandlerFunc(lrh(GetAlbum))
+
+	r.Path(pp + "/photos").Methods("GET").HandlerFunc(lrh(GetPhotos))
+	r.Path(pp + "/photos/search").Methods("GET").HandlerFunc(lrh(SearchPhotos))
+	r.Path(pp+"/photos").Methods("PUT", "POST").HandlerFunc(arh(UpdatePhotos))
+	r.Path(pp+"/photos/job/schedule").Methods("PUT", "POST").HandlerFunc(arh(ScheduleJob))
+	r.Path(pp + "/photos/job/{id}").Methods("GET").HandlerFunc(arh(StatusJob))
+	r.Path(pp + "/photos").Methods("DELETE").HandlerFunc(arh(DeletePhotos))
 
 	r.Path(pp + "/photos/{id}/orig").Methods("GET").HandlerFunc(DownloadPhoto)
-	r.Path(pp + "/photos/{id}/exif").Methods("GET").HandlerFunc(h(GetExif))
-	r.Path(pp + "/photos/latest").Methods("GET").HandlerFunc(h(GetLatestPhoto))
-	r.Path(pp + "/photos/{id}").Methods("GET").HandlerFunc(h(GetPhoto))
-	r.Path(pp+"/photos/{id}").Methods("POST", "PUT").HandlerFunc(ah(UpdatePhoto))
-	r.Path(pp + "/photos/{id}").Methods("DELETE").HandlerFunc(ah(DeletePhoto))
+	r.Path(pp + "/photos/{id}/exif").Methods("GET").HandlerFunc(rh(GetExif))
+	r.Path(pp + "/photos/latest").Methods("GET").HandlerFunc(lrh(GetLatestPhoto))
+	r.Path(pp + "/photos/{id}").Methods("GET").HandlerFunc(lrh(GetPhoto))
+	r.Path(pp+"/photos/{id}").Methods("POST", "PUT").HandlerFunc(arh(UpdatePhoto))
+	r.Path(pp + "/photos/{id}").Methods("DELETE").HandlerFunc(arh(DeletePhoto))
+	r.Path(pp+"/photos/{id}/private").Methods("POST", "PUT").HandlerFunc(arh(UpdatePrivate))
 
-	r.Path(pp + "/user").Methods("GET").HandlerFunc(hw(GetUser))
-	r.Path(pp+"/user").Methods("POST", "PUT").HandlerFunc(ah(UpdateUser))
-	r.Path(pp + "/user/pic").Methods("PUT").HandlerFunc(ah(UpdateUserPic))
-	r.Path(pp + "/user/drive").Methods("PUT").HandlerFunc(ah(UpdateUserDrive))
+	r.Path(pp + "/user").Methods("GET").HandlerFunc(lrh(GetUser))
+	r.Path(pp+"/user").Methods("POST", "PUT").HandlerFunc(arh(UpdateUser))
+	r.Path(pp + "/user/pic").Methods("PUT").HandlerFunc(arh(UpdateUserPic))
+	r.Path(pp + "/user/drive").Methods("PUT").HandlerFunc(arh(UpdateUserDrive))
 
 	r.Path(pp + "/images/{name}").Methods("Get").HandlerFunc(GetImage)
 	r.Path(pp + "/thumbs/{name}").Methods("Get").HandlerFunc(GetThumb)
@@ -77,6 +81,16 @@ func Authenticated(r *http.Request) (interface{}, error) {
 	return AuthUser{isGoogleConnected()}, nil
 }
 
+func GetAlbum(r *http.Request, loggedIn bool) (interface{}, error) {
+	vars := mux.Vars(r)
+	name := vars["name"]
+	return ps.GetAlbumCollection(name, loggedIn)
+}
+
+func GetAlbums(r *http.Request) (interface{}, error) {
+	return ps.GetAlbums()
+}
+
 func GetExif(r *http.Request) (interface{}, error) {
 	if exif, found := ps.GetExif(Var(r, "id")); found {
 		return exif, nil
@@ -85,18 +99,18 @@ func GetExif(r *http.Request) (interface{}, error) {
 	}
 }
 
-func GetLatestPhoto(_ *http.Request) (interface{}, error) {
-	if photo, found := ps.GetLatestPhoto(); found {
+func GetLatestPhoto(_ *http.Request, loggedIn bool) (interface{}, error) {
+	if photo, found := ps.GetLatestPhoto(loggedIn); found {
 		return photo, nil
 	} else {
 		return nil, service.NotFoundError("photo does not exist")
 	}
 }
 
-func GetPhoto(r *http.Request) (interface{}, error) {
+func GetPhoto(r *http.Request, loggedIn bool) (interface{}, error) {
 	vars := mux.Vars(r)
 	id := vars["id"]
-	if photo, found := ps.GetPhoto(id); found {
+	if photo, found := ps.GetPhoto(id, loggedIn); found {
 		return photo, nil
 	} else {
 		return nil, service.NotFoundError("photo does not exist")
@@ -118,7 +132,8 @@ func GetThumb(w http.ResponseWriter, r *http.Request) {
 func DownloadPhoto(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
-	p, f := ps.GetPhoto(id)
+	loggedIn := isLoggedIn(w, r)
+	p, f := ps.GetPhoto(id, loggedIn)
 	if !f {
 		http.Error(w, "file not found", http.StatusNotFound)
 	}
@@ -163,13 +178,13 @@ type SearchPhotosParam struct {
 	Generic     string
 }
 
-func SearchPhotos(r *http.Request) (interface{}, error) {
+func SearchPhotos(r *http.Request, loggedIn bool) (interface{}, error) {
 	var params SearchPhotosParam
 	if err := decodeRequest(r, &params); err != nil {
 		return nil, err
 	}
 	if params.CameraModel != "" {
-		return ps.SearchByCameraModel(params.CameraModel)
+		return ps.SearchByCameraModel(params.CameraModel, loggedIn)
 	} else {
 		return nil, service.InternalError("Search pattern not yet implemented")
 	}
@@ -181,19 +196,18 @@ type GetPhotosParam struct {
 	OriginalDate bool
 }
 
-func GetPhotos(r *http.Request) (interface{}, error) {
+func GetPhotos(r *http.Request, loggedIn bool) (interface{}, error) {
 	var params GetPhotosParam
 	if err := decodeRequest(r, &params); err != nil {
 		return nil, err
 	} else {
-		return ps.GetPhotos(params.OriginalDate, params.Limit, params.Offset)
+		return ps.GetPhotos(params.OriginalDate, params.Limit, params.Offset, loggedIn)
 	}
 }
 
-func GetUser(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	auth := isLoggedIn(w, r)
+func GetUser(r *http.Request, loggedIn bool) (interface{}, error) {
 	if u, err := ps.GetUser(); err == nil {
-		if !auth {
+		if !loggedIn {
 			u.DriveFolderId = ""
 			u.DriveFolderName = ""
 		}
@@ -262,8 +276,8 @@ func Logout(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	}
 }
 
-func LoggedIn(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	return AuthUser{isLoggedIn(w, r)}, nil
+func LoggedIn(r *http.Request, loggedIn bool) (interface{}, error) {
+	return AuthUser{loggedIn}, nil
 }
 
 type DeletePhotoParam struct {
@@ -271,7 +285,7 @@ type DeletePhotoParam struct {
 }
 
 func DeletePhoto(r *http.Request) (interface{}, error) {
-	photo, found := ps.GetPhoto(Var(r, "id"))
+	photo, found := ps.GetPhoto(Var(r, "id"), true)
 	if !found {
 		return nil, service.NotFoundError("photo not found")
 	}
@@ -316,12 +330,28 @@ func UpdatePhotos(_ *http.Request) (interface{}, error) {
 	return ps.AddPhotos()
 }
 
+type EditPhoto struct {
+	Id          string   `json:"id"`
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
+	Keywords    []string `json:"keywords"`
+	Albums      []string `json:"albums"`
+}
+
 func UpdatePhoto(r *http.Request) (interface{}, error) {
 	var ep EditPhoto
 	if err := decodeRequest(r, &ep); err != nil {
 		return nil, err
 	}
-	return ps.UpdatePhoto(ep.Id, ep.Title, ep.Description, ep.Keywords)
+	return ps.UpdatePhoto(ep.Id, ep.Title, ep.Description, ep.Keywords, ep.Albums)
+}
+
+func UpdatePrivate(r *http.Request) (interface{}, error) {
+	photo, found := ps.GetPhoto(Var(r, "id"), true)
+	if !found {
+		return nil, service.NotFoundError("photo not found")
+	}
+	return ps.TogglePrivate(photo)
 }
 
 func UpdateUserPic(r *http.Request) (interface{}, error) {
