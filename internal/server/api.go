@@ -51,6 +51,7 @@ func InitApi(r *mux.Router, pp string) {
 
 	r.Path(pp + "/albums").Methods("GET").HandlerFunc(rh(GetAlbums))
 	r.Path(pp + "/albums/{name}").Methods("GET").HandlerFunc(lrh(GetAlbum))
+	r.Path(pp+"/albums/{name}").Methods("PUT", "POST").HandlerFunc(arh(UpdateAlbum))
 
 	r.Path(pp + "/photos").Methods("GET").HandlerFunc(lrh(GetPhotos))
 	r.Path(pp + "/photos/search").Methods("GET").HandlerFunc(lrh(SearchPhotos))
@@ -59,8 +60,9 @@ func InitApi(r *mux.Router, pp string) {
 	r.Path(pp + "/photos/job/{id}").Methods("GET").HandlerFunc(arh(StatusJob))
 	r.Path(pp + "/photos").Methods("DELETE").HandlerFunc(arh(DeletePhotos))
 
+	r.Path(pp + "/photos/{id}/albums").Methods("GET").HandlerFunc(lrh(GetPhotoAlbums))
 	r.Path(pp + "/photos/{id}/orig").Methods("GET").HandlerFunc(DownloadPhoto)
-	r.Path(pp + "/photos/{id}/exif").Methods("GET").HandlerFunc(rh(GetExif))
+	r.Path(pp + "/photos/{id}/exif").Methods("GET").HandlerFunc(lrh(GetExif))
 	r.Path(pp + "/photos/latest").Methods("GET").HandlerFunc(lrh(GetLatestPhoto))
 	r.Path(pp + "/photos/{id}").Methods("GET").HandlerFunc(lrh(GetPhoto))
 	r.Path(pp+"/photos/{id}").Methods("POST", "PUT").HandlerFunc(arh(UpdatePhoto))
@@ -91,12 +93,18 @@ func GetAlbums(r *http.Request) (interface{}, error) {
 	return ps.GetAlbums()
 }
 
-func GetExif(r *http.Request) (interface{}, error) {
-	if exif, found := ps.GetExif(Var(r, "id")); found {
+func GetExif(r *http.Request, loggedIn bool) (interface{}, error) {
+	if exif, found := ps.GetExif(Var(r, "id"), loggedIn); found {
 		return exif, nil
 	} else {
 		return nil, service.NotFoundError("exif does not exist")
 	}
+}
+
+func GetPhotoAlbums(r *http.Request, loggedIn bool) (interface{}, error) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	return ps.GetPhotoAlbums(id, loggedIn)
 }
 
 func GetLatestPhoto(_ *http.Request, loggedIn bool) (interface{}, error) {
@@ -243,26 +251,6 @@ func Login(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	return user, nil
 }
 
-/*
-func Login2(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	if session, err := store.Get(r, cookieName); err != nil {
-		return nil, service.InternalError(err.Error())
-	} else if r.FormValue("password") != config.ServicePassword() {
-		if err := session.Save(r, w); err != nil {
-			return nil, service.InternalError(err.Error())
-		}
-		return nil, service.UnauthorizedError("This code was incorrect")
-	} else {
-		user := &AuthUser{true}
-		session.Values["user"] = user
-		if err := session.Save(r, w); err != nil {
-			return nil, service.InternalError(err.Error())
-		}
-		return user, nil
-	}
-}
-*/
-
 func Logout(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	if session, err := store.Get(r, cookieName); err != nil {
 		return nil, service.InternalError(err.Error())
@@ -328,6 +316,15 @@ func ScheduleJob(_ *http.Request) (interface{}, error) {
 
 func UpdatePhotos(_ *http.Request) (interface{}, error) {
 	return ps.AddPhotos()
+}
+
+func UpdateAlbum(r *http.Request) (interface{}, error) {
+	var a service.Album
+	println("in update album")
+	if err := decodeRequest(r, &a); err != nil {
+		return nil, err
+	}
+	return ps.UpdateAlbum(a.Description, a.CoverPic, a.Name)
 }
 
 type EditPhoto struct {

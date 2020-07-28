@@ -27,10 +27,8 @@ type Photo struct {
 	FNumber  float32 `json:"fNumber"`
 	Width    uint    `json:"width"`
 	Height   uint    `json:"height"`
-
-	Private bool   `json:"private"`
-	Album   string `json:"album"`
-	Likes   uint   `json:"likes"`
+	Private  bool    `json:"private"`
+	Likes    uint    `json:"likes"`
 }
 
 type Comments struct {
@@ -67,6 +65,13 @@ const createAlbumTable = `
 		coverPic TEXT NOT NULL
 	);
 `
+const createAlbumPhotoTable = `
+	CREATE TABLE IF NOT EXISTS albumphoto (
+		album TEXT,
+		driveId TEXT,
+		PRIMARY KEY (album, driveId)
+	);
+`
 
 const createPhotoTable = `
 CREATE TABLE IF NOT EXISTS photos (
@@ -90,8 +95,7 @@ CREATE TABLE IF NOT EXISTS photos (
 	width INTEGER NOT NULL,
 	height INTEGER NOT NULL,
 	private BOOLEAN NOT NULL,
-	album TEXT NOT NULL,
-	stars INTEGER NOT NULL
+	likes INTEGER NOT NULL
 );
 `
 
@@ -123,44 +127,55 @@ const dropUserTable = "DROP TABLE IF EXISTS users;"
 
 const dropAlbumTable = "DROP TABLE IF EXISTS albums;"
 
+const dropAlbumPhotoTable = "DROP TABLE IF EXISTS albumphoto;"
+
+const allCols = "driveId,md5,fileName,title,keywords,description,driveDate,originalDate," +
+	"cameraMake,cameraModel,lensMake,lensModel,focalLength,focalLength35,iso,fNumber,exposure," +
+	"width,height,private,likes"
+
 const (
-	containsIdStmt             = "SELECT 1 FROM photos WHERE driveId = $1"
-	containsAlbumStmt          = "SELECT 1 FROM albums WHERE name = $1"
-	deleteStmt                 = "DELETE FROM photos WHERE driveId = $1;"
-	deleteExifStmt             = "DELETE FROM exif WHERE driveId = $1"
-	distinctAlbumsStmt         = "SELECT DISTINCT(album) FROM photos"
-	getExifStmt                = "SELECT * FROM exif WHERE driveId = $1"
-	getIdStmt                  = "SELECT * FROM photos WHERE driveId = $1"
-	getIdStmtPublic            = "SELECT * FROM photos WHERE driveId = $1 AND private = false"
-	getAlbumsStmt              = "SELECT * FROM albums"
-	getAlbumStmt               = "SELECT * FROM albums WHERE name = $1"
-	getAlbumPhotosPublicStmt   = "SELECT * FROM photos WHERE private = false AND album SIMILAR TO $1"
-	getAlbumPhotosStmt         = "SELECT * FROM photos WHERE album SIMILAR TO $1"
-	getAll                     = "SELECT * FROM photos"
-	getByDriveDate             = "SELECT * FROM photos ORDER BY driveDate DESC LIMIT $1 OFFSET $2"
-	getByOriginalDate          = "SELECT * FROM photos ORDER BY originalDate DESC LIMIT $1 OFFSET $2"
-	getByCameraModel           = "SELECT * FROM photos WHERE cameraModel = $1 ORDER BY driveDate DESC"
-	getAllPublic               = "SELECT * FROM photos WHERE private = false"
-	getByDriveDatePublic       = "SELECT * FROM photos WHERE private = false ORDER BY driveDate DESC LIMIT $1 OFFSET $2"
-	getByOriginalDatePublic    = "SELECT * FROM photos WHERE private = false ORDER BY originalDate DESC LIMIT $1 OFFSET $2"
-	getByCameraModelPublic     = "SELECT * FROM photos WHERE private = false AND cameraModel = $1 ORDER BY driveDate DESC"
+	containsIdStmt           = "SELECT 1 FROM photos WHERE driveId = $1"
+	containsIdPublicStmt     = "SELECT 1 FROM photos WHERE driveId = $1 AND private = false"
+	containsAlbumStmt        = "SELECT 1 FROM albums WHERE name = $1"
+	containsAlbumPhotoStmt   = "SELECT 1 FROM albumphoto WHERE name = $1 AND driveId = $2"
+	deleteStmt               = "DELETE FROM photos WHERE driveId = $1;"
+	deleteExifStmt           = "DELETE FROM exif WHERE driveId = $1"
+	distinctAlbumsStmt       = "SELECT DISTINCT(album) FROM photos"
+	getExifStmt              = "SELECT " + allCols + " FROM exif WHERE driveId = $1"
+	getIdStmt                = "SELECT " + allCols + " FROM photos WHERE driveId = $1"
+	getIdStmtPublic          = "SELECT " + allCols + " FROM photos WHERE driveId = $1 AND private = false"
+	getAlbumsStmt            = "SELECT name,description,coverPic FROM albums"
+	getAlbumStmt             = "SELECT name,description,coverPic FROM albums WHERE name = $1"
+	getAlbumPhotosPublicStmt = "SELECT " + allCols + ` FROM photos WHERE private = false AND 
+									driveId IN (SELECT driveId FROM albumphoto WHERE album = $1)`
+	getAlbumPhotosStmt         = "SELECT " + allCols + " FROM photos WHERE driveId IN (SELECT driveId FROM albumphoto WHERE album = $1)"
+	getAll                     = "SELECT " + allCols + " FROM photos"
+	getByDriveDate             = "SELECT " + allCols + " FROM photos ORDER BY driveDate DESC LIMIT $1 OFFSET $2"
+	getByOriginalDate          = "SELECT " + allCols + " FROM photos ORDER BY originalDate DESC LIMIT $1 OFFSET $2"
+	getByCameraModel           = "SELECT " + allCols + " FROM photos WHERE cameraModel = $1 ORDER BY driveDate DESC"
+	getAllPublic               = "SELECT " + allCols + " FROM photos WHERE private = false"
+	getByDriveDatePublic       = "SELECT " + allCols + " FROM photos WHERE private = false ORDER BY driveDate DESC LIMIT $1 OFFSET $2"
+	getByOriginalDatePublic    = "SELECT " + allCols + " FROM photos WHERE private = false ORDER BY originalDate DESC LIMIT $1 OFFSET $2"
+	getByCameraModelPublic     = "SELECT " + allCols + " FROM photos WHERE private = false AND cameraModel = $1 ORDER BY driveDate DESC"
+	getPhotoAlbumsStmt         = "SELECT album FROM albumphoto WHERE driveId = $1"
 	getUserStmt                = "SELECT name,bio,pic,driveFolderId,driveFolderName FROM users LIMIT 1"
 	updateAlbumStmt            = "UPDATE albums SET (description, coverPic) = ($1, $2) WHERE name = $3"
 	updatePhotoTitleStmt       = "UPDATE photos SET title = $1 WHERE driveId = $2"
 	updatePhotoDescriptionStmt = "UPDATE photos SET description = $1 WHERE driveId = $2"
 	updatePhotoKeywordsStmt    = "UPDATE photos SET keywords = $1 WHERE driveId = $2"
-	updatePhotoAlbumStmt       = "UPDATE photos SET album = $1 WHERE driveId = $2"
-	updatePhotoPrivateStmt     = "UPDATE photos SET private = $1 WHERE driveId = $2"
-	updatePhotoLikesStmt       = "UPDATE photos SET likes = $1 WHERE driveId = $2"
-	updatePhotoStmt            = "UPDATE photos SET (title, description,keywords, album) = ($1, $2, $3, $4) WHERE driveId = $5"
-	updateUserBioStmt          = "UPDATE users SET bio = $1"
-	updateUserNameStmt         = "UPDATE users SET name = $1"
-	updateUserPicStmt          = "UPDATE users SET pic = $1"
-	updateUserDriveFolder      = "UPDATE users SET (driveFolderId, driveFolderName) = ($1, $2)"
-	updateUserStmt             = "UPDATE users SET (name, bio, pic) = ($1, $2, $3)"
-	insAlbumStmt               = "INSERT INTO albums (name, description, coverPic) VALUES ($1, $2, $3)"
-	insExifStmt                = "INSERT INTO exif (driveId, data) VALUES ($1, $2)"
-	insPhotoStmt               = `
+	//updatePhotoAlbumStmt       = "UPDATE photos SET album = $1 WHERE driveId = $2"
+	updatePhotoPrivateStmt = "UPDATE photos SET private = $1 WHERE driveId = $2"
+	updatePhotoLikesStmt   = "UPDATE photos SET likes = $1 WHERE driveId = $2"
+	updatePhotoStmt        = "UPDATE photos SET (title, description,keywords) = ($1, $2, $3) WHERE driveId = $4"
+	updateUserBioStmt      = "UPDATE users SET bio = $1"
+	updateUserNameStmt     = "UPDATE users SET name = $1"
+	updateUserPicStmt      = "UPDATE users SET pic = $1"
+	updateUserDriveFolder  = "UPDATE users SET (driveFolderId, driveFolderName) = ($1, $2)"
+	updateUserStmt         = "UPDATE users SET (name, bio, pic) = ($1, $2, $3)"
+	insAlbumStmt           = "INSERT INTO albums (name, description, coverPic) VALUES ($1, $2, $3)"
+	insAlbumPhotoStmt      = "INSERT INTO albumphoto (album, driveId) VALUES ($1, $2)"
+	insExifStmt            = "INSERT INTO exif (driveId, data) VALUES ($1, $2)"
+	insPhotoStmt           = `
 INSERT INTO photos (
 	driveId,
 	md5, 
@@ -182,8 +197,7 @@ INSERT INTO photos (
 	width,
 	height,
 	private,
-	album,
-	likes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22);
+	likes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21);
 `
 	insUserStmt = "INSERT INTO user (name, bio, pic, driveFolderId) VALUES ($1, $2, $3, $4)"
 )

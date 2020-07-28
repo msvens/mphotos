@@ -190,7 +190,7 @@ func arh(f ReqHandler) HttpHandler {
 func lrh(f RLoginHandler) HttpHandler {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var loggedIn = isLoggedIn(w, r)
-		logger.Debugw("Req", "uri", r.RequestURI, "method", r.Method, "loggedin", loggedIn)
+		logger.Debugw("LReq", "uri", r.RequestURI, "method", r.Method, "loggedin", loggedIn)
 		data, err := f(r, loggedIn)
 		psResponse(data, err, w)
 	}
@@ -255,8 +255,9 @@ func checkAndWrite(w http.ResponseWriter, r *http.Request) bool {
 func isLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 	if err := checkLogin(w, r); err == nil {
 		return true
+	} else {
+		return false
 	}
-	return false
 }
 
 // Checks if a google drive connection has been established

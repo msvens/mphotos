@@ -82,7 +82,7 @@ func (ps *PhotoService) createPaths() error {
 	return nil
 }
 
-func (ps *PhotoService) GetExif(id string) (*Exif, bool) {
+func (ps *PhotoService) GetExif(id string, loogedIn bool) (*Exif, bool) {
 	if exif, err := ps.dbs.GetExif(id); err == nil {
 		return exif, true
 	} else {
@@ -98,6 +98,10 @@ func (ps *PhotoService) GetPhoto(id string, private bool) (*Photo, bool) {
 		logger.Errorw("could not get photo", "error", err)
 		return nil, false
 	}
+}
+
+func (ps *PhotoService) GetPhotoAlbums(id string, private bool) ([]string, error) {
+	return ps.dbs.GetPhotoAlbums(id, private)
 }
 
 func (ps *PhotoService) GetLatestPhoto(private bool) (*Photo, bool) {
@@ -149,6 +153,10 @@ func (ps *PhotoService) GetAlbums() ([]*Album, error) {
 
 func (ps *PhotoService) GetUser() (*User, error) {
 	return ps.dbs.GetUser()
+}
+
+func (ps *PhotoService) UpdateAlbum(description string, coverPic string, name string) (*Album, error) {
+	return ps.dbs.UpdateAlbum(description, coverPic, name)
 }
 
 func (ps *PhotoService) UpdatePhoto(driveId string, title string, description string,
@@ -240,7 +248,7 @@ func (ps *PhotoService) CheckPhotosDrive() ([]*drive.File, error) {
 	}
 	var ret []*drive.File
 	for _, f := range fl {
-		if !ps.dbs.Contains(f.Id) {
+		if !ps.dbs.Contains(f.Id, true) {
 			ret = append(ret, f)
 		}
 	}
@@ -273,16 +281,20 @@ func (ps *PhotoService) AddPhotos() (*DriveFiles, error) {
 	return ToDriveFiles(files), nil
 }
 
+func toFileName(driveId string) string {
+	return driveId + ".jpg"
+}
+
 func (ps *PhotoService) AddPhoto(f *drive.File, tool *mexif.MExifTool) (bool, error) {
 	var err error
-	if ps.dbs.Contains(f.Id) {
+	if ps.dbs.Contains(f.Id, true) {
 		return false, nil
 	}
 	photo := Photo{}
 	photo.DriveId = f.Id
 	//photo.Title = f.Name
 	photo.Md5 = f.Md5Checksum
-	photo.FileName = f.Id + ".jpg"
+	photo.FileName = toFileName(f.Id)
 	if t, err := mdrive.ParseTime(f.CreatedTime); err == nil {
 		photo.DriveDate = t
 	}

@@ -38,7 +38,6 @@ var createdbCmd = &cobra.Command{
 		if err != nil {
 			fmt.Println("could not create tables: ", err)
 		}
-
 	},
 }
 

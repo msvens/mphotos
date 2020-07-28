@@ -33,8 +33,8 @@ type PhotoFiles struct {
 }
 
 type AlbumCollection struct {
-	Info   *Album      `json:info`
-	Photos *PhotoFiles `json:photos`
+	Info   *Album      `json:"info"`
+	Photos *PhotoFiles `json:"photos"`
 }
 
 func (e *ApiError) Error() string {

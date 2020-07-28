@@ -16,6 +16,8 @@ type DbService struct {
 	Db *sql.DB
 }
 
+//type DbService sql.DB
+
 var NoSuchPhoto = errors.New("No such Photo Id")
 
 func NewDbService() (*DbService, error) {
@@ -56,6 +58,9 @@ func (dbs *DbService) CreateTables() error {
 	if _, err := dbs.Db.Exec(createAlbumTable); err != nil {
 		return err
 	}
+	if _, err := dbs.Db.Exec(createAlbumPhotoTable); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -72,6 +77,9 @@ func (dbs *DbService) DropTables() error {
 	if _, err := dbs.Db.Exec(dropAlbumTable); err != nil {
 		return err
 	}
+	if _, err := dbs.Db.Exec(dropAlbumPhotoTable); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -83,10 +91,12 @@ func (dbs *DbService) AddPhoto(p *Photo, exif *mexif.ExifCompact) error {
 
 	_, err := dbs.Db.Exec(insPhotoStmt, p.DriveId, p.Md5, p.FileName, p.Title, p.Keywords, p.Description, p.DriveDate, p.OriginalDate,
 		p.CameraMake, p.CameraModel, p.LensMake, p.LensModel, p.FocalLength, p.FocalLength35, p.Iso,
-		p.FNumber, p.Exposure, p.Width, p.Height, p.Private, p.Album, p.Likes)
+		p.FNumber, p.Exposure, p.Width, p.Height, p.Private, p.Likes)
 	if err != nil {
 		return err
 	}
+
+	//insert extended exif information
 	data, err := json.Marshal(exif)
 	if err != nil {
 		return err
@@ -103,8 +113,17 @@ func (dbs *DbService) AddAlbum(album *Album) error {
 	}
 }
 
-func (dbs *DbService) Contains(driveId string) bool {
-	if rows, err := dbs.Db.Query(containsIdStmt, driveId); err == nil {
+func (dbs *DbService) AddAlbumPhoto(album string, driveId string) error {
+	_, err := dbs.Db.Exec(insAlbumPhotoStmt, album, driveId)
+	return err
+}
+
+func (dbs *DbService) Contains(driveId string, private bool) bool {
+	var stmt = containsIdPublicStmt
+	if private {
+		stmt = containsIdStmt
+	}
+	if rows, err := dbs.Db.Query(stmt, driveId); err == nil {
 		return rows.Next()
 	} else {
 		return false
@@ -113,6 +132,14 @@ func (dbs *DbService) Contains(driveId string) bool {
 
 func (dbs *DbService) ContainsAlbum(name string) bool {
 	if rows, err := dbs.Db.Query(containsAlbumStmt, name); err == nil {
+		return rows.Next()
+	} else {
+		return false
+	}
+}
+
+func (dbs *DbService) ContainsAlbumPhoto(album string, driveId string) bool {
+	if rows, err := dbs.Db.Query(containsAlbumPhotoStmt, album, driveId); err == nil {
 		return rows.Next()
 	} else {
 		return false
@@ -148,7 +175,9 @@ func (dbs *DbService) GetAlbums() ([]*Album, error) {
 	} else {
 		for rows.Next() {
 			var album = Album{}
-			rows.Scan(&album.Name, &album.Description, &album.CoverPic)
+			if err := rows.Scan(&album.Name, &album.Description, &album.CoverPic); err != nil {
+				return nil, err
+			}
 			albums = append(albums, &album)
 		}
 	}
@@ -160,11 +189,29 @@ func (dbs *DbService) GetAlbumPhotos(name string, private bool) ([]*Photo, error
 	if private {
 		stmt = getAlbumPhotosStmt
 	}
-	nn := "%" + name + "%"
-	if rows, err := dbs.Db.Query(stmt, nn); err != nil {
+	if rows, err := dbs.Db.Query(stmt, name); err != nil {
 		return nil, err
 	} else {
-		return scanR(rows)
+		return scanPhotos(rows)
+	}
+}
+
+func (dbs *DbService) GetPhotoAlbums(driveId string, private bool) ([]string, error) {
+	if contains := dbs.Contains(driveId, private); !contains {
+		return nil, NotFoundError("could not find photo: " + driveId)
+	}
+	if rows, err := dbs.Db.Query(getPhotoAlbumsStmt, driveId); err != nil {
+		return nil, err
+	} else {
+		var n string
+		names := make([]string, 0)
+		for rows.Next() {
+			if err := rows.Scan(&n); err != nil {
+				return nil, err
+			}
+			names = append(names, n)
+		}
+		return names, nil
 	}
 }
 
@@ -182,16 +229,15 @@ func (dbs *DbService) GetExif(driveId string) (*Exif, error) {
 }
 
 func (dbs *DbService) GetId(driveId string, private bool) (*Photo, error) {
-	resp := Photo{}
 	var stmt = getIdStmtPublic
 	if private {
 		stmt = getIdStmt
 	}
-	r := dbs.Db.QueryRow(stmt, driveId)
-	if err := scanRow(&resp, r); err != nil {
+
+	if rows, err := dbs.Db.Query(stmt, driveId); err != nil {
 		return nil, err
 	} else {
-		return &resp, nil
+		return scanOnePhoto(rows)
 	}
 }
 
@@ -204,12 +250,19 @@ func (dbs *DbService) GetUser() (*User, error) {
 	return &resp, nil
 }
 
-func (dbs *DbService) UpdatePhoto(title string, description string, keywords []string, albums []string, driveId string) (*Photo, error) {
-	if _, err := dbs.Db.Exec(updatePhotoStmt, title, description,
-		trimAndJoin(keywords), trimAndJoin(albums), driveId); err != nil {
+func (dbs *DbService) UpdateAlbum(description string, coverPic string, name string) (*Album, error) {
+	if _, err := dbs.Db.Exec(updateAlbumStmt, description, coverPic, name); err != nil {
 		return nil, err
 	}
-	return dbs.GetId(driveId, true)
+	return dbs.GetAlbum(name)
+}
+
+func (dbs *DbService) UpdatePhoto(title string, description string, keywords []string, albums []string, driveId string) (*Photo, error) {
+	if _, err := dbs.Db.Exec(updatePhotoStmt, title, description,
+		trimAndJoin(keywords), driveId); err != nil {
+		return nil, err
+	}
+	return dbs.UpdatePhotoAlbum(albums, driveId)
 }
 
 func (dbs *DbService) UpdatePhotoDescription(description string, driveId string) (*Photo, error) {
@@ -234,8 +287,21 @@ func (dbs *DbService) UpdatePhotoTitle(title string, driveId string) (*Photo, er
 }
 
 func (dbs *DbService) UpdatePhotoAlbum(albums []string, driveId string) (*Photo, error) {
-	if _, err := dbs.Db.Exec(updatePhotoAlbumStmt, trimAndJoin(albums), driveId); err != nil {
-		return nil, err
+	var err error
+	for _, name := range albums {
+		trimmed := strings.TrimSpace(name)
+		if !dbs.ContainsAlbum(trimmed) {
+			err = dbs.AddAlbum(&Album{Name: trimmed, Description: "", CoverPic: toFileName(driveId)})
+			if err != nil {
+				return nil, err
+			}
+		}
+		if !dbs.ContainsAlbumPhoto(trimmed, driveId) {
+			if err = dbs.AddAlbumPhoto(trimmed, driveId); err != nil {
+				return nil, err
+			}
+
+		}
 	}
 	return dbs.GetId(driveId, true)
 }
@@ -297,7 +363,7 @@ func (dbs *DbService) GetAllPhotos(private bool) ([]*Photo, error) {
 	if rows, err := dbs.Db.Query(stmt); err != nil {
 		return nil, err
 	} else {
-		return scanR(rows)
+		return scanPhotos(rows)
 	}
 }
 
@@ -309,7 +375,7 @@ func (dbs *DbService) GetByOriginalDate(limit int, offset int, private bool) ([]
 	if rows, err := dbs.Db.Query(stmt, limit, offset); err != nil {
 		return nil, err
 	} else {
-		return scanR(rows)
+		return scanPhotos(rows)
 	}
 }
 
@@ -321,7 +387,7 @@ func (dbs *DbService) GetByDriveDate(limit int, offset int, private bool) ([]*Ph
 	if rows, err := dbs.Db.Query(stmt, limit, offset); err != nil {
 		return nil, err
 	} else {
-		return scanR(rows)
+		return scanPhotos(rows)
 	}
 }
 
@@ -333,21 +399,19 @@ func (dbs *DbService) GetByCameraModel(model string, private bool) ([]*Photo, er
 	if rows, err := dbs.Db.Query(stmt, model); err != nil {
 		return nil, err
 	} else {
-		return scanR(rows)
+		return scanPhotos(rows)
 	}
 }
 
 func (dbs *DbService) GetLatest(private bool) (*Photo, error) {
-	resp := Photo{}
 	var stmt = getByDriveDatePublic
 	if private {
 		stmt = getByDriveDate
 	}
-	r := dbs.Db.QueryRow(stmt, 1, 0)
-	if err := scanRow(&resp, r); err != nil {
+	if rows, err := dbs.Db.Query(stmt, 1, 0); err != nil {
 		return nil, err
 	} else {
-		return &resp, nil
+		return scanOnePhoto(rows)
 	}
 }
 
@@ -372,46 +436,44 @@ func trimAndJoin(strs []string) string {
 	return strings.Join(newString, ",")
 }
 
-func scanR(rows *sql.Rows) ([]*Photo, error) {
+func scanPhoto(p *Photo, r *sql.Rows) error {
+	err := r.Scan(&p.DriveId, &p.Md5, &p.FileName, &p.Title, &p.Keywords, &p.Description, &p.DriveDate,
+		&p.OriginalDate, &p.CameraMake, &p.CameraModel, &p.LensMake, &p.LensModel, &p.FocalLength, &p.FocalLength35,
+		&p.Iso, &p.FNumber, &p.Exposure, &p.Width, &p.Height, &p.Private, &p.Likes)
+
+	switch err {
+	case sql.ErrNoRows:
+		return NoSuchPhoto
+	case nil:
+		return nil
+	default:
+		return err
+	}
+}
+
+func scanOnePhoto(rows *sql.Rows) (*Photo, error) {
+	if rows.Next() {
+		p := &Photo{}
+		if err := scanPhoto(p, rows); err != nil {
+			return nil, err
+		}
+		return p, nil
+
+	} else {
+		return nil, NoSuchPhoto
+	}
+}
+
+func scanPhotos(rows *sql.Rows) ([]*Photo, error) {
 	var p *Photo
 	var photos []*Photo
 	for rows.Next() {
 		p = &Photo{}
-		if err := scanRows(p, rows); err == nil {
+		if err := scanPhoto(p, rows); err == nil {
 			photos = append(photos, p)
 		} else {
 			return nil, err
 		}
 	}
 	return photos, nil
-}
-
-func scanRows(p *Photo, r *sql.Rows) error {
-	err := r.Scan(&p.DriveId, &p.Md5, &p.FileName, &p.Title, &p.Keywords, &p.Description, &p.DriveDate,
-		&p.OriginalDate, &p.CameraMake, &p.CameraModel, &p.LensMake, &p.LensModel, &p.FocalLength, &p.FocalLength35,
-		&p.Iso, &p.FNumber, &p.Exposure, &p.Width, &p.Height, &p.Private, &p.Album, &p.Likes)
-
-	switch err {
-	case sql.ErrNoRows:
-		return NoSuchPhoto
-	case nil:
-		return nil
-	default:
-		return err
-	}
-}
-
-func scanRow(p *Photo, r *sql.Row) error {
-	err := r.Scan(&p.DriveId, &p.Md5, &p.FileName, &p.Title, &p.Keywords, &p.Description, &p.DriveDate,
-		&p.OriginalDate, &p.CameraMake, &p.CameraModel, &p.LensMake, &p.LensModel, &p.FocalLength, &p.FocalLength35,
-		&p.Iso, &p.FNumber, &p.Exposure, &p.Width, &p.Height, &p.Private, &p.Album, &p.Likes)
-
-	switch err {
-	case sql.ErrNoRows:
-		return NoSuchPhoto
-	case nil:
-		return nil
-	default:
-		return err
-	}
 }
