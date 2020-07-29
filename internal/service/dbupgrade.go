@@ -108,7 +108,7 @@ func upgradeToV3FromV2(dbs *DbService) error {
 func upgradeToV4FromV1(dbs *DbService) error {
 	addColumnsPhotosV2 := `
 ALTER TABLE photos
-	ADD COLUMN private BOOLEAN
+	ADD COLUMN private BOOLEAN,
 	ADD COLUMN likes INTEGER;
 `
 	setColumnsPhotosV2 := `UPDATE photos SET private = false, likes = 0;`
@@ -119,7 +119,7 @@ ALTER TABLE photos
 	ALTER COLUMN likes SET NOT NULL;
 `
 
-	fmt.Println("Upgrading mphotos db from Version 1 to Version 3")
+	fmt.Println("Upgrading mphotos db from Version 1 to Version 4")
 	fmt.Println("Adding columns to photos")
 	_, err := dbs.Db.Exec(addColumnsPhotosV2)
 	if err != nil {
