@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/msvens/mphotos/internal/config"
+	"github.com/msvens/mphotos/internal/model"
 	"github.com/msvens/mphotos/internal/service"
 	"go.uber.org/zap"
 	"io"
@@ -209,7 +210,7 @@ func GetPhotos(r *http.Request, loggedIn bool) (interface{}, error) {
 	if err := decodeRequest(r, &params); err != nil {
 		return nil, err
 	} else {
-		return ps.GetPhotos(params.OriginalDate, params.Limit, params.Offset, loggedIn)
+		return ps.GetPhotos(model.DriveDate, params.Limit, params.Offset, loggedIn)
 	}
 }
 
@@ -319,7 +320,7 @@ func UpdatePhotos(_ *http.Request) (interface{}, error) {
 }
 
 func UpdateAlbum(r *http.Request) (interface{}, error) {
-	var a service.Album
+	var a model.Album
 	println("in update album")
 	if err := decodeRequest(r, &a); err != nil {
 		return nil, err
@@ -352,7 +353,7 @@ func UpdatePrivate(r *http.Request) (interface{}, error) {
 }
 
 func UpdateUserPic(r *http.Request) (interface{}, error) {
-	var u service.User
+	var u model.User
 	if err := decodeRequest(r, &u); err != nil {
 		return nil, err
 	}
@@ -360,7 +361,7 @@ func UpdateUserPic(r *http.Request) (interface{}, error) {
 }
 
 func UpdateUserDrive(r *http.Request) (interface{}, error) {
-	var u service.User
+	var u model.User
 	if err := decodeRequest(r, &u); err != nil {
 		return nil, err
 	}
@@ -368,7 +369,7 @@ func UpdateUserDrive(r *http.Request) (interface{}, error) {
 }
 
 func UpdateUser(r *http.Request) (interface{}, error) {
-	var u service.User
+	var u model.User
 	if err := decodeRequest(r, &u); err != nil {
 		return nil, err
 	}

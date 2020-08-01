@@ -18,8 +18,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/msvens/mphotos/internal/config"
-	"github.com/msvens/mphotos/internal/service"
-
+	"github.com/msvens/mphotos/internal/model"
 	"github.com/spf13/cobra"
 )
 
@@ -30,11 +29,11 @@ var createdbCmd = &cobra.Command{
 	Long:  `Create the underlying postgres photo database tables if not existing`,
 	Run: func(cmd *cobra.Command, args []string) {
 		config.InitConfig()
-		dbs, err := service.NewDbService()
+		db, err := model.NewDB()
 		if err != nil {
 			fmt.Println("could not open db service: ", err)
 		}
-		err = dbs.CreateTables()
+		err = db.CreateDataStore()
 		if err != nil {
 			fmt.Println("could not create tables: ", err)
 		}

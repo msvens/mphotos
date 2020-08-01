@@ -18,8 +18,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/msvens/mphotos/internal/config"
-	"github.com/msvens/mphotos/internal/service"
-
+	"github.com/msvens/mphotos/internal/model"
 	"github.com/spf13/cobra"
 )
 
@@ -30,11 +29,11 @@ var deletedbCmd = &cobra.Command{
 	Long:  `Permanently deletes all photo database tables`,
 	Run: func(cmd *cobra.Command, args []string) {
 		config.InitConfig()
-		dbs, err := service.NewDbService()
+		dbs, err := model.NewDB()
 		if err != nil {
 			fmt.Println("could not open db service: ", err)
 		}
-		err = dbs.DropTables()
+		err = dbs.DeleteDataStore()
 		if err != nil {
 			fmt.Println("could not drop tables: ", err)
 		}

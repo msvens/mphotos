@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"github.com/msvens/mdrive"
+	"github.com/msvens/mphotos/internal/model"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/googleapi"
 	"net/http"
@@ -28,13 +29,13 @@ type DriveFiles struct {
 }
 
 type PhotoFiles struct {
-	Length int      `json:"length"`
-	Photos []*Photo `json:"photos,omitempty"`
+	Length int            `json:"length"`
+	Photos []*model.Photo `json:"photos,omitempty"`
 }
 
 type AlbumCollection struct {
-	Info   *Album      `json:"info"`
-	Photos *PhotoFiles `json:"photos"`
+	Info   *model.Album `json:"info"`
+	Photos *PhotoFiles  `json:"photos"`
 }
 
 func (e *ApiError) Error() string {
