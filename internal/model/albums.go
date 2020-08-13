@@ -1,6 +1,8 @@
 package model
 
-import "go.uber.org/zap"
+import (
+	"go.uber.org/zap"
+)
 
 type Album struct {
 	Name        string `json:"name"`
@@ -12,10 +14,10 @@ type AlbumStore interface {
 	AddAlbum(album *Album) error
 	Album(name string) (*Album, error)
 	Albums() ([]*Album, error)
-	AlbumPhotos(name string, filter PhotoFilter) ([]*Photo, error)
 	CreateAlbumStore() error
 	DeleteAlbumStore() error
 	HasAlbum(name string) bool
+	PhotoAlbums(id string) ([]*Album, error)
 	UpdateAlbum(album *Album) (*Album, error)
 }
 
@@ -35,21 +37,6 @@ func (db *DB) Album(name string) (*Album, error) {
 		return nil, err
 	} else {
 		return &resp, nil
-	}
-}
-
-func (db *DB) AlbumPhotos(name string, filter PhotoFilter) ([]*Photo, error) {
-	var stmt string
-	if !filter.Private {
-		stmt = "SELECT " + photoCols + " FROM photos WHERE private = false AND driveId IN (SELECT driveId FROM albumphoto WHERE album = $1)"
-	} else {
-		stmt = "SELECT " + photoCols + " FROM photos WHERE driveId IN (SELECT driveId FROM albumphoto WHERE album = $1)"
-	}
-	if rows, err := db.Query(stmt, name); err != nil {
-		return nil, err
-	} else {
-		defer rows.Close()
-		return scanPhotos(rows)
 	}
 }
 
@@ -85,6 +72,24 @@ func (db *DB) Albums() ([]*Album, error) {
 	const stmt = "SELECT name,description,coverPic FROM albums"
 	var albums []*Album
 	if rows, err := db.Query(stmt); err != nil {
+		return nil, err
+	} else {
+		defer rows.Close()
+		for rows.Next() {
+			var album = Album{}
+			if err := rows.Scan(&album.Name, &album.Description, &album.CoverPic); err != nil {
+				return nil, err
+			}
+			albums = append(albums, &album)
+		}
+	}
+	return albums, nil
+}
+
+func (db *DB) PhotoAlbums(id string) ([]*Album, error) {
+	const stmt = "SELECT name, description, coverPic FROM albums WHERE name IN (SELECT album FROM albumphoto WHERE driveId = $1)"
+	var albums []*Album
+	if rows, err := db.Query(stmt, id); err != nil {
 		return nil, err
 	} else {
 		defer rows.Close()

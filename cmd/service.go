@@ -27,7 +27,7 @@ var serviceCmd = &cobra.Command{
 	Short: "Start the mphotos web server",
 	Long:  `Starts the mphotos web server. The webserver will listen to a ctrl-c signal`,
 	Run: func(cmd *cobra.Command, args []string) {
-		server.StartServer()
+		server.StartMServer()
 	},
 }
 

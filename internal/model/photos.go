@@ -11,6 +11,7 @@ import (
 
 type PhotoStore interface {
 	AddPhoto(p *Photo, exif *mexif.ExifCompact) error
+	AlbumPhotos(name string, filter PhotoFilter) ([]*Photo, error)
 	CreatePhotoStore() error
 	DeletePhoto(id string) (bool, error)
 	DeletePhotoStore() error
@@ -129,7 +130,21 @@ CREATE TABLE IF NOT EXISTS photos (
 	}
 	_, err := db.Exec("CREATE TABLE IF NOT EXISTS exif (driveId TEXT PRIMARY KEY,data TEXT NOT NULL);")
 	return err
+}
 
+func (db *DB) AlbumPhotos(name string, filter PhotoFilter) ([]*Photo, error) {
+	var stmt string
+	if !filter.Private {
+		stmt = "SELECT " + photoCols + " FROM photos WHERE private = false AND driveId IN (SELECT driveId FROM albumphoto WHERE album = $1)"
+	} else {
+		stmt = "SELECT " + photoCols + " FROM photos WHERE driveId IN (SELECT driveId FROM albumphoto WHERE album = $1)"
+	}
+	if rows, err := db.Query(stmt, name); err != nil {
+		return nil, err
+	} else {
+		defer rows.Close()
+		return scanPhotos(rows)
+	}
 }
 
 func (db *DB) DeletePhoto(id string) (bool, error) {

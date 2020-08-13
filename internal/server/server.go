@@ -1,12 +1,19 @@
 package server
 
 import (
-	"flag"
+	"database/sql"
+	"encoding/gob"
+	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
+	"github.com/msvens/mdrive"
 	"github.com/msvens/mphotos/internal/config"
+	"github.com/msvens/mphotos/internal/model"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
-	"html/template"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/googleapi"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,51 +21,104 @@ import (
 	"time"
 )
 
-var templates *template.Template
-var logger *zap.SugaredLogger
-
-//var srv *http.Server
-
-type Page struct {
-	IsGoogleLoggedIn bool
-	IsPhotosLoggedIn bool
+type mserver struct {
+	db model.DataStore
+	//ps *service.PhotoService //will go away
+	ds         *mdrive.DriveService
+	r          *mux.Router
+	l          *zap.SugaredLogger
+	prefixPath string
+	store      *sessions.CookieStore
+	cookieName string
+	tokenFile  string
+	gconfig    *oauth2.Config
+	//rootDir string
+	imgDir   string
+	thumbDir string
 }
 
-func StartServer() {
-	config.InitConfig()
-	templates = template.Must(template.ParseFiles("tmpl/index.html"))
+func NewServer(prefixPath string) *mserver {
 
+	s := mserver{}
+	s.prefixPath = prefixPath
+
+	//Initialize session
+	authKeyOne := []byte(config.SessionAuthcKey())
+	encKeyOne := []byte(config.SessionEncKey())
+	s.cookieName = config.SessionCookieName()
+	s.store = sessions.NewCookieStore(
+		authKeyOne,
+		encKeyOne,
+	)
+	s.store.Options = &sessions.Options{
+		Path:     "/api",
+		MaxAge:   60 * 60 * 24,
+		HttpOnly: true,
+	}
+	gob.Register(AuthUser{})
+
+	//setup logging
 	l, _ := zap.NewDevelopment()
-	logger = l.Sugar()
-	defer logger.Sync()
+	s.l = l.Sugar()
 
-	var dir string
+	s.r = mux.NewRouter()
 
-	flag.StringVar(&dir, "dir", "./static/", "the directory to serve files from. Defaults to the current dir")
-	flag.Parse()
+	var err error
+	if s.db, err = model.NewDB(); err != nil {
+		s.l.Panicw("could not create dbservice", "error", err)
+	}
 
-	r := mux.NewRouter()
-	InitApi(r, "/api")
+	//init image paths:
+	//s.rootDir = config.ServiceRoot()
+	s.imgDir = config.ServicePath("img")
+	s.thumbDir = config.ServicePath("thumb")
+	if err = os.MkdirAll(s.imgDir, 0744); err != nil {
+		s.l.Panicw("could not create image dir", zap.Error(err))
+	}
+	if err = os.MkdirAll(s.thumbDir, 0744); err != nil {
+		s.l.Panicw("could not rcreae thumb dir", zap.Error(err))
+	}
 
-	r.Path("/api").HandlerFunc(handleRoot)
+	//ps.DriveSrv = driveSrv
+	//ps.folderPath = ps.rootDir + "/" + folderFileName
+
+	//ps, _ := service.NewPhotosService(s.db)
+	//s.ps = ps
+
+	//start async job channel:
+	wg.Add(1)
+	go worker(jobChan)
+
+	//init google auth:
+	s.tokenFile = config.ServicePath("token.json")
+
+	s.gconfig = &oauth2.Config{
+		ClientID:     config.GoogleClientId(),
+		ClientSecret: config.GoogleClientSecret(),
+		Endpoint:     google.Endpoint,
+		RedirectURL:  config.GoogleRedirectUrl(),
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", mdrive.ReadOnlyScope()},
+	}
+
+	return &s
+}
+
+func StartMServer() {
+	config.InitConfig()
+
+	s := NewServer("/api")
+	s.routes()
+	defer s.l.Sync()
 
 	//auth
-	r.Path("/api/auth/login").HandlerFunc(HandleGoogleLogin)
-	r.Path("/api/auth/callback").HandlerFunc(HandleGoogleCallback)
-
-	//static files
-	r.PathPrefix("/api/static/").Handler(http.StripPrefix("/api/static/", http.FileServer(http.Dir(dir))))
-
-	//auth
-	InitGoogleAuth()
-	err := AuthFromFile()
+	err := s.authFromFile()
 	if err != nil {
-		logger.Errorw("google auth", zap.Error(err))
+		s.l.Errorw("google auth", zap.Error(err))
 	}
 
 	srv := &http.Server{
 		Addr:    ":8050",
-		Handler: r,
+		Handler: s.r,
 	}
 
 	done := make(chan os.Signal, 1)
@@ -66,15 +126,15 @@ func StartServer() {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Fatalw("listen", zap.Error(err))
+			s.l.Fatalw("listen", zap.Error(err))
 		}
 	}()
 
-	logger.Info("server started")
+	s.l.Info("server started")
 
 	<-done //wait for shutdown interrupt, e.g ctrl-c
 
-	logger.Info("shutting down server")
+	s.l.Info("shutting down server")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer func() {
@@ -82,24 +142,67 @@ func StartServer() {
 		cancel()
 	}()
 
-	if ps != nil {
-		ps.Shutdown()
-	}
+	close(jobChan)
+	wg.Wait()
+	//if s.ps != nil {
+	//	s.ps.Shutdown()
+	//}
 
 	if err := srv.Shutdown(ctx); err != nil {
-		logger.Fatalw("server shutdown failed", zap.Error(err))
+		s.l.Fatalw("server shutdown failed", zap.Error(err))
 	}
-	logger.Info("server exited properly")
-
+	s.l.Info("server exited properly")
 }
 
-func handleRoot(w http.ResponseWriter, r *http.Request) {
-	err := templates.ExecuteTemplate(w, "index.html", newPage(w, r))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+func (s *mserver) setDriveService(ds *mdrive.DriveService) {
+	s.ds = ds
+	//s.ps.DriveSrv = s.ds
 }
 
-func newPage(w http.ResponseWriter, r *http.Request) *Page {
-	return &Page{IsGoogleLoggedIn: isGoogleConnected(), IsPhotosLoggedIn: isLoggedIn(w, r)}
+type ApiError struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+func (e *ApiError) Error() string {
+	return fmt.Sprintf("code: %d message: %s", e.Code, e.Message)
+}
+
+func newError(code int, message string) *ApiError {
+	return &ApiError{Code: code, Message: message}
+}
+
+func UnauthorizedError(message string) *ApiError {
+	return newError(http.StatusUnauthorized, message)
+}
+
+func NotFoundError(message string) *ApiError {
+	return newError(http.StatusNotFound, message)
+}
+
+func BadRequestError(message string) *ApiError {
+	return newError(http.StatusBadRequest, message)
+}
+
+func InternalError(message string) *ApiError {
+	return newError(http.StatusInternalServerError, message)
+}
+
+func ResolveError(err error) *ApiError {
+	//check for api error
+	e, ok := err.(*ApiError)
+	if ok {
+		return e
+	}
+	//check for google error
+	e1, ok := err.(*googleapi.Error)
+	if ok {
+		return &ApiError{e1.Code, e1.Message}
+	}
+
+	if err == sql.ErrNoRows {
+		return NotFoundError("No such data")
+	}
+	//check for db error
+	return InternalError(err.Error())
 }

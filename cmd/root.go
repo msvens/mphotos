@@ -34,7 +34,7 @@ var rootCmd = &cobra.Command{
 	Long:  `mphotos is the backend for a mphotos photo blog. This app starts the webserver by default`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	Run: func(cmd *cobra.Command, args []string) { server.StartServer() },
+	Run: func(cmd *cobra.Command, args []string) { server.StartMServer() },
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

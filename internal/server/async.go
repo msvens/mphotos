@@ -1,4 +1,4 @@
-package service
+package server
 
 import (
 	"github.com/google/uuid"
@@ -17,7 +17,7 @@ type Job struct {
 	State        string `json:"state"`
 	Percent      int    `json:"percent"`
 	files        []*drive.File
-	ps           *PhotoService
+	s            *mserver
 	NumFiles     int       `json:"numFiles"`
 	NumProcessed int       `json:"numProcessed"`
 	Err          *ApiError `json:"error,omitempty"`
@@ -32,7 +32,7 @@ func worker(jobChan <-chan *Job) {
 	defer wg.Done()
 
 	for job := range jobChan {
-		logger.Infow("Processing job", "jobid", job.Id, "files", job.NumFiles)
+		job.s.l.Infow("Processing job", "jobid", job.Id, "files", job.NumFiles)
 		process(job)
 	}
 }
@@ -52,20 +52,20 @@ func process(job *Job) {
 	var percent = 100 / job.NumFiles
 
 	for _, f := range job.files {
-		if _, err := job.ps.AddPhoto(f, tool); err != nil {
+		if _, err := addPhoto(job.s, f, tool); err != nil {
 			finishJob(job, err)
 			return
 		}
 		job.Percent = job.Percent + percent
 		job.NumProcessed = job.NumProcessed + 1
-		logger.Debugw("", "jobid", job.Id, "progress", job.Percent)
+		job.s.l.Debugw("", "jobid", job.Id, "progress", job.Percent)
 	}
 	finishJob(job, nil)
 }
 
 func finishJob(job *Job, err error) {
 	job.files = nil
-	job.ps = nil
+	job.s = nil
 	if err != nil {
 		job.State = StateAborted
 		job.Err = ResolveError(err)
@@ -76,7 +76,7 @@ func finishJob(job *Job, err error) {
 
 }
 
-func (ps *PhotoService) JobStatus(id string) (*Job, error) {
+func jobStatus(s *mserver, id string) (*Job, error) {
 	if job, found := jobMap[id]; found {
 		return job, nil
 	} else {
@@ -84,15 +84,15 @@ func (ps *PhotoService) JobStatus(id string) (*Job, error) {
 	}
 }
 
-func (ps *PhotoService) ScheduleAddPhotos() (*Job, error) {
-	fl, err := ps.ListDriveFiles()
+func scheduleAddPhotos(s *mserver) (*Job, error) {
+	fl, err := listDriveFiles(s)
 	if err != nil {
 		return nil, err
 	}
 	job := Job{}
 	job.Id = uuid.New().String()
 	job.files = fl
-	job.ps = ps
+	job.s = s
 	job.NumFiles = len(fl)
 	job.State = StateScheduled
 	jobMap[job.Id] = &job
