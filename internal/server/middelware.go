@@ -17,7 +17,7 @@ type PSResponse struct {
 }
 
 const (
-	maxFormSize = 32 << 20
+	//maxFormSize = 32 << 20
 	contentType = "Content-Type"
 	contentJson = "application/json"
 )
@@ -74,7 +74,6 @@ func psResponse(data interface{}, err error, w http.ResponseWriter) {
 		fmt.Println("request error", err)
 		resp = PSResponse{ResolveError(err), nil}
 	} else if data != nil {
-		//TODO: Check if this check is ok
 		resp = PSResponse{nil, data}
 	} else {
 		resp = PSResponse{InternalError("no payload"), nil}
@@ -82,7 +81,6 @@ func psResponse(data interface{}, err error, w http.ResponseWriter) {
 	e := enc.Encode(resp)
 	if e != nil {
 		fmt.Println("could not encode response", e)
-		//s.l.Errorw("could not encode response", zap.Error(e))
 	}
 }
 
