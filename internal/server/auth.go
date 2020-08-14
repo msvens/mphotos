@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/sessions"
 	"github.com/msvens/mdrive"
 	"github.com/msvens/mphotos/internal/config"
@@ -25,8 +24,6 @@ func (s *mserver) handleLogin(w http.ResponseWriter, r *http.Request) (interface
 	type request struct {
 		Password string `json:"password" schema:"password"`
 	}
-
-	fmt.Println("cookiename, ", s.cookieName)
 	session, err := s.store.Get(r, s.cookieName)
 	if err != nil {
 		return nil, InternalError(err.Error())

@@ -32,7 +32,6 @@ func (s *mserver) handleSearchDrive(r *http.Request) (interface{}, error) {
 	} else {
 		return toDriveFiles(files), nil
 	}
-	//return s.ps.SearchDrive(id, name)
 }
 
 func (s *mserver) handleDrive(_ *http.Request) (interface{}, error) {
@@ -41,7 +40,6 @@ func (s *mserver) handleDrive(_ *http.Request) (interface{}, error) {
 	} else {
 		return toDriveFiles(files), nil
 	}
-	//return s.ps.ListDrive()
 }
 
 func (s *mserver) handleAuthenticatedDrive(r *http.Request) (interface{}, error) {
@@ -54,7 +52,6 @@ func (s *mserver) handleCheckDrive(_ *http.Request) (interface{}, error) {
 	} else {
 		return toDriveFiles(files), nil
 	}
-	//return s.ps.CheckPhotos()
 }
 
 func checkPhotosDrive(s *mserver) ([]*drive.File, error) {

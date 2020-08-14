@@ -15,6 +15,7 @@ type AlbumStore interface {
 	Album(name string) (*Album, error)
 	Albums() ([]*Album, error)
 	CreateAlbumStore() error
+	DeleteAlbum(name string) error
 	DeleteAlbumStore() error
 	HasAlbum(name string) bool
 	PhotoAlbums(id string) ([]*Album, error)
@@ -50,6 +51,17 @@ func (db *DB) CreateAlbumStore() error {
 `
 	_, err := db.Exec(stmt)
 	return err
+}
+
+func (db *DB) DeleteAlbum(name string) error {
+	const delAlbumStmt = "DELETE FROM albums WHERE name = $1"
+	const delAlbumPhotoStmt = "DELETE FROM albumphoto WHERE album = $1"
+	if _, err := db.Exec(delAlbumStmt, name); err != nil {
+		return err
+	}
+	_, err := db.Exec(delAlbumPhotoStmt, name)
+	return err
+
 }
 
 func (db *DB) DeleteAlbumStore() error {

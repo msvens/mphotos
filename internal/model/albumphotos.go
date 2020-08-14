@@ -5,6 +5,8 @@ import "go.uber.org/zap"
 type AlbumPhotoStore interface {
 	AddAlbumPhoto(album string, photoId string) error
 	CreateAlbumPhotoStore() error
+	//DeleteAlbumPhotoAlbum(album string) error
+	//DeleteAlbumPhotoPhoto(photo string) error
 	DeleteAlbumPhotoStore() error
 	HasAlbumPhoto(album string, photoId string) bool
 	UpdatePhotoAlbums(albums []string, photoId string) error
@@ -27,6 +29,19 @@ func (db *DB) CreateAlbumPhotoStore() error {
 	_, err := db.Exec(stmt)
 	return err
 }
+
+/*
+func (db *DB) DeleteAlbumPhotoAlbum(album string) error {
+	const stmt = "DELETE FROM albumphoto WHERE album = $1"
+	_, err := db.Exec(stmt, album);
+	return err
+}
+func (db *DB) DeleteAlbumPhotoPhoto(driveId string) error {
+	const stmt = "DELETE FROM albumphoto WHERE driveId = $1"
+	_, err := db.Exec(stmt, driveId);
+	return err
+}
+*/
 
 func (db *DB) DeleteAlbumPhotoStore() error {
 	_, err := db.Exec("DROP TABLE IF EXISTS albumphoto;")

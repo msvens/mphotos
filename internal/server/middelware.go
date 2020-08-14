@@ -28,11 +28,9 @@ type mHandler func(w http.ResponseWriter, r *http.Request) (interface{}, error)
 type reqHandler func(r *http.Request) (interface{}, error)
 type loginHandler func(r *http.Request, loggedIn bool) (interface{}, error)
 
-//type ReqRespHandler func(w http.ResponseWriter, r *http.Request) (interface{}, error)
-
 func (s *mserver) authOnly(rh reqHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.l.Debugw("AReq", "uri", r.RequestURI, "method", r.Method)
+		s.l.Debugw("AuthReq", "uri", r.RequestURI, "method", r.Method)
 		if s.checkAndWrite(w, r) {
 			data, err := rh(r)
 			psResponse(data, err, w)
@@ -51,7 +49,7 @@ func (s *mserver) mResponse(handler mHandler) http.HandlerFunc {
 func (s *mserver) loginInfo(lh loginHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var loggedIn = s.isLoggedIn(w, r)
-		s.l.Debugw("LReq", "uri", r.RequestURI, "method", r.Method, "loggedin", loggedIn)
+		s.l.Debugw("LoginReq", "uri", r.RequestURI, "method", r.Method, "loggedin", loggedIn)
 		data, err := lh(r, loggedIn)
 		psResponse(data, err, w)
 	}

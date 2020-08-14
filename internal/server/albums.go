@@ -12,7 +12,6 @@ type AlbumCollection struct {
 }
 
 func (s *mserver) handleAlbums(_ http.ResponseWriter, _ *http.Request) (interface{}, error) {
-	//return s.db.Ge
 	return s.db.Albums()
 }
 
@@ -28,19 +27,20 @@ func (s *mserver) handleAlbum(r *http.Request, loggedIn bool) (interface{}, erro
 		}
 		return &AlbumCollection{Info: album, Photos: &PhotoFiles{len(photos), photos}}, nil
 	}
-	//return s.ps.GetAlbumCollection(name, loggedIn)
 }
 
-//TODO: Handle Delete
 func (s *mserver) handleDeleteAlbum(r *http.Request) (interface{}, error) {
-	return nil, InternalError("not yet implemented")
-	/*vars := mux.Vars(r)
-	name := vars["name"]
-	collection, err := s.ps.GetAlbumCollection(name, true)
+	name := Var(r, "name")
+
+	album, err := s.db.Album(name)
 	if err != nil {
 		return nil, err
 	}
-	return collection.Info, nil*/
+	if err = s.db.DeleteAlbum(name); err != nil {
+		return nil, err
+	}
+	return album, nil
+
 }
 
 func (s *mserver) handleUpdateAlbum(r *http.Request) (interface{}, error) {
@@ -48,7 +48,5 @@ func (s *mserver) handleUpdateAlbum(r *http.Request) (interface{}, error) {
 	if err := decodeRequest(r, &a); err != nil {
 		return nil, err
 	}
-	//a = model.Album{Name: a.Name, Description: a.Description, CoverPic: a.CoverPic}
 	return s.db.UpdateAlbum(&a)
-	//return s.ps.UpdateAlbum(a.Description, a.CoverPic, a.Name)
 }

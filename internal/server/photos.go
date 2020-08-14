@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/msvens/mdrive"
 	"github.com/msvens/mexif"
@@ -47,7 +48,7 @@ func (s *mserver) handleDeletePhoto(r *http.Request) (interface{}, error) {
 		RemoveFiles bool `json:"removeFiles" schema:"removeFiles"`
 	}
 	if photo, err := s.db.Photo(Var(r, "id"), true); err != nil {
-		return nil, ResolveError(err)
+		return nil, err
 	} else {
 		var params request
 		if err := decodeRequest(r, &params); err != nil {
@@ -55,7 +56,6 @@ func (s *mserver) handleDeletePhoto(r *http.Request) (interface{}, error) {
 		}
 		return deletePhoto(s, photo, params.RemoveFiles)
 	}
-	//return s.ps.DeletePhoto(photo, params.RemoveFiles)
 }
 
 func (s *mserver) handleDeletePhotos(r *http.Request) (interface{}, error) {
@@ -77,7 +77,6 @@ func (s *mserver) handleDeletePhotos(r *http.Request) (interface{}, error) {
 		}
 		return &PhotoFiles{len(photos), photos}, nil
 	}
-	//return s.ps.DeletePhotos(params.RemoveFiles)
 }
 
 func (s *mserver) handleDownloadPhoto(w http.ResponseWriter, r *http.Request) {
@@ -195,9 +194,19 @@ func (s *mserver) handlePhotos(r *http.Request, loggedIn bool) (interface{}, err
 }
 
 func (s *mserver) handleScheduleJob(_ *http.Request) (interface{}, error) {
-	return scheduleAddPhotos(s)
-	//return s.ps.ScheduleAddPhotos()
-	//return nil, service.InternalError("Schedule Add Photos currently disabled")
+	fl, err := listDriveFiles(s)
+	if err != nil {
+		return nil, err
+	}
+	job := Job{}
+	job.Id = uuid.New().String()
+	job.files = fl
+	job.s = s
+	job.NumFiles = len(fl)
+	job.State = StateScheduled
+	jobMap[job.Id] = &job
+	jobChan <- &job
+	return &job, nil
 }
 
 func (s *mserver) handleSearchPhotos(r *http.Request, loggedIn bool) (interface{}, error) {
@@ -227,9 +236,11 @@ func (s *mserver) handleSearchPhotos(r *http.Request, loggedIn bool) (interface{
 }
 
 func (s *mserver) handleStatusJob(r *http.Request) (interface{}, error) {
-	//return nil, service.InternalError("Async Jobs currently disabled")
-	//return s.ps.JobStatus(Var(r, "id"))
-	return jobStatus(s, Var(r, "id"))
+	if job, found := jobMap[Var(r, "id")]; found {
+		return job, nil
+	} else {
+		return nil, NotFoundError("job not found")
+	}
 }
 
 func (s *mserver) handleThumb(w http.ResponseWriter, r *http.Request) {
@@ -258,7 +269,6 @@ func (s *mserver) handleUpdatePhoto(r *http.Request) (interface{}, error) {
 		}
 		return photo, err
 	}
-	//return s.ps.UpdatePhoto(par.Id, par.Title, par.Description, par.Keywords, par.Albums)
 }
 
 func (s *mserver) handleUpdatePhotoPrivate(r *http.Request) (interface{}, error) {

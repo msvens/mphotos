@@ -1,7 +1,6 @@
 package server
 
 import (
-	"github.com/google/uuid"
 	"github.com/msvens/mexif"
 	"google.golang.org/api/drive/v3"
 	"sync"
@@ -73,29 +72,4 @@ func finishJob(job *Job, err error) {
 		job.Percent = 100
 		job.State = StateFinished
 	}
-
-}
-
-func jobStatus(s *mserver, id string) (*Job, error) {
-	if job, found := jobMap[id]; found {
-		return job, nil
-	} else {
-		return nil, NotFoundError("job not found")
-	}
-}
-
-func scheduleAddPhotos(s *mserver) (*Job, error) {
-	fl, err := listDriveFiles(s)
-	if err != nil {
-		return nil, err
-	}
-	job := Job{}
-	job.Id = uuid.New().String()
-	job.files = fl
-	job.s = s
-	job.NumFiles = len(fl)
-	job.State = StateScheduled
-	jobMap[job.Id] = &job
-	jobChan <- &job
-	return &job, nil
 }

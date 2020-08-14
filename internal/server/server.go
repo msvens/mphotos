@@ -22,8 +22,7 @@ import (
 )
 
 type mserver struct {
-	db model.DataStore
-	//ps *service.PhotoService //will go away
+	db         model.DataStore
 	ds         *mdrive.DriveService
 	r          *mux.Router
 	l          *zap.SugaredLogger
@@ -32,9 +31,8 @@ type mserver struct {
 	cookieName string
 	tokenFile  string
 	gconfig    *oauth2.Config
-	//rootDir string
-	imgDir   string
-	thumbDir string
+	imgDir     string
+	thumbDir   string
 }
 
 func NewServer(prefixPath string) *mserver {
@@ -159,6 +157,7 @@ func (s *mserver) setDriveService(ds *mdrive.DriveService) {
 	//s.ps.DriveSrv = s.ds
 }
 
+//Error Handling
 type ApiError struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`

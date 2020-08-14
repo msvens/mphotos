@@ -82,7 +82,6 @@ func (db *DB) AddPhoto(p *Photo, exif *mexif.ExifCompact) error {
 	const insPhoto = "INSERT INTO photos (" + photoCols + ") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21);"
 	const insExif = "INSERT INTO exif (driveId, data) VALUES ($1, $2)"
 
-	fmt.Println(insPhoto)
 	_, err := db.Exec(insPhoto, p.DriveId, p.Md5, p.FileName, p.Title, p.Keywords, p.Description, p.DriveDate, p.OriginalDate,
 		p.CameraMake, p.CameraModel, p.LensMake, p.LensModel, p.FocalLength, p.FocalLength35, p.Iso,
 		p.FNumber, p.Exposure, p.Width, p.Height, p.Private, p.Likes)
@@ -90,7 +89,6 @@ func (db *DB) AddPhoto(p *Photo, exif *mexif.ExifCompact) error {
 		return err
 	}
 
-	fmt.Println("added photo")
 	//insert extended exif information
 	data, err := json.Marshal(exif)
 	if err != nil {
@@ -150,7 +148,12 @@ func (db *DB) AlbumPhotos(name string, filter PhotoFilter) ([]*Photo, error) {
 func (db *DB) DeletePhoto(id string) (bool, error) {
 	const delPhoto = "DELETE FROM photos WHERE driveId = $1;"
 	const delExif = "DELETE FROM exif WHERE driveId = $1"
+	const delAlbumPhoto = "DELETE FROM albumphoto WHERE driveId = $1"
+
 	if _, err := db.Exec(delPhoto, id); err != nil {
+		return false, err
+	}
+	if _, err := db.Exec(delAlbumPhoto, id); err != nil {
 		return false, err
 	}
 	if res, err := db.Exec(delExif, id); err != nil {
