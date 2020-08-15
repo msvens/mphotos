@@ -13,7 +13,6 @@ type DataStore interface {
 	PhotoStore
 	AlbumStore
 	UserStore
-	AlbumPhotoStore
 	CreateDataStore() error
 	DeleteDataStore() error
 }

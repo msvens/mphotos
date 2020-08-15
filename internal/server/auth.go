@@ -24,7 +24,7 @@ func (s *mserver) handleLogin(w http.ResponseWriter, r *http.Request) (interface
 	type request struct {
 		Password string `json:"password" schema:"password"`
 	}
-	session, err := s.store.Get(r, s.cookieName)
+	session, err := s.store.Get(r, config.SessionCookieName())
 	if err != nil {
 		return nil, InternalError(err.Error())
 	}
@@ -46,7 +46,7 @@ func (s *mserver) handleLogin(w http.ResponseWriter, r *http.Request) (interface
 }
 
 func (s *mserver) handleLogout(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	if session, err := s.store.Get(r, s.cookieName); err != nil {
+	if session, err := s.store.Get(r, config.SessionCookieName()); err != nil {
 		return nil, InternalError(err.Error())
 	} else {
 		session.Values["user"] = AuthUser{}

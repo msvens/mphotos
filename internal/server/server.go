@@ -205,3 +205,5 @@ func ResolveError(err error) *ApiError {
 	//check for db error
 	return InternalError(err.Error())
 }
+
+//async

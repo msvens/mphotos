@@ -14,8 +14,10 @@ type AlbumStore interface {
 	AddAlbum(album *Album) error
 	Album(name string) (*Album, error)
 	Albums() ([]*Album, error)
+	CreateAlbumPhotoStore() error
 	CreateAlbumStore() error
 	DeleteAlbum(name string) error
+	DeleteAlbumPhotoStore() error
 	DeleteAlbumStore() error
 	HasAlbum(name string) bool
 	PhotoAlbums(id string) ([]*Album, error)
@@ -41,6 +43,18 @@ func (db *DB) Album(name string) (*Album, error) {
 	}
 }
 
+func (db *DB) CreateAlbumPhotoStore() error {
+	const stmt = `
+	CREATE TABLE IF NOT EXISTS albumphoto (
+		album TEXT,
+		driveId TEXT,
+		PRIMARY KEY (album, driveId)
+	);
+`
+	_, err := db.Exec(stmt)
+	return err
+}
+
 func (db *DB) CreateAlbumStore() error {
 	const stmt = `
 	CREATE TABLE IF NOT EXISTS albums (
@@ -61,7 +75,11 @@ func (db *DB) DeleteAlbum(name string) error {
 	}
 	_, err := db.Exec(delAlbumPhotoStmt, name)
 	return err
+}
 
+func (db *DB) DeleteAlbumPhotoStore() error {
+	_, err := db.Exec("DROP TABLE IF EXISTS albumphoto;")
+	return err
 }
 
 func (db *DB) DeleteAlbumStore() error {

@@ -20,6 +20,7 @@ type PhotoStore interface {
 	Photo(id string, private bool) (*Photo, error)
 	Photos(r Range, order PhotoOrder, filter PhotoFilter) ([]*Photo, error)
 	SetPrivatePhoto(private bool, id string) (*Photo, error)
+	UpdatePhotoAlbums(albums []string, photoId string) error
 	UpdatePhoto(title string, description string, keywords []string, id string) (*Photo, error)
 }
 
@@ -259,6 +260,20 @@ func (db *DB) SetPrivatePhoto(private bool, id string) (*Photo, error) {
 		return nil, err
 	}
 	return db.Photo(id, true)
+}
+
+func (db *DB) UpdatePhotoAlbums(album []string, photoId string) error {
+	//delete all old albums
+	if _, err := db.Exec("DELETE FROM albumphoto WHERE driveId = $1", photoId); err != nil {
+		return err
+	}
+	const addAlbumPhoto = "INSERT INTO albumphoto (album, driveId) VALUES ($1, $2)"
+	for _, a := range album {
+		if _, err := db.Exec(addAlbumPhoto, a, photoId); err != nil {
+			return nil
+		}
+	}
+	return nil
 }
 
 func (db *DB) UpdatePhoto(title string, description string, keywords []string, id string) (*Photo, error) {
