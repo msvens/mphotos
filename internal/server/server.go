@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/msvens/mdrive"
 	"github.com/msvens/mphotos/internal/config"
+	"github.com/msvens/mphotos/internal/img"
 	"github.com/msvens/mphotos/internal/model"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -22,17 +23,21 @@ import (
 )
 
 type mserver struct {
-	db         model.DataStore
-	ds         *mdrive.DriveService
-	r          *mux.Router
-	l          *zap.SugaredLogger
-	prefixPath string
-	store      *sessions.CookieStore
-	cookieName string
-	tokenFile  string
-	gconfig    *oauth2.Config
-	imgDir     string
-	thumbDir   string
+	db           model.DataStore
+	ds           *mdrive.DriveService
+	r            *mux.Router
+	l            *zap.SugaredLogger
+	prefixPath   string
+	store        *sessions.CookieStore
+	cookieName   string
+	tokenFile    string
+	gconfig      *oauth2.Config
+	imgDir       string
+	thumbDir     string
+	portraitDir  string
+	landscapeDir string
+	squareDir    string
+	resizeDir    string
 }
 
 func NewServer(prefixPath string) *mserver {
@@ -66,16 +71,23 @@ func NewServer(prefixPath string) *mserver {
 		s.l.Panicw("could not create dbservice", "error", err)
 	}
 
-	//init image paths:
+	//init img paths:
 	//s.rootDir = config.ServiceRoot()
 	s.imgDir = config.ServicePath("img")
 	s.thumbDir = config.ServicePath("thumb")
+	s.portraitDir = config.ServicePath("portrait")
+	s.landscapeDir = config.ServicePath("landscape")
+	s.squareDir = config.ServicePath("square")
+	s.resizeDir = config.ServicePath("resize")
 	if err = os.MkdirAll(s.imgDir, 0744); err != nil {
-		s.l.Panicw("could not create image dir", zap.Error(err))
+		s.l.Panicw("could not create img dir", zap.Error(err))
 	}
-	if err = os.MkdirAll(s.thumbDir, 0744); err != nil {
+	if err = img.CreateImageDir(config.ServiceRoot()); err != nil {
+		s.l.Panicw("could not create image dirs", zap.Error(err))
+	}
+	/*if err = os.MkdirAll(s.thumbDir, 0744); err != nil {
 		s.l.Panicw("could not rcreae thumb dir", zap.Error(err))
-	}
+	}*/
 
 	//ps.DriveSrv = driveSrv
 	//ps.folderPath = ps.rootDir + "/" + folderFileName

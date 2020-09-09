@@ -20,6 +20,10 @@ func (s *mserver) routes() {
 
 	s.path("/images/{name}").Methods("Get").HandlerFunc(s.handleImage)
 	s.path("/thumbs/{name}").Methods("Get").HandlerFunc(s.handleThumb)
+	s.path("/squares/{name}").Methods("Get").HandlerFunc(s.handleSquare)
+	s.path("/portraits/{name}").Methods("Get").HandlerFunc(s.handlePortrait)
+	s.path("/landscapes/{name}").Methods("Get").HandlerFunc(s.handleLandscape)
+	s.path("/resizes/{image}").Methods("Get").HandlerFunc(s.handleResize)
 
 	s.path("/login").Methods("POST").HandlerFunc(s.mResponse(s.handleLogin))
 	s.path("/logout").Methods("GET").HandlerFunc(s.mResponse(s.handleLogout))

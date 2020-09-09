@@ -5,13 +5,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/msvens/mdrive"
 	"github.com/msvens/mexif"
+	"github.com/msvens/mphotos/internal/config"
+	"github.com/msvens/mphotos/internal/img"
 	"github.com/msvens/mphotos/internal/model"
 	"go.uber.org/zap"
 	"google.golang.org/api/drive/v3"
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -35,7 +36,7 @@ func deletePhoto(s *mserver, p *model.Photo, removeFiles bool) (*model.Photo, er
 	}
 	//remove files
 	if err := os.Remove(imgPath(s, p.FileName)); err != nil {
-		s.l.Errorw("Could not remove image", zap.Error(err))
+		s.l.Errorw("Could not remove img", zap.Error(err))
 	}
 	if err := os.Remove(thumbPath(s, p.FileName)); err != nil {
 		s.l.Errorw("Could not remove thumbnail", zap.Error(err))
@@ -129,12 +130,6 @@ func (s *mserver) handleExif(r *http.Request, loggedIn bool) (interface{}, error
 	} else {
 		return exif, nil
 	}
-}
-
-func (s *mserver) handleImage(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	name := vars["name"]
-	http.ServeFile(w, r, imgPath(s, name))
 }
 
 func (s *mserver) handleLatestPhoto(_ *http.Request, loggedIn bool) (interface{}, error) {
@@ -244,10 +239,40 @@ func (s *mserver) handleStatusJob(r *http.Request) (interface{}, error) {
 	}
 }
 
-func (s *mserver) handleThumb(w http.ResponseWriter, r *http.Request) {
+func (s *mserver) handleImg(dir string, w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
-	http.ServeFile(w, r, thumbPath(s, name))
+	http.ServeFile(w, r, filepath.Join(dir, name))
+}
+
+func (s *mserver) handleImage(w http.ResponseWriter, r *http.Request) {
+	s.handleImg(s.imgDir, w, r)
+	/*vars := mux.Vars(r)
+	name := vars["name"]
+	http.ServeFile(w, r, imgPath(s, name))*/
+}
+
+func (s *mserver) handleResize(w http.ResponseWriter, r *http.Request) {
+	s.handleImg(s.resizeDir, w, r)
+}
+
+func (s *mserver) handlePortrait(w http.ResponseWriter, r *http.Request) {
+	s.handleImg(s.portraitDir, w, r)
+}
+
+func (s *mserver) handleLandscape(w http.ResponseWriter, r *http.Request) {
+	s.handleImg(s.landscapeDir, w, r)
+}
+
+func (s *mserver) handleSquare(w http.ResponseWriter, r *http.Request) {
+	s.handleImg(s.squareDir, w, r)
+}
+
+func (s *mserver) handleThumb(w http.ResponseWriter, r *http.Request) {
+	s.handleImg(s.thumbDir, w, r)
+	/*vars := mux.Vars(r)
+	name := vars["name"]
+	http.ServeFile(w, r, thumbPath(s, name))*/
 }
 
 func (s *mserver) handleUpdatePhoto(r *http.Request) (interface{}, error) {
@@ -341,17 +366,20 @@ func downloadPhoto(s *mserver, photo *model.Photo) error {
 		return err
 	}
 
-	//create thumbnail
-	//args := []string{ps.GetImgPath(photo.FileName), "-s", "640", "-m", "centre", "-o", ps.GetThumbPath(photo.FileName)}
-	args := []string{imgPath(s, photo.FileName), "-s", "640", "-c", "-o", thumbPath(s, photo.FileName)}
-	s.l.Infow("creating thumbnail", "args: ", strings.Join(args, " "))
-	cmd := exec.Command("vipsthumbnail", args...)
+	//create photo versions
+	return img.GenerateImages(imgPath(s, photo.FileName), config.ServiceRoot())
+	/*
+		//create thumbnail
+		//args := []string{ps.GetImgPath(photo.FileName), "-s", "640", "-m", "centre", "-o", ps.GetThumbPath(photo.FileName)}
+		args := []string{imgPath(s, photo.FileName), "-s", "640", "-c", "-o", thumbPath(s, photo.FileName)}
+		s.l.Infow("creating thumbnail", "args: ", strings.Join(args, " "))
+		cmd := exec.Command("vipsthumbnail", args...)
 
-	if err := cmd.Start(); err != nil {
-		s.l.Errorw("could not create thumbnail", zap.Error(err))
-		return InternalError(err.Error())
-	}
-
+		if err := cmd.Start(); err != nil {
+			s.l.Errorw("could not create thumbnail", zap.Error(err))
+			return InternalError(err.Error())
+		}
+	*/
 	return nil
 }
 
