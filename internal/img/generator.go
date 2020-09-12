@@ -14,11 +14,11 @@ var (
 	thumb     = option(400, 400)
 	landscape = option(1200, 628)
 	square    = option(1200, 1200)
-	portraite = option(1080, 1350)
+	portrait  = option(1080, 1350)
 	resize    = bimg.Options{Quality: 90, Width: 1200}
 
 	imageTypes = map[string]bimg.Options{"thumb": thumb, "landscape": landscape,
-		"square": square, "portrait": portraite, "resize": resize}
+		"square": square, "portrait": portrait, "resize": resize}
 )
 
 func CreateImageDir(dir string) error {
