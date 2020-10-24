@@ -9,6 +9,9 @@ func (s *mserver) routes() {
 	s.mDELETE("/albums/{name}").HandlerFunc(s.authOnly(s.handleDeleteAlbum))
 	s.mPUT("/albums/{name}").HandlerFunc(s.authOnly(s.handleUpdateAlbum))
 
+	s.mGET("/smartalbum/camera").HandlerFunc(s.mResponse(s.handleAlbumCameras))
+	s.mGET("/smartalbum/camera/{name}").HandlerFunc(s.loginInfo(s.handleAlbumCamera))
+
 	s.path("/auth/login").HandlerFunc(s.handleGoogleLogin)
 	s.path("/uth/callback").HandlerFunc(s.handleGoogleCallback)
 
@@ -48,6 +51,8 @@ func (s *mserver) routes() {
 	s.path("/user").Methods("POST", "PUT").HandlerFunc(s.authOnly(s.handleUpdateUser))
 	s.path("/user/pic").Methods("PUT").HandlerFunc(s.authOnly(s.handleUpdatePicUser))
 	s.path("/user/drive").Methods("PUT").HandlerFunc(s.authOnly(s.handleUpdateDriveUser))
+	s.path("/user/config").Methods("GET").HandlerFunc(s.mResponse(s.handleUserConfig))
+	s.path("/user/config").Methods("POST", "PUT").HandlerFunc(s.authOnly(s.handleUpdateConfig))
 }
 
 func (s *mserver) mGET(p string) *mux.Route {

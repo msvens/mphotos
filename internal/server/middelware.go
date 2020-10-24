@@ -106,8 +106,14 @@ func decodeRequest(r *http.Request, dst interface{}) error {
 }
 
 func decodeJson(r *http.Request, dst interface{}) error {
+	// Buffer the body
+
+	//bodyBuffer, _ := ioutil.ReadAll(r.Body)
+	//println(string(bodyBuffer))
+	//r.Body = ioutil.NopCloser(bytes.NewReader(bodyBuffer))
+
 	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
+	//decoder.DisallowUnknownFields()
 	//We assume it is is ptr
 	err := decoder.Decode(dst)
 	if err != nil {

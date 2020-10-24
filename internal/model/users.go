@@ -12,7 +12,9 @@ type UserStore interface {
 	CreateUserStore() error
 	DeleteUserStore() error
 	UpdateUser(u *User) (*User, error)
+	UpdateUserConfig(c string) error
 	User() (*User, error)
+	UserConfig() (string, error)
 }
 
 func (db *DB) CreateUserStore() error {
@@ -23,9 +25,10 @@ CREATE TABLE IF NOT EXISTS users (
 	bio TEXT NOT NULL,
 	pic TEXT NOT NULL,
 	driveFolderId TEXT NOT NULL,
-	driveFolderName TEXT NOT NULL
+	driveFolderName TEXT NOT NULL,
+	config TEXT NOT NULL
 );
-INSERT INTO users (id, name, bio, pic, driveFolderId, driveFolderName) VALUES (23657, '', '', '', '','') ON CONFLICT (id) DO NOTHING;
+INSERT INTO users (id, name, bio, pic, driveFolderId, driveFolderName, config) VALUES (23657, '', '', '', '','','{}') ON CONFLICT (id) DO NOTHING;
 `
 	_, err := db.Exec(stmt)
 	return err
@@ -53,4 +56,20 @@ func (db *DB) UpdateUser(u *User) (*User, error) {
 		return nil, err
 	}
 	return db.User()
+}
+
+func (db *DB) UserConfig() (string, error) {
+	const stmt = "SELECT config FROM users LIMIT 1"
+	var c string
+	r := db.QueryRow(stmt)
+	if err := r.Scan(&c); err != nil {
+		return c, err
+	}
+	return c, nil
+}
+
+func (db *DB) UpdateUserConfig(c string) error {
+	const stmt = "UPDATE users SET config = $1"
+	_, err := db.Exec(stmt, c)
+	return err
 }

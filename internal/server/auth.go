@@ -16,10 +16,6 @@ type AuthUser struct {
 	Authenticated bool `json:"authenticated"`
 }
 
-//MPhotos Auth Handlers and Methods
-//
-//
-
 func (s *mserver) handleLogin(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	type request struct {
 		Password string `json:"password" schema:"password"`

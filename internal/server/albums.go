@@ -15,6 +15,25 @@ func (s *mserver) handleAlbums(_ http.ResponseWriter, _ *http.Request) (interfac
 	return s.db.Albums()
 }
 
+func (s *mserver) handleAlbumCameras(_ http.ResponseWriter, _ *http.Request) (interface{}, error) {
+	return s.db.CameraAlbums()
+}
+
+func (s *mserver) handleAlbumCamera(r *http.Request, loggedIn bool) (interface{}, error) {
+	vars := mux.Vars(r)
+	name := vars["name"]
+	if album, err := s.db.CameraAlbum(name); err != nil {
+		return nil, err
+	} else {
+		photos, err := s.db.Photos(model.Range{}, model.DriveDate, model.PhotoFilter{loggedIn, name})
+		if err != nil {
+			return nil, err
+		}
+		return &AlbumCollection{album, &PhotoFiles{len(photos), photos}}, nil
+	}
+
+}
+
 func (s *mserver) handleAlbum(r *http.Request, loggedIn bool) (interface{}, error) {
 	vars := mux.Vars(r)
 	name := vars["name"]

@@ -14,6 +14,8 @@ type AlbumStore interface {
 	AddAlbum(album *Album) error
 	Album(name string) (*Album, error)
 	Albums() ([]*Album, error)
+	CameraAlbums() ([]*Album, error)
+	CameraAlbum(cameraModel string) (*Album, error)
 	CreateAlbumPhotoStore() error
 	CreateAlbumStore() error
 	DeleteAlbum(name string) error
@@ -114,6 +116,35 @@ func (db *DB) Albums() ([]*Album, error) {
 		}
 	}
 	return albums, nil
+}
+
+func (db *DB) CameraAlbums() ([]*Album, error) {
+	const stmt = "SELECT DISTINCT ON (cameramodel) cameramodel, cameramake, driveId FROM photos ORDER BY cameramodel, drivedate;"
+	var albums []*Album
+	if rows, err := db.Query(stmt); err != nil {
+		return nil, err
+	} else {
+		defer rows.Close()
+		for rows.Next() {
+			var album = Album{}
+			if err := rows.Scan(&album.Name, &album.Description, &album.CoverPic); err != nil {
+				return nil, err
+			}
+			albums = append(albums, &album)
+		}
+	}
+	return albums, nil
+}
+
+func (db *DB) CameraAlbum(cameramodel string) (*Album, error) {
+	const stmt = "SELECT cameramodel, cameramake, driveId FROM photos WHERE cameramodel = $1 ORDER BY drivedate;"
+	resp := Album{}
+	if err := db.QueryRow(stmt, cameramodel).Scan(&resp.Name, &resp.Description, &resp.CoverPic); err != nil {
+		return nil, err
+	} else {
+		return &resp, nil
+	}
+
 }
 
 func (db *DB) PhotoAlbums(id string) ([]*Album, error) {
