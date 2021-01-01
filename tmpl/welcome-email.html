@@ -1,0 +1,52 @@
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>Mellowtech Photos</title>
+        <style>
+            body{
+                #font-family: "Lucida Grande", Verdana, Sans-Serif;
+                font-family: helvetica, sans-serif;
+                line-height: 1.5em;
+                font-size: 0.9em;
+                #background-color:#F2F2F2;
+                font-weight: 400;
+            }
+
+            h1{
+                font-family: Helvetica, sans-serif;
+                font-size: 1.1em;
+                font-weight: 400;
+                text-transform: uppercase;
+
+            }
+            h2{
+                font-family: Helvetica, sans-serif;
+                font-size: 1.0em;
+                font-weight: 600;
+                text-transform: uppercase;
+                margin-bottom: 0px;
+                margin-top: 30px;
+                color: green;
+                letter-spacing: 0.3em;
+            }
+            #body{
+                margin: 0px auto;
+                width: 600px;
+            }
+
+            p{
+                margin-left: 0em;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h2>Welcome to Mellowtech Photos, {{.Name}}</h2>
+        As a guest you will be able to like my photos, add comments, download photos and more. In order to
+        enjoy your full Mellowtech Photos experience, please verify your email here:
+        <a href="{{.VerifyUrl}}?code={{.Code}}">VERIFY YOUR EMAIL</a>
+        <p>
+            Enjoy your stay at Mellowtech Photos!
+        </p>
+    </body>
+</html>

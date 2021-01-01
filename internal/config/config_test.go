@@ -34,6 +34,9 @@ func TestConfigFile(t *testing.T) {
 	if ServerHost() != "localhost" {
 		t.Errorf("expected localhost got %v", ServerHost())
 	}
+	if VerifyUrl() != "http://localhost:8050/api/guest/verify" {
+		t.Errorf("expected http://localhost:8050/api/guest/verify got #{VerifyUrl()}")
+	}
 
 	//session config:
 	if SessionCookieName() != "server-session" {

@@ -2,8 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/gorilla/sessions"
-	"github.com/msvens/mdrive"
 	"github.com/msvens/mphotos/internal/config"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -20,7 +18,8 @@ func (s *mserver) handleLogin(w http.ResponseWriter, r *http.Request) (interface
 	type request struct {
 		Password string `json:"password" schema:"password"`
 	}
-	session, err := s.store.Get(r, config.SessionCookieName())
+	//session, err := s.store.Get(r, config.SessionCookieName())
+	session, err := s.store.Get(r, s.cookieName)
 	if err != nil {
 		return nil, InternalError(err.Error())
 	}
@@ -58,38 +57,20 @@ func (s *mserver) handleLoggedIn(r *http.Request, loggedIn bool) (interface{}, e
 	return AuthUser{loggedIn}, nil
 }
 
-func (s *mserver) checkLogin(w http.ResponseWriter, r *http.Request) error {
+func (s *mserver) checkLogin(w http.ResponseWriter, r *http.Request) (bool, error) {
 	session, err := s.store.Get(r, s.cookieName)
 	if err != nil {
-		return InternalError(err.Error())
+		return false, InternalError(err.Error())
 	}
-	user := sessionUser(session)
-	if !user.Authenticated {
-		err = session.Save(r, w)
-		if err != nil {
-			return InternalError(err.Error())
+	if val, ok := session.Values["user"]; ok {
+		if user, ok := val.(AuthUser); ok {
+			return user.Authenticated, nil
+		} else {
+			return false, InternalError("could not parse mphotos cookie value")
 		}
-		return UnauthorizedError("user not authenticated to api")
-	}
-	return nil
-}
-
-func (s *mserver) isLoggedIn(w http.ResponseWriter, r *http.Request) bool {
-	if err := s.checkLogin(w, r); err == nil {
-		return true
 	} else {
-		return false
+		return false, nil
 	}
-}
-
-func sessionUser(s *sessions.Session) AuthUser {
-	val := s.Values["user"]
-	var user = AuthUser{}
-	user, ok := val.(AuthUser)
-	if !ok {
-		return AuthUser{Authenticated: false}
-	}
-	return user
 }
 
 // GOOGLE Auth methods and handler below:
@@ -110,16 +91,19 @@ func (s *mserver) tokenFromFile(file string) (*oauth2.Token, error) {
 
 func (s *mserver) authFromFile() error {
 	if token, err := s.tokenFromFile(s.tokenFile); err != nil {
-		s.setDriveService(nil)
+		//s.setDriveService(nil)
+		s.ds = nil
+		s.ms = nil
 		return err
 	} else {
-		if drv, err := mdrive.NewDriveService(token, s.gconfig); err != nil {
+		return s.setGoogleServices(token)
+		/*if drv, err := gdrive.NewDriveService(token, s.gconfig); err != nil {
 			s.setDriveService(nil)
 			return err
 		} else {
 			s.setDriveService(drv)
 			return nil
-		}
+		}*/
 	}
 }
 
@@ -156,15 +140,19 @@ func (s *mserver) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		s.saveToken(s.tokenFile, token)
-		if drv, err := mdrive.NewDriveService(token, s.gconfig); err != nil {
-			s.l.Errorw("cannot create mdrive service", zap.Error(err))
+		if err := s.setGoogleServices(token); err == nil {
+			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+		}
+		/*if drv, err := gdrive.NewDriveService(token, s.gconfig); err != nil {
+			s.l.Errorw("cannot create google drive service", zap.Error(err))
 		} else {
 			s.setDriveService(drv)
 			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
-		}
+		}*/
 	}
 }
 
+//TODO: make sure you can only do this if you are logged in
 func (s *mserver) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	token, err := s.tokenFromFile(s.tokenFile)
 	if err != nil {
@@ -173,13 +161,17 @@ func (s *mserver) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 	} else {
 		s.l.Info("read token from file")
-		//gtoken = token
-		drv, err := mdrive.NewDriveService(token, s.gconfig)
-		if err != nil {
-			s.l.Errorw("could not create mdrive service", zap.Error(err))
+		if err = s.setGoogleServices(token); err == nil {
+			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		}
+		//gtoken = token
+		/*drv, err := gdrive.NewDriveService(token, s.gconfig)
+		if err != nil {
+			s.l.Errorw("could not create google drive service", zap.Error(err))
+		}
+
 		s.setDriveService(drv)
-		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)*/
 	}
 }
 

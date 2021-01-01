@@ -3,9 +3,9 @@ package server
 import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/msvens/mdrive"
 	"github.com/msvens/mexif"
 	"github.com/msvens/mphotos/internal/config"
+	"github.com/msvens/mphotos/internal/gdrive"
 	"github.com/msvens/mphotos/internal/img"
 	"github.com/msvens/mphotos/internal/model"
 	"go.uber.org/zap"
@@ -84,7 +84,7 @@ func (s *mserver) handleDeletePhotos(r *http.Request) (interface{}, error) {
 func (s *mserver) handleDownloadPhoto(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
-	loggedIn := s.isLoggedIn(w, r)
+	loggedIn := ctxLoggedIn(r.Context())
 	p, err := s.db.Photo(id, loggedIn)
 	if err != nil {
 		http.Error(w, "file not found", http.StatusNotFound)
@@ -319,7 +319,7 @@ func addPhoto(s *mserver, f *drive.File, tool *mexif.MExifTool) (bool, error) {
 	//photo.Title = f.Name
 	photo.Md5 = f.Md5Checksum
 	photo.FileName = f.Id + ".jpg"
-	if t, err := mdrive.ParseTime(f.CreatedTime); err == nil {
+	if t, err := gdrive.ParseTime(f.CreatedTime); err == nil {
 		photo.DriveDate = t
 	}
 

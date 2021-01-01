@@ -1,9 +1,11 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"io"
@@ -27,20 +29,59 @@ var decoder = schema.NewDecoder()
 type mHandler func(w http.ResponseWriter, r *http.Request) (interface{}, error)
 type reqHandler func(r *http.Request) (interface{}, error)
 type loginHandler func(r *http.Request, loggedIn bool) (interface{}, error)
+type guestHandler func(r *http.Request, uuid uuid.UUID) (interface{}, error)
+
+var loggedInCtxKey = &contextKey{"loggedIn"}
+var guestCtxKey = &contextKey{"guest"}
+
+type contextKey struct {
+	name string
+}
+
+func ctxLoggedIn(ctx context.Context) bool {
+	if raw, found := ctx.Value(loggedInCtxKey).(bool); found {
+		return raw
+	} else {
+		return true
+	}
+}
+
+func ctxGuest(ctx context.Context) uuid.UUID {
+	if raw, found := ctx.Value(guestCtxKey).(uuid.UUID); found {
+		return raw
+	} else {
+		return emptyuuid
+	}
+}
+
+//Middleware to set information about logged in user as well as the
+//current guest
+func (s *mserver) userGuestInfoMW(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		loggedIn, loginErr := s.checkLogin(w, r)
+		uuid, err := guestUUID(w, r, s)
+		ctx := context.WithValue(r.Context(), loggedInCtxKey, loggedIn)
+		ctx = context.WithValue(ctx, guestCtxKey, uuid)
+		r = r.WithContext(ctx)
+		s.l.Debugw("MWReq", "uri", r.RequestURI, "method", r.Method, "loggedIn", loggedIn, "guest", uuid, "guest error", err, "user error", loginErr)
+		next.ServeHTTP(w, r)
+	})
+}
 
 func (s *mserver) authOnly(rh reqHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.l.Debugw("AuthReq", "uri", r.RequestURI, "method", r.Method)
-		if s.checkAndWrite(w, r) {
+		//s.l.Debugw("AuthReq", "uri", r.RequestURI, "method", r.Method)
+		if ctxLoggedIn(r.Context()) {
 			data, err := rh(r)
 			psResponse(data, err, w)
+		} else {
+			psResponse(nil, UnauthorizedError("user not logged in"), w)
 		}
 	}
 }
 
 func (s *mserver) mResponse(handler mHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.l.Debugw("Req", "uri", r.RequestURI, "method", r.Method)
 		data, err := handler(w, r)
 		psResponse(data, err, w)
 	}
@@ -48,19 +89,21 @@ func (s *mserver) mResponse(handler mHandler) http.HandlerFunc {
 
 func (s *mserver) loginInfo(lh loginHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var loggedIn = s.isLoggedIn(w, r)
-		s.l.Debugw("LoginReq", "uri", r.RequestURI, "method", r.Method, "loggedin", loggedIn)
-		data, err := lh(r, loggedIn)
+		data, err := lh(r, ctxLoggedIn(r.Context()))
 		psResponse(data, err, w)
 	}
 }
 
-func (s *mserver) checkAndWrite(w http.ResponseWriter, r *http.Request) bool {
-	if err := s.checkLogin(w, r); err != nil {
-		psResponse(nil, err, w)
-		return false
+func (s *mserver) guestOnly(gh guestHandler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var guest = ctxGuest(r.Context())
+		if guest == emptyuuid {
+			psResponse(nil, UnauthorizedError("guest not found"), w)
+		} else {
+			data, err := gh(r, guest)
+			psResponse(data, err, w)
+		}
 	}
-	return true
 }
 
 func psResponse(data interface{}, err error, w http.ResponseWriter) {

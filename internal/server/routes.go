@@ -4,6 +4,8 @@ import "github.com/gorilla/mux"
 
 func (s *mserver) routes() {
 
+	s.r.Use(s.userGuestInfoMW)
+
 	s.mGET("/albums").HandlerFunc(s.mResponse(s.handleAlbums))
 	s.mGET("/albums/{name}").HandlerFunc(s.loginInfo(s.handleAlbum))
 	s.mDELETE("/albums/{name}").HandlerFunc(s.authOnly(s.handleDeleteAlbum))
@@ -13,7 +15,7 @@ func (s *mserver) routes() {
 	s.mGET("/smartalbum/camera/{name}").HandlerFunc(s.loginInfo(s.handleAlbumCamera))
 
 	s.path("/auth/login").HandlerFunc(s.handleGoogleLogin)
-	s.path("/uth/callback").HandlerFunc(s.handleGoogleCallback)
+	s.path("/auth/callback").HandlerFunc(s.handleGoogleCallback)
 
 	s.path("/drive/search").Methods("GET").HandlerFunc(s.authOnly(s.handleSearchDrive))
 	s.path("/drive").Methods("GET").HandlerFunc(s.authOnly(s.handleDrive))
@@ -47,10 +49,19 @@ func (s *mserver) routes() {
 	s.path("/photos/{id}").Methods("DELETE").HandlerFunc(s.authOnly(s.handleDeletePhoto))
 	s.path("/photos/{id}/private").Methods("POST", "PUT").HandlerFunc(s.authOnly(s.handleUpdatePhotoPrivate))
 
+	s.path("/guest").Methods("POST", "PUT").HandlerFunc(s.mResponse(s.handleCreateGuest))
+	s.path("/guest/verify").HandlerFunc(s.mResponse(s.handleVerifyGuest))
+	s.path("/guest").Methods("GET").HandlerFunc(s.guestOnly(s.handleGuest))
+	s.path("/guest/is").Methods("GET").HandlerFunc(s.mResponse(s.handleIsGuest))
+	s.path("/guest/likes").Methods("GET").HandlerFunc(s.guestOnly(s.handleGuestLikes))
+	s.path("/guest/likes/{photo}").Methods("GET").HandlerFunc(s.guestOnly(s.handleGuestLikePhoto))
+	s.path("/likes/{photo}").Methods("POST", "PUT").HandlerFunc(s.guestOnly(s.handleLikePhoto))
+	s.path("/likes/{photo}").Methods("DELETE").HandlerFunc(s.guestOnly(s.handleUnlikePhoto))
+	s.path("/likes/{photo}").Methods("GET").HandlerFunc(s.loginInfo(s.handlePhotoLikes))
 	s.path("/user").Methods("GET").HandlerFunc(s.loginInfo(s.handleUser))
 	s.path("/user").Methods("POST", "PUT").HandlerFunc(s.authOnly(s.handleUpdateUser))
 	s.path("/user/pic").Methods("PUT").HandlerFunc(s.authOnly(s.handleUpdatePicUser))
-	s.path("/user/drive").Methods("PUT").HandlerFunc(s.authOnly(s.handleUpdateDriveUser))
+	s.path("/user/gdrive").Methods("PUT").HandlerFunc(s.authOnly(s.handleUpdateDriveUser))
 	s.path("/user/config").Methods("GET").HandlerFunc(s.mResponse(s.handleUserConfig))
 	s.path("/user/config").Methods("POST", "PUT").HandlerFunc(s.authOnly(s.handleUpdateConfig))
 }

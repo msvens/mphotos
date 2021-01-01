@@ -13,6 +13,7 @@ type DataStore interface {
 	PhotoStore
 	AlbumStore
 	UserStore
+	GuestStore
 	CreateDataStore() error
 	DeleteDataStore() error
 }
@@ -56,6 +57,12 @@ func (db *DB) CreateDataStore() error {
 	if err = db.CreateAlbumStore(); err != nil {
 		return err
 	}
+	if err = db.CreateGuestStore(); err != nil {
+		return err
+	}
+	if err = db.CreateLikeStore(); err != nil {
+		return err
+	}
 	return db.CreatePhotoStore()
 }
 
@@ -68,6 +75,12 @@ func (db *DB) DeleteDataStore() error {
 		return err
 	}
 	if err = db.DeleteAlbumStore(); err != nil {
+		return err
+	}
+	if err = db.DeleteGuestStore(); err != nil {
+		return err
+	}
+	if err = db.DeleteLikeStore(); err != nil {
 		return err
 	}
 	return db.DeletePhotoStore()

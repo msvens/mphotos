@@ -67,5 +67,11 @@ func (s *mserver) handleUpdateAlbum(r *http.Request) (interface{}, error) {
 	if err := decodeRequest(r, &a); err != nil {
 		return nil, err
 	}
-	return s.db.UpdateAlbum(&a)
+	if s.db.HasAlbum(a.Name) {
+		return s.db.UpdateAlbum(&a)
+	} else {
+		s.l.Debugw("Album not found add", "Album", a.Name)
+		return &a, s.db.AddAlbum(&a)
+	}
+
 }

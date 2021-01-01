@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
-	"github.com/msvens/mdrive"
 	"github.com/msvens/mphotos/internal/config"
+	"github.com/msvens/mphotos/internal/gdrive"
+	"github.com/msvens/mphotos/internal/gmail"
 	"github.com/msvens/mphotos/internal/img"
 	"github.com/msvens/mphotos/internal/model"
 	"go.uber.org/zap"
@@ -24,12 +25,14 @@ import (
 
 type mserver struct {
 	db           model.DataStore
-	ds           *mdrive.DriveService
+	ds           *gdrive.DriveService
+	ms           *gmail.GmailService
 	r            *mux.Router
 	l            *zap.SugaredLogger
 	prefixPath   string
 	store        *sessions.CookieStore
 	cookieName   string
+	guestCookie  string
 	tokenFile    string
 	gconfig      *oauth2.Config
 	imgDir       string
@@ -49,6 +52,7 @@ func NewServer(prefixPath string) *mserver {
 	authKeyOne := []byte(config.SessionAuthcKey())
 	encKeyOne := []byte(config.SessionEncKey())
 	s.cookieName = config.SessionCookieName()
+	s.guestCookie = s.cookieName + "-guest"
 	s.store = sessions.NewCookieStore(
 		authKeyOne,
 		encKeyOne,
@@ -59,6 +63,7 @@ func NewServer(prefixPath string) *mserver {
 		HttpOnly: true,
 	}
 	gob.Register(AuthUser{})
+	gob.Register(SessionGuest{})
 
 	//setup logging
 	l, _ := zap.NewDevelopment()
@@ -107,7 +112,7 @@ func NewServer(prefixPath string) *mserver {
 		ClientSecret: config.GoogleClientSecret(),
 		Endpoint:     google.Endpoint,
 		RedirectURL:  config.GoogleRedirectUrl(),
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", mdrive.ReadOnlyScope()},
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", gdrive.ReadOnlyScope(), gmail.ComposeScope()},
 	}
 
 	return &s
@@ -164,9 +169,29 @@ func StartMServer() {
 	s.l.Info("server exited properly")
 }
 
-func (s *mserver) setDriveService(ds *mdrive.DriveService) {
+/*
+func (s *mserver) setDriveService(ds *gdrive.DriveService) {
 	s.ds = ds
 	//s.ps.DriveSrv = s.ds
+}
+*/
+
+func (s *mserver) setGoogleServices(token *oauth2.Token) error {
+	if drv, err := gdrive.NewDriveService(token, s.gconfig); err != nil {
+		s.l.Errorw("cannot create google drive service", zap.Error(err))
+		s.ds = nil
+		return err
+	} else {
+		s.ds = drv
+	}
+	if srv, err := gmail.NewGmailService(token, s.gconfig); err != nil {
+		s.l.Errorw("cannot create google mail service", zap.Error(err))
+		s.ms = nil
+		return err
+	} else {
+		s.ms = srv
+		return nil
+	}
 }
 
 //Error Handling

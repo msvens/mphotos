@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/msvens/mdrive"
+	"github.com/msvens/mphotos/internal/gdrive"
 	"google.golang.org/api/drive/v3"
 	"net/http"
 	"time"
@@ -86,7 +86,7 @@ func searchDriveFiles(s *mserver, id string, name string) ([]*drive.File, error)
 			id = f.Id
 		}
 	}
-	query := mdrive.NewQuery().Parents().In(id).And().MimeType().Eq(mdrive.Jpeg).TrashedEq(false)
+	query := gdrive.NewQuery().Parents().In(id).And().MimeType().Eq(gdrive.Jpeg).TrashedEq(false)
 	return s.ds.SearchAll(query, fileFields)
 }
 
@@ -97,7 +97,7 @@ func toDriveFile(file *drive.File) *DriveFile {
 		Md5Checksum: file.Md5Checksum,
 		MimeType:    file.MimeType,
 	}
-	df.CreatedTime, _ = mdrive.ParseTime(file.CreatedTime)
+	df.CreatedTime, _ = gdrive.ParseTime(file.CreatedTime)
 	return &df
 }
 

@@ -14,7 +14,6 @@ require (
 	github.com/magiconair/properties v1.8.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
-	github.com/msvens/mdrive v0.0.0-20200614193049-93ab05e12b1e
 	github.com/msvens/mexif v0.0.0-20200408190103-a1f0a29dec20
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/spf13/afero v1.3.4 // indirect

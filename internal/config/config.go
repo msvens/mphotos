@@ -73,6 +73,10 @@ func ServerHost() string {
 	return viper.GetString("server.host")
 }
 
+func VerifyUrl() string {
+	return viper.GetString("server.verifyUrl")
+}
+
 func ServerPrefix() string {
 	return viper.GetString("server.prefix")
 }
