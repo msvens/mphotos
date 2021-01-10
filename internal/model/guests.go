@@ -18,24 +18,18 @@ type Verify struct {
 
 type GuestStore interface {
 	CreateGuestStore() error
-	CreateLikeStore() error
 	DeleteGuestStore() error
-	DeleteLikeStore() error
 	AddGuest(id uuid.UUID, u *Guest) error
+	DeleteGuest(id uuid.UUID) (bool, error)
 	VerifyGuest(id uuid.UUID) (*Verify, error)
 	Guest(id uuid.UUID) (*Guest, error)
 	GuestByEmail(email string) (*Guest, error)
 	GuestUUID(email string) (*uuid.UUID, error)
 	HasGuest(id uuid.UUID) bool
 	HasGuestByEmail(email string) bool
+	HasGuestByName(name string) bool
 	Verified(id uuid.UUID) (*Verify, error)
-	AddLike(guest uuid.UUID, driveId string) error
-	DeleteLike(guest uuid.UUID, driveId string) error
-	Like(guest uuid.UUID, driveId string) bool
-	PhotoLikes(driveId string) ([]*Guest, error)
-	GuestLikes(guest uuid.UUID) ([]string, error)
-
-	//GuestLikes(uuid uuid.UUID) ([]*string, error)
+	UpdateGuest(guest uuid.UUID, email string, name string) (*Guest, error)
 }
 
 func (db *DB) CreateGuestStore() error {
@@ -46,7 +40,8 @@ CREATE TABLE IF NOT EXISTS guests (
 	email TEXT NOT NULL,
 	verified BOOLEAN NOT NULL,
 	verifytime TIMESTAMP NOT NULL,
-	CONSTRAINT guestemail UNIQUE (email)
+	CONSTRAINT guestemail UNIQUE (email),
+	CONSTRAINT guestname UNIQUE (name)
 );
 `
 	_, err := db.Exec(stmt)
@@ -54,25 +49,8 @@ CREATE TABLE IF NOT EXISTS guests (
 	return err
 }
 
-func (db *DB) CreateLikeStore() error {
-	const stmt = `
-	CREATE TABLE IF NOT EXISTS likes (
-		guest UUID,
-		driveId TEXT,
-		PRIMARY KEY (guest, driveId)
-	);
-`
-	_, err := db.Exec(stmt)
-	return err
-}
-
 func (db *DB) DeleteGuestStore() error {
 	_, err := db.Exec("DROP TABLE IF EXISTS guests;")
-	return err
-}
-
-func (db *DB) DeleteLikeStore() error {
-	_, err := db.Exec("DROP TABLE IF EXISTS likes;")
 	return err
 }
 
@@ -97,13 +75,8 @@ func (db *DB) DeleteGuest(uuid uuid.UUID) (bool, error) {
 		cnt, _ = res.RowsAffected()
 	}
 
-	const delLikes = "DELETE FROM likes WHERE guest = $1"
-
-	if _, err := db.Exec(delLikes, uuid.String()); err != nil {
-		return false, err
-	}
-
-	return cnt > 0, nil
+	err := db.DeleteLikes(uuid)
+	return cnt > 0, err
 
 }
 
@@ -161,6 +134,24 @@ func (db *DB) HasGuestByEmail(email string) bool {
 	}
 }
 
+func (db *DB) HasGuestByName(name string) bool {
+	const stmt = "SELECT 1 FROM guests WHERE name = $1"
+	if rows, err := db.Query(stmt, name); err == nil {
+		defer rows.Close()
+		return rows.Next()
+	} else {
+		return false
+	}
+}
+
+func (db *DB) UpdateGuest(uuid uuid.UUID, email string, name string) (*Guest, error) {
+	const stmt = "UPDATE guests SET (email, name) = ($1, $2) WHERE id = $3"
+	if _, err := db.Exec(stmt, email, name, uuid.String()); err != nil {
+		return nil, err
+	}
+	return db.Guest(uuid)
+}
+
 func (db *DB) Verified(uuid uuid.UUID) (*Verify, error) {
 	const stmt = "SELECT verified, verifytime FROM guests WHERE id = $1"
 	var ver Verify
@@ -176,69 +167,4 @@ func (db *DB) VerifyGuest(uuid uuid.UUID) (*Verify, error) {
 		return nil, err
 	}
 	return db.Verified(uuid)
-}
-
-func (db *DB) AddLike(uuid uuid.UUID, driveId string) error {
-	const stmt = "INSERT INTO likes (guest, driveId) VALUES ($1, $2) ON CONFLICT DO NOTHING"
-	if _, err := db.Exec(stmt, uuid.String(), driveId); err != nil {
-		return err
-	} else {
-		return nil
-	}
-}
-
-func (db *DB) DeleteLike(uuid uuid.UUID, driveId string) error {
-	const stmt = "DELETE FROM likes WHERE guest = $1 AND driveId = $2"
-	if _, err := db.Exec(stmt, uuid.String(), driveId); err != nil {
-		return err
-	} else {
-		return nil
-	}
-}
-
-func (db *DB) Like(guest uuid.UUID, driveId string) bool {
-	const stmt = "SELECT 1 FROM likes WHERE guest = $1 AND driveId = $2"
-	if rows, err := db.Query(stmt, guest.String(), driveId); err == nil {
-		defer rows.Close()
-		return rows.Next()
-	} else {
-		return false
-	}
-}
-
-func (db *DB) GuestLikes(guest uuid.UUID) ([]string, error) {
-	const stmt = "SELECT driveId FROM likes WHERE guest = $1"
-	photos := []string{}
-	if rows, err := db.Query(stmt, guest.String()); err != nil {
-		return nil, err
-	} else {
-		defer rows.Close()
-		for rows.Next() {
-			var driveId string
-			if err := rows.Scan(&driveId); err != nil {
-				return nil, err
-			}
-			photos = append(photos, driveId)
-		}
-	}
-	return photos, nil
-}
-
-func (db *DB) PhotoLikes(driveId string) ([]*Guest, error) {
-	const stmt = "SELECT name,email FROM guests WHERE id IN (SELECT guest FROM likes WHERE driveId = $1)"
-	guests := []*Guest{}
-	if rows, err := db.Query(stmt, driveId); err != nil {
-		return nil, err
-	} else {
-		defer rows.Close()
-		for rows.Next() {
-			var guest = Guest{}
-			if err := rows.Scan(&guest.Name, &guest.Email); err != nil {
-				return nil, err
-			}
-			guests = append(guests, &guest)
-		}
-	}
-	fmt.Println(len(guests))
-	return guests, nil
 }

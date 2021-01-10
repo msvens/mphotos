@@ -1,9 +1,7 @@
 package server
 
 import (
-	"database/sql"
 	"encoding/gob"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/msvens/mphotos/internal/config"
@@ -15,7 +13,6 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"google.golang.org/api/googleapi"
 	"net/http"
 	"os"
 	"os/signal"
@@ -195,52 +192,5 @@ func (s *mserver) setGoogleServices(token *oauth2.Token) error {
 }
 
 //Error Handling
-type ApiError struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-func (e *ApiError) Error() string {
-	return fmt.Sprintf("code: %d message: %s", e.Code, e.Message)
-}
-
-func newError(code int, message string) *ApiError {
-	return &ApiError{Code: code, Message: message}
-}
-
-func UnauthorizedError(message string) *ApiError {
-	return newError(http.StatusUnauthorized, message)
-}
-
-func NotFoundError(message string) *ApiError {
-	return newError(http.StatusNotFound, message)
-}
-
-func BadRequestError(message string) *ApiError {
-	return newError(http.StatusBadRequest, message)
-}
-
-func InternalError(message string) *ApiError {
-	return newError(http.StatusInternalServerError, message)
-}
-
-func ResolveError(err error) *ApiError {
-	//check for api error
-	e, ok := err.(*ApiError)
-	if ok {
-		return e
-	}
-	//check for google error
-	e1, ok := err.(*googleapi.Error)
-	if ok {
-		return &ApiError{e1.Code, e1.Message}
-	}
-
-	if err == sql.ErrNoRows {
-		return NotFoundError("No such data")
-	}
-	//check for db error
-	return InternalError(err.Error())
-}
 
 //async

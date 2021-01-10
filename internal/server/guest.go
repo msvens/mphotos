@@ -36,7 +36,7 @@ func guestUUID(w http.ResponseWriter, r *http.Request, s *mserver) (uuid.UUID, e
 	var guest = SessionGuest{}
 	guest, ok := val.(SessionGuest)
 	if !ok {
-		return emptyuuid, NotFoundError("no guest cookie")
+		return emptyuuid, nil
 	}
 	//check guest
 	if uuid, err := uuid.Parse(guest.Id); err != nil {
@@ -56,18 +56,40 @@ func guestUUID(w http.ResponseWriter, r *http.Request, s *mserver) (uuid.UUID, e
 	}
 }
 
-func (s *mserver) saveGuestCookie(w http.ResponseWriter, r *http.Request, guest uuid.UUID) error {
+func (s *mserver) saveGuestCookie(w http.ResponseWriter, r *http.Request, guest uuid.UUID, days int) error {
 	session, err := s.store.Get(r, s.guestCookie)
 	if err != nil {
 		return InternalError(err.Error())
 	}
 	gid := &SessionGuest{guest.String()}
 	session.Values["guest"] = gid
-	session.Options.MaxAge = Session_Year
+	session.Options.MaxAge = days
 	if err := session.Save(r, w); err != nil {
 		return InternalError(err.Error())
 	}
 	return nil
+}
+
+func (s *mserver) handleCommentPhoto(r *http.Request, uuid uuid.UUID) (interface{}, error) {
+	photo := Var(r, "photo")
+
+	type request struct {
+		Body string
+	}
+	var params request
+	if err := decodeRequest(r, &params); err != nil {
+		return nil, err
+	}
+	return s.db.AddComment(uuid, photo, params.Body)
+}
+
+func (s *mserver) handlePhotoComments(r *http.Request, loggedIn bool) (interface{}, error) {
+	photo := Var(r, "photo")
+	if s.db.HasPhoto(photo, loggedIn) {
+		return s.db.PhotoComments(photo)
+	} else {
+		return nil, NotFoundError("photo not found")
+	}
 }
 
 func (s *mserver) handleGuest(r *http.Request, uuid uuid.UUID) (interface{}, error) {
@@ -130,7 +152,7 @@ func (s *mserver) handleVerifyGuest(w http.ResponseWriter, r *http.Request) (int
 	if ver, err := s.db.VerifyGuest(id); err != nil {
 		return nil, err
 	} else if ver.Verified {
-		return ver, s.saveGuestCookie(w, r, id)
+		return ver, s.saveGuestCookie(w, r, id, Session_Year)
 	} else {
 		return ver, nil
 	}
@@ -154,6 +176,10 @@ func (s *mserver) handleGuestLikes(r *http.Request, uuid uuid.UUID) (interface{}
 	return nil, nil
 }
 
+func (s *mserver) handleLogoutGuest(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	return AuthUser{false}, s.saveGuestCookie(w, r, emptyuuid, -1)
+}
+
 func (s *mserver) handleGuestLikePhoto(r *http.Request, uuid uuid.UUID) (interface{}, error) {
 	type ret struct {
 		Like bool `json:"like"`
@@ -175,19 +201,21 @@ func (s *mserver) handleCreateGuest(w http.ResponseWriter, r *http.Request) (int
 		return err
 	}
 
-	saveGuestCookie := func(id *uuid.UUID) error {
-		session, err := s.store.Get(r, s.guestCookie)
-		if err != nil {
-			return InternalError(err.Error())
+	/*
+		saveGuestCookie := func(id *uuid.UUID) error {
+			session, err := s.store.Get(r, s.guestCookie)
+			if err != nil {
+				return InternalError(err.Error())
+			}
+			gid := &SessionGuest{id.String()}
+			session.Values["guest"] = gid
+			session.Options.MaxAge = Session_Year
+			if err := session.Save(r, w); err != nil {
+				return InternalError(err.Error())
+			}
+			return nil
 		}
-		gid := &SessionGuest{id.String()}
-		session.Values["guest"] = gid
-		session.Options.MaxAge = Session_Year
-		if err := session.Save(r, w); err != nil {
-			return InternalError(err.Error())
-		}
-		return nil
-	}
+	*/
 
 	type request struct {
 		Email string
@@ -203,22 +231,56 @@ func (s *mserver) handleCreateGuest(w http.ResponseWriter, r *http.Request) (int
 		s.l.Debugw("guest already exists send a new verify email", "email", params.Email)
 		id, _ := s.db.GuestUUID(params.Email)
 		u, _ := s.db.Guest(*id)
+
+		if u.Name != params.Name {
+			return nil, UnauthorizedError("name does not match provided email")
+		}
+		//here we should send a notification email...not a verify email
 		if err := sendEmail(u, id); err != nil {
 			return nil, err
 		}
-		return u, saveGuestCookie(id)
+		return u, s.saveGuestCookie(w, r, *id, Session_Year)
 	}
-	//user not found
+	//user email not found try to create new user
 	id := uuid.New()
 	u := model.Guest{
 		Email: params.Email,
 		Name:  params.Name,
 	}
+	if s.db.HasGuestByName(params.Name) {
+		return nil, UnauthorizedError("name already exists")
+	}
 	if err := s.db.AddGuest(id, &u); err != nil {
 		return nil, err
 	}
 	if err := sendEmail(&u, &id); err != nil {
+		_, _ = s.db.DeleteGuest(id)
 		return nil, err
 	}
-	return u, saveGuestCookie(&id)
+	return u, s.saveGuestCookie(w, r, id, Session_Year)
+}
+
+func (s *mserver) handleUpdateGuest(r *http.Request, uuid uuid.UUID) (interface{}, error) {
+
+	type request struct {
+		Email string
+		Name  string
+	}
+
+	var params request
+
+	if err := decodeRequest(r, &params); err != nil {
+		return nil, err
+	}
+
+	if strings.TrimSpace(params.Name) == "" {
+		return nil, BadRequestError("name cannot contain only white space characters")
+	}
+	u, _ := s.db.Guest(uuid)
+
+	if params.Email != "" && params.Email != u.Email {
+		return nil, BadRequestError("change of email is not yet supported")
+	}
+	return s.db.UpdateGuest(uuid, params.Email, params.Name)
+
 }
