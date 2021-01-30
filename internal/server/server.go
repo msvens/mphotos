@@ -87,15 +87,6 @@ func NewServer(prefixPath string) *mserver {
 	if err = img.CreateImageDir(config.ServiceRoot()); err != nil {
 		s.l.Panicw("could not create image dirs", zap.Error(err))
 	}
-	/*if err = os.MkdirAll(s.thumbDir, 0744); err != nil {
-		s.l.Panicw("could not rcreae thumb dir", zap.Error(err))
-	}*/
-
-	//ps.DriveSrv = driveSrv
-	//ps.folderPath = ps.rootDir + "/" + folderFileName
-
-	//ps, _ := service.NewPhotosService(s.db)
-	//s.ps = ps
 
 	//start async job channel:
 	wg.Add(1)
@@ -163,6 +154,11 @@ func StartMServer() {
 	if err := srv.Shutdown(ctx); err != nil {
 		s.l.Fatalw("server shutdown failed", zap.Error(err))
 	}
+
+	if err := s.db.CloseDb(); err != nil {
+		s.l.Fatalw("db close failed", zap.Error(err))
+	}
+
 	s.l.Info("server exited properly")
 }
 

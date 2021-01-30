@@ -18,6 +18,7 @@ type DataStore interface {
 	LikeStore
 	CreateDataStore() error
 	DeleteDataStore() error
+	CloseDb() error
 }
 
 type DB struct {
@@ -48,11 +49,12 @@ func NewDB() (DataStore, error) {
 	}
 }
 
+func (db *DB) CloseDb() error {
+	return db.Close()
+}
+
 func (db *DB) CreateDataStore() error {
 	var err error
-	if err = db.CreateAlbumPhotoStore(); err != nil {
-		return err
-	}
 	if err = db.CreateUserStore(); err != nil {
 		return err
 	}
@@ -73,9 +75,6 @@ func (db *DB) CreateDataStore() error {
 
 func (db *DB) DeleteDataStore() error {
 	var err error
-	if err = db.DeleteAlbumPhotoStore(); err != nil {
-		return err
-	}
 	if err = db.DeleteUserStore(); err != nil {
 		return err
 	}

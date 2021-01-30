@@ -1,95 +1,110 @@
 package model
 
 import (
+	"fmt"
 	"go.uber.org/zap"
 )
 
 type Album struct {
+	Id          int    `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	CoverPic    string `json:"coverPic"`
 }
 
 type AlbumStore interface {
-	AddAlbum(album *Album) error
-	Album(name string) (*Album, error)
+	AddAlbum(name, description, coverpic string) (*Album, error)
+	Album(id int) (*Album, error)
 	Albums() ([]*Album, error)
-	CameraAlbums() ([]*Album, error)
-	CameraAlbum(cameraModel string) (*Album, error)
-	CreateAlbumPhotoStore() error
+	AlbumPhotos(albumId int, filter PhotoFilter) ([]*Photo, error)
+	//CameraAlbums() ([]*Album, error)
+	//CameraAlbum(cameraModel string) (*Album, error)
 	CreateAlbumStore() error
-	DeleteAlbum(name string) error
-	DeleteAlbumPhotoStore() error
+	DeleteAlbum(id int) error
 	DeleteAlbumStore() error
-	HasAlbum(name string) bool
-	PhotoAlbums(id string) ([]*Album, error)
+	HasAlbum(id int) bool
+	HasAlbumName(name string) bool
+	PhotoAlbums(photoId string) ([]*Album, error)
 	UpdateAlbum(album *Album) (*Album, error)
+	UpdatePhotoAlbums(albumIds []int, photoId string) error
 }
 
-func (db *DB) AddAlbum(album *Album) error {
-	const stmt = "INSERT INTO albums (name, description, coverPic) VALUES ($1, $2, $3)"
-	if _, err := db.Exec(stmt, album.Name, album.Description, album.CoverPic); err != nil {
+func (db *DB) AddAlbum(name, description, coverpic string) (*Album, error) {
+	const stmt = "INSERT INTO albums (name, description, coverPic) VALUES ($1, $2, $3) RETURNING id;"
+	var id int
+	if err := db.QueryRow(stmt, name, description, coverpic).Scan(&id); err != nil {
+		return nil, err
+	} else {
+		fmt.Println(id, name, description)
+		return &Album{Id: id, Name: name, Description: description, CoverPic: coverpic}, nil
+	}
+	/*if _, err := db.QueryRow(stmt, name, description, coverpic); err != nil {
 		return err
 	} else {
 		return nil
-	}
+	}*/
 }
 
-func (db *DB) Album(name string) (*Album, error) {
-	const stmt = "SELECT name,description,coverPic FROM albums WHERE name = $1"
+func (db *DB) Album(id int) (*Album, error) {
+	const stmt = "SELECT id,name,description,coverPic FROM albums WHERE id = $1"
 	resp := Album{}
-	if err := db.QueryRow(stmt, name).Scan(&resp.Name, &resp.Description, &resp.CoverPic); err != nil {
+	if err := db.QueryRow(stmt, id).Scan(&resp.Id, &resp.Name, &resp.Description, &resp.CoverPic); err != nil {
 		return nil, err
 	} else {
 		return &resp, nil
 	}
 }
 
-func (db *DB) CreateAlbumPhotoStore() error {
-	const stmt = `
-	CREATE TABLE IF NOT EXISTS albumphoto (
-		album TEXT,
-		driveId TEXT,
-		PRIMARY KEY (album, driveId)
-	);
-`
-	_, err := db.Exec(stmt)
-	return err
-}
-
 func (db *DB) CreateAlbumStore() error {
 	const stmt = `
 	CREATE TABLE IF NOT EXISTS albums (
-		name TEXT PRIMARY KEY,
+	    id SERIAL PRIMARY KEY,
+		name TEXT,
 		description TEXT NOT NULL,
-		coverPic TEXT NOT NULL
+		coverPic TEXT NOT NULL,
+		CONSTRAINT albumname UNIQUE (name)
+	);
+	CREATE TABLE IF NOT EXISTS albumphoto (
+		albumId INTEGER,
+		driveId TEXT,
+		PRIMARY KEY (albumId, driveId)
 	);
 `
 	_, err := db.Exec(stmt)
 	return err
 }
 
-func (db *DB) DeleteAlbum(name string) error {
-	const delAlbumStmt = "DELETE FROM albums WHERE name = $1"
-	const delAlbumPhotoStmt = "DELETE FROM albumphoto WHERE album = $1"
-	if _, err := db.Exec(delAlbumStmt, name); err != nil {
+func (db *DB) DeleteAlbum(id int) error {
+	const delAlbumStmt = "DELETE FROM albums WHERE id = $1"
+	const delAlbumPhotoStmt = "DELETE FROM albumphoto WHERE albumId = $1"
+	if _, err := db.Exec(delAlbumStmt, id); err != nil {
 		return err
 	}
-	_, err := db.Exec(delAlbumPhotoStmt, name)
-	return err
-}
-
-func (db *DB) DeleteAlbumPhotoStore() error {
-	_, err := db.Exec("DROP TABLE IF EXISTS albumphoto;")
+	_, err := db.Exec(delAlbumPhotoStmt, id)
 	return err
 }
 
 func (db *DB) DeleteAlbumStore() error {
-	_, err := db.Exec("DROP TABLE IF EXISTS albums;")
+	const stmt = `
+	DROP TABLE IF EXISTS albumphoto;
+	DROP TABLE IF EXISTS albums;
+`
+	_, err := db.Exec(stmt)
 	return err
 }
 
-func (db *DB) HasAlbum(name string) bool {
+func (db *DB) HasAlbum(id int) bool {
+	const stmt = "SELECT 1 FROM albums WHERE id = $1"
+	if rows, err := db.Query(stmt, id); err == nil {
+		defer rows.Close()
+		return rows.Next()
+	} else {
+		logger.Errorw("could not check album", zap.Error(err))
+		return false
+	}
+}
+
+func (db *DB) HasAlbumName(name string) bool {
 	const stmt = "SELECT 1 FROM albums WHERE name = $1"
 	if rows, err := db.Query(stmt, name); err == nil {
 		defer rows.Close()
@@ -101,15 +116,15 @@ func (db *DB) HasAlbum(name string) bool {
 }
 
 func (db *DB) Albums() ([]*Album, error) {
-	const stmt = "SELECT name,description,coverPic FROM albums"
-	var albums []*Album
+	const stmt = "SELECT id,name,description,coverPic FROM albums"
+	albums := []*Album{}
 	if rows, err := db.Query(stmt); err != nil {
 		return nil, err
 	} else {
 		defer rows.Close()
 		for rows.Next() {
 			var album = Album{}
-			if err := rows.Scan(&album.Name, &album.Description, &album.CoverPic); err != nil {
+			if err := rows.Scan(&album.Id, &album.Name, &album.Description, &album.CoverPic); err != nil {
 				return nil, err
 			}
 			albums = append(albums, &album)
@@ -118,6 +133,7 @@ func (db *DB) Albums() ([]*Album, error) {
 	return albums, nil
 }
 
+/*
 func (db *DB) CameraAlbums() ([]*Album, error) {
 	const stmt = "SELECT DISTINCT ON (cameramodel) cameramodel, cameramake, driveId FROM photos ORDER BY cameramodel, drivedate;"
 	var albums []*Album
@@ -144,19 +160,34 @@ func (db *DB) CameraAlbum(cameramodel string) (*Album, error) {
 	} else {
 		return &resp, nil
 	}
+}
+*/
 
+func (db *DB) AlbumPhotos(albumId int, filter PhotoFilter) ([]*Photo, error) {
+	var stmt string
+	if !filter.Private {
+		stmt = "SELECT " + photoCols + " FROM photos WHERE private = false AND driveId IN (SELECT driveId FROM albumphoto WHERE albumId = $1)"
+	} else {
+		stmt = "SELECT " + photoCols + " FROM photos WHERE driveId IN (SELECT driveId FROM albumphoto WHERE albumId = $1)"
+	}
+	if rows, err := db.Query(stmt, albumId); err != nil {
+		return nil, err
+	} else {
+		defer rows.Close()
+		return scanPhotos(rows)
+	}
 }
 
-func (db *DB) PhotoAlbums(id string) ([]*Album, error) {
-	const stmt = "SELECT name, description, coverPic FROM albums WHERE name IN (SELECT album FROM albumphoto WHERE driveId = $1)"
-	var albums []*Album
-	if rows, err := db.Query(stmt, id); err != nil {
+func (db *DB) PhotoAlbums(photoId string) ([]*Album, error) {
+	const stmt = "SELECT id, name, description, coverPic FROM albums WHERE id IN (SELECT albumId FROM albumphoto WHERE driveId = $1)"
+	albums := []*Album{}
+	if rows, err := db.Query(stmt, photoId); err != nil {
 		return nil, err
 	} else {
 		defer rows.Close()
 		for rows.Next() {
 			var album = Album{}
-			if err := rows.Scan(&album.Name, &album.Description, &album.CoverPic); err != nil {
+			if err := rows.Scan(&album.Id, &album.Name, &album.Description, &album.CoverPic); err != nil {
 				return nil, err
 			}
 			albums = append(albums, &album)
@@ -166,9 +197,23 @@ func (db *DB) PhotoAlbums(id string) ([]*Album, error) {
 }
 
 func (db *DB) UpdateAlbum(album *Album) (*Album, error) {
-	const stmt = "UPDATE albums SET (description, coverPic) = ($1, $2) WHERE name = $3"
-	if _, err := db.Exec(stmt, album.Description, album.CoverPic, album.Name); err != nil {
+	const stmt = "UPDATE albums SET (name, description, coverPic) = ($1, $2, $3) WHERE id = $4"
+	if _, err := db.Exec(stmt, album.Name, album.Description, album.CoverPic, album.Id); err != nil {
 		return nil, err
 	}
-	return db.Album(album.Name)
+	return db.Album(album.Id)
+}
+
+func (db *DB) UpdatePhotoAlbums(album []int, photoId string) error {
+	//delete all old albums
+	if _, err := db.Exec("DELETE FROM albumphoto WHERE driveId = $1", photoId); err != nil {
+		return err
+	}
+	const addAlbumPhoto = "INSERT INTO albumphoto (albumId, driveId) VALUES ($1, $2)"
+	for _, a := range album {
+		if _, err := db.Exec(addAlbumPhoto, a, photoId); err != nil {
+			return nil
+		}
+	}
+	return nil
 }

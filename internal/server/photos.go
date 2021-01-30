@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/api/drive/v3"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -143,22 +144,6 @@ func (s *mserver) handleLatestPhoto(_ *http.Request, loggedIn bool) (interface{}
 	}
 }
 
-func (s *mserver) handlePhotoAlbums(r *http.Request, loggedIn bool) (interface{}, error) {
-	id := Var(r, "id")
-	if !loggedIn && !s.db.HasPhoto(id, loggedIn) {
-		return nil, NotFoundError("Could not find photo")
-	}
-	if albums, err := s.db.PhotoAlbums(id); err != nil {
-		return nil, err
-	} else {
-		names := make([]string, 0)
-		for _, a := range albums {
-			names = append(names, a.Name)
-		}
-		return names, nil
-	}
-}
-
 func (s *mserver) handlePhoto(r *http.Request, loggedIn bool) (interface{}, error) {
 	id := Var(r, "id")
 	if photo, err := s.db.Photo(id, loggedIn); err != nil {
@@ -190,7 +175,7 @@ func (s *mserver) handlePhotos(r *http.Request, loggedIn bool) (interface{}, err
 }
 
 func (s *mserver) handleScheduleJob(_ *http.Request) (interface{}, error) {
-	fl, err := listDriveFiles(s)
+	fl, err := checkPhotosDrive(s)
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +266,7 @@ func (s *mserver) handleUpdatePhoto(r *http.Request) (interface{}, error) {
 		Title       string   `json:"title"`
 		Description string   `json:"description"`
 		Keywords    []string `json:"keywords"`
-		Albums      []string `json:"albums"`
+		Albums      []int    `json:"albums"`
 	}
 	var par request
 	if err := decodeRequest(r, &par); err != nil {
@@ -460,15 +445,15 @@ func process(job *Job) {
 
 	job.State = StateStarted
 
-	var percent = 100 / job.NumFiles
-
 	for _, f := range job.files {
 		if _, err := addPhoto(job.s, f, tool); err != nil {
 			finishJob(job, err)
 			return
 		}
-		job.Percent = job.Percent + percent
 		job.NumProcessed = job.NumProcessed + 1
+		percent := float64(job.NumProcessed) / float64(job.NumFiles)
+		job.Percent = int(math.Round(percent * 100))
+		//fmt.Println(job.Percent, job.NumFiles, job.NumProcessed)
 		job.s.l.Debugw("", "jobid", job.Id, "progress", job.Percent)
 	}
 	finishJob(job, nil)

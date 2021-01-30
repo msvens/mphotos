@@ -11,7 +11,6 @@ import (
 
 type PhotoStore interface {
 	AddPhoto(p *Photo, exif *mexif.ExifCompact) error
-	AlbumPhotos(name string, filter PhotoFilter) ([]*Photo, error)
 	CreatePhotoStore() error
 	DeletePhoto(id string) (bool, error)
 	DeletePhotoStore() error
@@ -20,7 +19,6 @@ type PhotoStore interface {
 	Photo(id string, private bool) (*Photo, error)
 	Photos(r Range, order PhotoOrder, filter PhotoFilter) ([]*Photo, error)
 	SetPrivatePhoto(private bool, id string) (*Photo, error)
-	UpdatePhotoAlbums(albums []string, photoId string) error
 	UpdatePhoto(title string, description string, keywords []string, id string) (*Photo, error)
 }
 
@@ -129,21 +127,6 @@ CREATE TABLE IF NOT EXISTS photos (
 	}
 	_, err := db.Exec("CREATE TABLE IF NOT EXISTS exif (driveId TEXT PRIMARY KEY,data TEXT NOT NULL);")
 	return err
-}
-
-func (db *DB) AlbumPhotos(name string, filter PhotoFilter) ([]*Photo, error) {
-	var stmt string
-	if !filter.Private {
-		stmt = "SELECT " + photoCols + " FROM photos WHERE private = false AND driveId IN (SELECT driveId FROM albumphoto WHERE album = $1)"
-	} else {
-		stmt = "SELECT " + photoCols + " FROM photos WHERE driveId IN (SELECT driveId FROM albumphoto WHERE album = $1)"
-	}
-	if rows, err := db.Query(stmt, name); err != nil {
-		return nil, err
-	} else {
-		defer rows.Close()
-		return scanPhotos(rows)
-	}
 }
 
 func (db *DB) DeletePhoto(id string) (bool, error) {
@@ -260,20 +243,6 @@ func (db *DB) SetPrivatePhoto(private bool, id string) (*Photo, error) {
 		return nil, err
 	}
 	return db.Photo(id, true)
-}
-
-func (db *DB) UpdatePhotoAlbums(album []string, photoId string) error {
-	//delete all old albums
-	if _, err := db.Exec("DELETE FROM albumphoto WHERE driveId = $1", photoId); err != nil {
-		return err
-	}
-	const addAlbumPhoto = "INSERT INTO albumphoto (album, driveId) VALUES ($1, $2)"
-	for _, a := range album {
-		if _, err := db.Exec(addAlbumPhoto, a, photoId); err != nil {
-			return nil
-		}
-	}
-	return nil
 }
 
 func (db *DB) UpdatePhoto(title string, description string, keywords []string, id string) (*Photo, error) {

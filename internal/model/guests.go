@@ -45,7 +45,6 @@ CREATE TABLE IF NOT EXISTS guests (
 );
 `
 	_, err := db.Exec(stmt)
-	fmt.Println("create guest store, ", err)
 	return err
 }
 

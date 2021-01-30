@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"github.com/google/uuid"
 	"time"
 )
@@ -33,7 +32,6 @@ CREATE TABLE IF NOT EXISTS comments (
 CREATE INDEX IF NOT EXISTS driveId_idx ON comments (driveId);
 `
 	_, err := db.Exec(stmt)
-	fmt.Println("create comment store, ", err)
 	return err
 }
 
