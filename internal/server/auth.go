@@ -19,12 +19,12 @@ func (s *mserver) handleLogin(w http.ResponseWriter, r *http.Request) (interface
 		Password string `json:"password" schema:"password"`
 	}
 	//session, err := s.store.Get(r, config.SessionCookieName())
-	session, err := s.store.Get(r, s.cookieName)
-	if err != nil {
+	session, _ := s.store.Get(r, s.cookieName)
+	/*if err != nil {
 		return nil, InternalError(err.Error())
-	}
+	}*/
 	var loginParams request
-	if err = decodeRequest(r, &loginParams); err != nil {
+	if err := decodeRequest(r, &loginParams); err != nil {
 		return nil, err
 	} else if loginParams.Password != config.ServicePassword() {
 		if e := session.Save(r, w); e != nil {
@@ -34,6 +34,7 @@ func (s *mserver) handleLogin(w http.ResponseWriter, r *http.Request) (interface
 	}
 	user := &AuthUser{true}
 	session.Values["user"] = user
+	session.Options.MaxAge = Session_Month
 	if err := session.Save(r, w); err != nil {
 		return nil, InternalError(err.Error())
 	}

@@ -14,7 +14,8 @@ type SessionGuest struct {
 }
 
 const (
-	Session_Year int = 60 * 60 * 24 * 365
+	Session_Year  int = 60 * 60 * 24 * 365
+	Session_Month int = 60 * 60 * 24 * 30
 )
 
 var emptyuuid = uuid.UUID{}
@@ -57,10 +58,11 @@ func guestUUID(w http.ResponseWriter, r *http.Request, s *mserver) (uuid.UUID, e
 }
 
 func (s *mserver) saveGuestCookie(w http.ResponseWriter, r *http.Request, guest uuid.UUID, days int) error {
-	session, err := s.store.Get(r, s.guestCookie)
-	if err != nil {
+	session, _ := s.store.Get(r, s.guestCookie)
+	/*if err != nil {
+		println("this is an error "+err.Error())
 		return InternalError(err.Error())
-	}
+	}*/
 	gid := &SessionGuest{guest.String()}
 	session.Values["guest"] = gid
 	session.Options.MaxAge = days

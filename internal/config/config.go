@@ -22,15 +22,26 @@ func InitConfig() error {
 	return err
 }
 
+func NewConfig(name string) error {
+	viper.SetConfigName(name)
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("$HOME/.mphotos")
+	viper.AddConfigPath("/etc/mphotos")
+	viper.AddConfigPath(".")
+	viper.AddConfigPath("../..")
+	err := viper.ReadInConfig()
+	configed = true
+	return err
+}
+
 func testConfig() error {
 	viper.SetConfigName("config_example")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
-	viper.AddConfigPath("..")
+	viper.AddConfigPath("../..")
 	err := viper.ReadInConfig()
 	configed = true
 	return err
-
 }
 
 func DbHost() string {
