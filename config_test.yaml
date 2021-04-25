@@ -1,0 +1,31 @@
+server:
+  prefix: /api
+  port: 8050
+  host: localhost
+  verifyUrl: http://localhost:8050/api/guest/verify #link to verify in verification email
+
+service:
+  root: .server #default
+  imgDir: img #img path
+  thumbDir: thumb #thumbnail path
+  password: password
+
+session:
+  authKey: authKey #64 bytes recommended
+  encKey: encKey #32bytes recommended
+  authKeyOld: authKeyOld
+  encKeyOld: encKeyOld
+  cookieName: server-session
+
+
+db:
+  host: localhost
+  port: 5432
+  user: user
+  password: password
+  name: name
+
+google:
+  redirectUrl: http://some/redirect/url
+  clientId: clientId
+  clientSecret: clientSecret

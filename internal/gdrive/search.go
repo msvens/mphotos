@@ -12,6 +12,7 @@ const (
 	True  = "true"
 	Jpeg  = "image/jpeg"
 	Gif   = "image/gif"
+	Png   = "image/png"
 
 	Folder  = "application/vnd.google-apps.folder"
 	Sheet   = "application/vnd.google-apps.spreadsheet"

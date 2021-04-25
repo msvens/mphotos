@@ -232,9 +232,6 @@ func (s *mserver) handleImg(dir string, w http.ResponseWriter, r *http.Request) 
 
 func (s *mserver) handleImage(w http.ResponseWriter, r *http.Request) {
 	s.handleImg(s.imgDir, w, r)
-	/*vars := mux.Vars(r)
-	name := vars["name"]
-	http.ServeFile(w, r, imgPath(s, name))*/
 }
 
 func (s *mserver) handleResize(w http.ResponseWriter, r *http.Request) {
@@ -341,6 +338,11 @@ func addPhoto(s *mserver, f *drive.File, tool *mexif.MExifTool) (bool, error) {
 		s.l.Errorw("error adding photo: ", zap.Error(err))
 		return false, err
 	}
+	if !s.db.HasCameraModel(photo.CameraModel) {
+		if err = s.db.AddCameraFromPhoto(&photo); err != nil {
+			s.l.Fatalw("error adding camera model: ", zap.Error(err))
+		}
+	}
 	s.l.Infow("added photo", "driveId", photo.DriveId)
 	return true, nil
 }
@@ -392,6 +394,10 @@ func addPhotos(s *mserver) (*DriveFiles, error) {
 		}
 	}
 	return toDriveFiles(files), nil
+}
+
+func cameraPath(s *mserver, fileName string) string {
+	return filepath.Join(s.cameraDir, fileName)
 }
 
 func imgPath(s *mserver, fileName string) string {

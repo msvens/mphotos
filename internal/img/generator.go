@@ -34,6 +34,39 @@ func CreateImageDir(dir string) error {
 	return nil
 }
 
+func ResizeImage(srcFile, dstFile string, width int) error {
+	buffer, err := bimg.Read(srcFile)
+	if err != nil {
+		return err
+	}
+	img := bimg.NewImage(buffer)
+	options := bimg.Options{Quality: 90, Width: width}
+	if buff, err := bimg.Resize(img.Image(), options); err != nil {
+		return err
+	} else {
+		return bimg.Write(dstFile, buff)
+	}
+}
+
+func ResizeImages(srcFile string, sizes map[string]int) error {
+	buffer, err := bimg.Read(srcFile)
+	if err != nil {
+		return err
+	}
+	img := bimg.NewImage(buffer)
+	for k, v := range sizes {
+		options := bimg.Options{Quality: 90, Width: v}
+		if buff, err := bimg.Resize(img.Image(), options); err != nil {
+			return err
+		} else {
+			if err := bimg.Write(k, buff); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func GenerateImages(srcFile, dir string) error {
 	buffer, err := bimg.Read(srcFile)
 

@@ -16,6 +16,7 @@ type DataStore interface {
 	GuestStore
 	CommentStore
 	LikeStore
+	CameraStore
 	CreateDataStore() error
 	DeleteDataStore() error
 	CloseDb() error
@@ -70,7 +71,13 @@ func (db *DB) CreateDataStore() error {
 	if err = db.CreateCommentStore(); err != nil {
 		return err
 	}
-	return db.CreatePhotoStore()
+	if err = db.CreateCameraStore(); err != nil {
+		return err
+	}
+	if err = db.CreatePhotoStore(); err != nil {
+		return err
+	}
+	return db.PopulateFromPhotos()
 }
 
 func (db *DB) DeleteDataStore() error {
@@ -88,6 +95,9 @@ func (db *DB) DeleteDataStore() error {
 		return err
 	}
 	if err = db.DeleteCommentStore(); err != nil {
+		return err
+	}
+	if err = db.DeleteCameraStore(); err != nil {
 		return err
 	}
 	return db.DeletePhotoStore()

@@ -33,6 +33,7 @@ type mserver struct {
 	tokenFile    string
 	gconfig      *oauth2.Config
 	imgDir       string
+	cameraDir    string
 	thumbDir     string
 	portraitDir  string
 	landscapeDir string
@@ -76,6 +77,7 @@ func NewServer(prefixPath string) *mserver {
 	//init img paths:
 	//s.rootDir = config.ServiceRoot()
 	s.imgDir = config.ServicePath("img")
+	s.cameraDir = config.ServicePath("cameras")
 	s.thumbDir = config.ServicePath("thumb")
 	s.portraitDir = config.ServicePath("portrait")
 	s.landscapeDir = config.ServicePath("landscape")
@@ -86,6 +88,12 @@ func NewServer(prefixPath string) *mserver {
 	}
 	if err = img.CreateImageDir(config.ServiceRoot()); err != nil {
 		s.l.Panicw("could not create image dirs", zap.Error(err))
+	}
+	if err = os.MkdirAll(s.imgDir, 0744); err != nil {
+		s.l.Panicw("could not create img dir", zap.Error(err))
+	}
+	if err = os.MkdirAll(s.cameraDir, 0744); err != nil {
+		s.l.Panicw("could not camera dir", zap.Error(err))
 	}
 
 	//start async job channel:
