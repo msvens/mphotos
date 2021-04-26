@@ -28,6 +28,8 @@ type DB struct {
 
 var logger *zap.SugaredLogger
 
+var Version = "unknown"
+
 func init() {
 	l, _ := zap.NewDevelopment()
 	logger = l.Sugar()
