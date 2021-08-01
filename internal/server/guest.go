@@ -1,7 +1,9 @@
 package server
 
 import (
+	"fmt"
 	"github.com/google/uuid"
+	"github.com/gorilla/sessions"
 	"github.com/msvens/mphotos/internal/config"
 	"github.com/msvens/mphotos/internal/model"
 	"html/template"
@@ -28,41 +30,45 @@ type WelcomeEmail struct {
 
 var templates = template.Must(template.ParseFiles("tmpl/welcome-email.html"))
 
+func sessionGuest(session *sessions.Session) (SessionGuest, bool) {
+	val := session.Values["guest"]
+	guest, ok := val.(SessionGuest)
+	return guest, ok
+}
+
 func guestUUID(w http.ResponseWriter, r *http.Request, s *mserver) (uuid.UUID, error) {
 	session, err := s.store.Get(r, s.guestCookie)
 	if err != nil {
-		return emptyuuid, InternalError(err.Error())
+		fmt.Println("Could not get session ", err)
+		return s.clearGuestCookie(w, r, session)
 	}
-	val := session.Values["guest"]
-	var guest = SessionGuest{}
-	guest, ok := val.(SessionGuest)
+	guest, ok := sessionGuest(session)
+
 	if !ok {
 		return emptyuuid, nil
 	}
-	//check guest
+
 	if uuid, err := uuid.Parse(guest.Id); err != nil {
-		return uuid, err
+		fmt.Println("Could not parse session guest 1", ok)
+		return s.clearGuestCookie(w, r, session)
 	} else {
 		if s.db.HasGuest(uuid) {
 			return uuid, nil
 		} else {
-			//set the max age to -1 as the uuid is invalid
-			session.Values["guest"] = SessionGuest{}
-			session.Options.MaxAge = -1
-			if err := session.Save(r, w); err != nil {
-				return emptyuuid, InternalError(err.Error())
-			}
-			return emptyuuid, UnauthorizedError("guest not found")
+			fmt.Println("Did not have guest ", ok)
+			return s.clearGuestCookie(w, r, session)
 		}
 	}
 }
 
+func (s *mserver) clearGuestCookie(w http.ResponseWriter, r *http.Request, session *sessions.Session) (uuid.UUID, error) {
+	session.Values["guest"] = SessionGuest{}
+	session.Options.MaxAge = -1
+	return emptyuuid, session.Save(r, w)
+}
+
 func (s *mserver) saveGuestCookie(w http.ResponseWriter, r *http.Request, guest uuid.UUID, days int) error {
 	session, _ := s.store.Get(r, s.guestCookie)
-	/*if err != nil {
-		println("this is an error "+err.Error())
-		return InternalError(err.Error())
-	}*/
 	gid := &SessionGuest{guest.String()}
 	session.Values["guest"] = gid
 	session.Options.MaxAge = days
@@ -202,22 +208,6 @@ func (s *mserver) handleCreateGuest(w http.ResponseWriter, r *http.Request) (int
 		_, err := s.ms.SendHtmlMessage(g.Email, "Mellowtech Guest Verification", b.String())
 		return err
 	}
-
-	/*
-		saveGuestCookie := func(id *uuid.UUID) error {
-			session, err := s.store.Get(r, s.guestCookie)
-			if err != nil {
-				return InternalError(err.Error())
-			}
-			gid := &SessionGuest{id.String()}
-			session.Values["guest"] = gid
-			session.Options.MaxAge = Session_Year
-			if err := session.Save(r, w); err != nil {
-				return InternalError(err.Error())
-			}
-			return nil
-		}
-	*/
 
 	type request struct {
 		Email string
