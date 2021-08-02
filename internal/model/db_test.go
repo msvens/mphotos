@@ -5,13 +5,13 @@ import (
 	"testing"
 )
 
-func openTestDb() {
-
+func openTestDb() (DataStore, error) {
+	config.NewConfig("config_test")
+	return NewDB()
 }
 
 func TestDB(t *testing.T) {
-	config.NewConfig("config_test")
-	ds, err := NewDB()
+	ds, err := openTestDb()
 	if err != nil {
 		t.Errorf("could not create db: %s", err.Error())
 	}

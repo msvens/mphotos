@@ -1,5 +1,10 @@
 package model
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 type User struct {
 	Name            string `json:"name"`
 	Bio             string `json:"bio"`
@@ -49,6 +54,7 @@ func (db *DB) User() (*User, error) {
 	return &resp, nil
 }
 
+//Todo: Make this update more clear (i.e. cannot update drive relevant stuff
 func (db *DB) UpdateUser(u *User) (*User, error) {
 	const stmt = "UPDATE users SET (name, bio, pic) = ($1, $2, $3)"
 
@@ -69,6 +75,9 @@ func (db *DB) UserConfig() (string, error) {
 }
 
 func (db *DB) UpdateUserConfig(c string) error {
+	if !json.Valid([]byte(c)) {
+		return fmt.Errorf("Non valid json config: %s", c)
+	}
 	const stmt = "UPDATE users SET config = $1"
 	_, err := db.Exec(stmt, c)
 	return err
