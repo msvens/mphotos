@@ -5,24 +5,31 @@ import (
 	"testing"
 )
 
-func openTestDb() (DataStore, error) {
+func openAndCreateTestDb(t *testing.T) DataStore {
 	config.NewConfig("config_test")
-	return NewDB()
+	ds, err := NewDB()
+	if err != nil {
+		t.Errorf("Could no open DataStore got error: %s", err)
+	}
+	err = ds.CreateDataStore()
+	if err != nil {
+		t.Errorf("Could not Create Data Store got error: %s", err)
+	}
+	return ds
+}
+
+func deleteAndCloseTestDb(ds DataStore, t *testing.T) {
+	err := ds.DeleteDataStore()
+	if err != nil {
+		t.Errorf("could not delete datastore: %s", err)
+	}
+	if err = ds.CloseDb(); err != nil {
+		t.Errorf("could not close datastore: %s", err)
+	}
 }
 
 func TestDB(t *testing.T) {
-	ds, err := openTestDb()
-	if err != nil {
-		t.Errorf("could not create db: %s", err.Error())
-	}
-	if err = ds.CreateDataStore(); err != nil {
-		t.Errorf("could not create data store: %s", err.Error())
-	}
-	if err = ds.DeleteDataStore(); err != nil {
-		t.Errorf("could not delete data store: %s", err.Error())
-
-	}
-	if err = ds.CloseDb(); err != nil {
-		t.Errorf("could not close db: %s", err.Error())
-	}
+	//This test lacks a bunch of test where we expect errors
+	ds := openAndCreateTestDb(t)
+	deleteAndCloseTestDb(ds, t)
 }

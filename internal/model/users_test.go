@@ -36,14 +36,8 @@ func checkEmptyJson(str string) error {
 }
 
 func TestUsers(t *testing.T) {
-	ds, err := openTestDb()
-	if err != nil {
-		t.Errorf("could not create db: %s", err.Error())
-	}
-	err = ds.CreateUserStore()
-	if err != nil {
-		t.Errorf("could not create UserStore: %s", err.Error())
-	}
+	ds := openAndCreateTestDb(t)
+
 	user, err := ds.User()
 	if err != nil {
 		t.Errorf("no user created: %s", err.Error())
@@ -112,10 +106,5 @@ func TestUsers(t *testing.T) {
 		t.Error("UserConfig accepted some non json string")
 	}
 
-	err = ds.DeleteUserStore()
-	if err != nil {
-		t.Errorf("Could not delete UserStore: %s", err)
-
-	}
-
+	deleteAndCloseTestDb(ds, t)
 }

@@ -12,6 +12,10 @@ type Album struct {
 	CoverPic    string `json:"coverPic"`
 }
 
+func (a Album) String() string {
+	return fmt.Sprintf("{Id: %v, Name: %s, Description: %s, CoverPic: %s}", a.Id, a.Name, a.Description, a.CoverPic)
+}
+
 type AlbumStore interface {
 	AddAlbum(name, description, coverpic string) (*Album, error)
 	Album(id int) (*Album, error)
@@ -30,19 +34,16 @@ type AlbumStore interface {
 }
 
 func (db *DB) AddAlbum(name, description, coverpic string) (*Album, error) {
+	if trim(name) == "" {
+		return nil, fmt.Errorf("white space/empty names not allowed")
+	}
 	const stmt = "INSERT INTO albums (name, description, coverPic) VALUES ($1, $2, $3) RETURNING id;"
 	var id int
 	if err := db.QueryRow(stmt, name, description, coverpic).Scan(&id); err != nil {
 		return nil, err
 	} else {
-		fmt.Println(id, name, description)
 		return &Album{Id: id, Name: name, Description: description, CoverPic: coverpic}, nil
 	}
-	/*if _, err := db.QueryRow(stmt, name, description, coverpic); err != nil {
-		return err
-	} else {
-		return nil
-	}*/
 }
 
 func (db *DB) Album(id int) (*Album, error) {
@@ -133,36 +134,6 @@ func (db *DB) Albums() ([]*Album, error) {
 	return albums, nil
 }
 
-/*
-func (db *DB) CameraAlbums() ([]*Album, error) {
-	const stmt = "SELECT DISTINCT ON (cameramodel) cameramodel, cameramake, driveId FROM photos ORDER BY cameramodel, drivedate;"
-	var albums []*Album
-	if rows, err := db.Query(stmt); err != nil {
-		return nil, err
-	} else {
-		defer rows.Close()
-		for rows.Next() {
-			var album = Album{}
-			if err := rows.Scan(&album.Name, &album.Description, &album.CoverPic); err != nil {
-				return nil, err
-			}
-			albums = append(albums, &album)
-		}
-	}
-	return albums, nil
-}
-
-func (db *DB) CameraAlbum(cameramodel string) (*Album, error) {
-	const stmt = "SELECT cameramodel, cameramake, driveId FROM photos WHERE cameramodel = $1 ORDER BY drivedate;"
-	resp := Album{}
-	if err := db.QueryRow(stmt, cameramodel).Scan(&resp.Name, &resp.Description, &resp.CoverPic); err != nil {
-		return nil, err
-	} else {
-		return &resp, nil
-	}
-}
-*/
-
 func (db *DB) AlbumPhotos(albumId int, filter PhotoFilter) ([]*Photo, error) {
 	var stmt string
 	if !filter.Private {
@@ -205,6 +176,16 @@ func (db *DB) UpdateAlbum(album *Album) (*Album, error) {
 }
 
 func (db *DB) UpdatePhotoAlbums(album []int, photoId string) error {
+	//first check if photo exists (this should be handled better as a photo could be deleted between statements
+	if !db.HasPhoto(photoId, true) {
+		return fmt.Errorf("non existent photo")
+	}
+	//check album Ids
+	for _, id := range album {
+		if !db.HasAlbum(id) {
+			return fmt.Errorf("non existent album")
+		}
+	}
 	//delete all old albums
 	if _, err := db.Exec("DELETE FROM albumphoto WHERE driveId = $1", photoId); err != nil {
 		return err

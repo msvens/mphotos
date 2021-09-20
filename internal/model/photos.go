@@ -65,6 +65,10 @@ type Photo struct {
 	Likes    uint    `json:"likes"`
 }
 
+func (p Photo) String() string {
+	return fmt.Sprintf("{DriveId: %s, FileName: %s, DriveDate: %v ...}", p.DriveId, p.FileName, p.DriveDate)
+}
+
 type PhotoFilter struct {
 	Private     bool
 	CameraModel string
