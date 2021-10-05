@@ -72,7 +72,8 @@ func (dao *AlbumPG) HasByName(name string) bool {
 
 func (dao *AlbumPG) Albums(photoId uuid.UUID) ([]*Album, error) {
 	ret := []*Album{}
-	err := dao.db.Select(&ret, "SELECT * FROM album")
+	stmt := "SELECT * FROM album WHERE id IN (select albumId FROM albumphotos WHERE photoId = $1)"
+	err := dao.db.Select(&ret, stmt, photoId)
 	return ret, err
 }
 

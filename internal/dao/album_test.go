@@ -134,6 +134,11 @@ func TestAlbums(t *testing.T) {
 			t.Errorf("Did not get %v in album list", second.Id)
 		}
 	}
+	if albums, err = pgdb.Album.Albums(testPhotos[3].Id); err != nil {
+		t.Error("could not retrive photo albums ", err)
+	} else if len(albums) != 0 {
+		t.Errorf("expected 0 albums got %v albums", len(albums))
+	}
 
 	if photos, err := pgdb.Album.Photos(updatedFirst.Id, false); err != nil {
 		t.Error("Could not get album photos got error: ", err)
