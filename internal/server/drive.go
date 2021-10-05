@@ -61,7 +61,7 @@ func checkPhotosDrive(s *mserver) ([]*drive.File, error) {
 	}
 	var ret []*drive.File
 	for _, f := range fl {
-		if !s.db.HasPhoto(f.Id, true) {
+		if !s.pg.Photo.HasMd5(f.Md5Checksum) {
 			ret = append(ret, f)
 		}
 	}
@@ -69,7 +69,7 @@ func checkPhotosDrive(s *mserver) ([]*drive.File, error) {
 }
 
 func listDriveFiles(s *mserver) ([]*drive.File, error) {
-	if u, err := s.db.User(); err != nil {
+	if u, err := s.pg.User.Get(); err != nil {
 		return nil, InternalError("user not found")
 	} else if u.DriveFolderId == "" {
 		return nil, NotFoundError("Drive folder has not been set")

@@ -56,6 +56,16 @@ func ctxGuest(ctx context.Context) uuid.UUID {
 
 //Middleware to set information about logged in user as well as the
 //current guest
+
+func uid(r *http.Request, idname string, uuID *uuid.UUID) error {
+	if id, err := uuid.Parse(Var(r, idname)); err != nil {
+		return BadRequestError("Could not parse photo id")
+	} else {
+		*uuID = id
+		return nil
+	}
+}
+
 func (s *mserver) userGuestInfoMW(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		loggedIn, loginErr := s.checkLogin(w, r)

@@ -18,8 +18,8 @@ package cmd
 import (
 	"fmt"
 	"github.com/msvens/mphotos/internal/config"
+	"github.com/msvens/mphotos/internal/dao"
 	"github.com/msvens/mphotos/internal/img"
-	"github.com/msvens/mphotos/internal/model"
 	"github.com/spf13/cobra"
 	"path/filepath"
 )
@@ -34,12 +34,12 @@ var photosCmd = &cobra.Command{
 		config.InitConfig()
 		imgDir := config.ServicePath("img")
 		baseDir := config.ServiceRoot()
-		db, err := model.NewDB()
+		db, err := dao.NewPGDB()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		photos, err := db.Photos(model.Range{}, model.DriveDate, model.PhotoFilter{Private: true})
+		photos, err := db.Photo.List()
 		if err != nil {
 			fmt.Println(err)
 			return

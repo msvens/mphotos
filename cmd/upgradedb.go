@@ -16,8 +16,8 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-	"github.com/msvens/mphotos/internal/model"
+	"github.com/msvens/mphotos/internal/config"
+	"github.com/msvens/mphotos/internal/dao"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +27,11 @@ var upgradedbCmd = &cobra.Command{
 	Short: "Upgrade mphotos database",
 	Long:  `Upgrades the mphotos database to the latest version if possible`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("current  version: ", model.Version)
+		config.InitConfig()
+		if err := dao.MigrateFromModelToDAO(); err != nil {
+			println(err.Error())
+		}
+		//model.NewDB()
 		/*config.InitConfig()
 		db, err := model.NewDB()
 		if err != nil {

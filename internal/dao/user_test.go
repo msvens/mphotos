@@ -1,4 +1,4 @@
-package model
+package dao
 
 import (
 	"encoding/json"
@@ -36,16 +36,18 @@ func checkEmptyJson(str string) error {
 }
 
 func TestUsers(t *testing.T) {
-	ds := openAndCreateTestDb(t)
+	pgdb := openAndCreateTestDb(t)
 
-	user, err := ds.User()
+	user, err := pgdb.User.Get()
+
 	if err != nil {
 		t.Errorf("no user created: %s", err.Error())
 	}
 	//verify empty user
 	cmpUser := User{}
+	cmpUser.Config = "{}"
 	if *user != cmpUser {
-		t.Errorf("initial user is not empty: %v", user)
+		t.Errorf("initial user is not empty: %v %v", user, cmpUser)
 	}
 
 	//Update User
@@ -53,7 +55,7 @@ func TestUsers(t *testing.T) {
 	cmpUser.Pic = "somepic"
 	cmpUser.Bio = "somebio"
 
-	ret, err := ds.UpdateUser(&cmpUser)
+	ret, err := pgdb.User.Update(&cmpUser)
 	if err != nil {
 		t.Errorf("Could not update user: %s", err.Error())
 	}
@@ -61,40 +63,25 @@ func TestUsers(t *testing.T) {
 		t.Errorf("Users dont match")
 	}
 
-	//Check that driveId and driveFolderName cannot be updated
-	cmpUser.DriveFolderId = "someid"
-	cmpUser.DriveFolderName = "somefoldername"
-
-	ret, err = ds.UpdateUser(&cmpUser)
-	if err != nil {
-		t.Errorf("Could not update user: %s", err.Error())
-	}
-	cmpUser.DriveFolderName = ""
-	cmpUser.DriveFolderId = ""
-	if *ret != cmpUser {
-		t.Errorf("driveId or driveFolderName accidently set")
-	}
-
-	//Check User Config (should be a json string)
-
 	//Inital config should be an empty json object
-	conf, err := ds.UserConfig()
+	u, err := pgdb.User.Get()
 	if err != nil {
 		t.Errorf("Could not retrive user config: %s", err.Error())
-	} else if checkEmptyJson(conf) != nil {
-		t.Error(err.Error())
+	} else if e := checkEmptyJson(u.Config); e != nil {
+		t.Error(e.Error())
 	}
 	//Updating config
 	expConfig := TestConfig{"strConf", 1, true}
-	err = ds.UpdateUserConfig(toJson(expConfig))
+	u.Config = toJson(expConfig)
+	_, err = pgdb.User.Update(u)
 	if err != nil {
 		t.Errorf("Could not update config: %s", err.Error())
 	}
-	conf, err = ds.UserConfig()
+	u, err = pgdb.User.Get()
 	if err != nil {
 		t.Errorf("Could not retrieve updated config: %s", err.Error())
 	}
-	actConfig, err := fromJson(conf)
+	actConfig, err := fromJson(u.Config)
 	if err != nil {
 		t.Errorf("Could not parse json config: %s", err.Error())
 	} else if actConfig != expConfig {
@@ -102,9 +89,10 @@ func TestUsers(t *testing.T) {
 	}
 
 	//Dont accept non json config
-	if err = ds.UpdateUserConfig("some non json string"); err == nil {
+	u.Config = "some non json string"
+	if _, err = pgdb.User.Update(u); err == nil {
 		t.Error("UserConfig accepted some non json string")
 	}
 
-	deleteAndCloseTestDb(ds, t)
+	deleteAndCloseTestDb(pgdb, t)
 }

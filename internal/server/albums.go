@@ -1,67 +1,45 @@
 package server
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/msvens/mphotos/internal/model"
+	"github.com/google/uuid"
+	"github.com/msvens/mphotos/internal/dao"
 	"net/http"
-	"strconv"
 )
 
 type AlbumCollection struct {
-	Info   *model.Album `json:"info"`
-	Photos *PhotoFiles  `json:"photos"`
+	Info   *dao.Album  `json:"info"`
+	Photos *PhotoFiles `json:"photos"`
 }
 
 func (s *mserver) handleAlbums(_ http.ResponseWriter, _ *http.Request) (interface{}, error) {
-	return s.db.Albums()
+	return s.pg.Album.List()
 }
-
-/*
-func (s *mserver) handleAlbumCameras(_ http.ResponseWriter, _ *http.Request) (interface{}, error) {
-	return s.db.CameraAlbums()
-}
-
-func (s *mserver) handleAlbumCamera(r *http.Request, loggedIn bool) (interface{}, error) {
-	vars := mux.Vars(r)
-	name := vars["name"]
-	if album, err := s.db.CameraAlbum(name); err != nil {
-		return nil, err
-	} else {
-		photos, err := s.db.Photos(model.Range{}, model.DriveDate, model.PhotoFilter{loggedIn, name})
-		if err != nil {
-			return nil, err
-		}
-		return &AlbumCollection{album, &PhotoFiles{len(photos), photos}}, nil
-	}
-}
-*/
 
 func (s *mserver) handleAlbum(r *http.Request, loggedIn bool) (interface{}, error) {
-	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
-	if album, err := s.db.Album(id); err != nil {
-		return nil, err
+	if id, err := uuid.Parse(Var(r, "id")); err != nil {
+		return nil, BadRequestError("Could not parse album id")
 	} else {
-		photos, err := s.db.AlbumPhotos(id, model.PhotoFilter{Private: loggedIn})
-		if err != nil {
+		if album, err := s.pg.Album.Get(id); err != nil {
 			return nil, err
+		} else {
+			photos, err := s.pg.Album.Photos(id, loggedIn)
+			if err != nil {
+				return nil, err
+			}
+			return &AlbumCollection{Info: album, Photos: &PhotoFiles{len(photos), photos}}, nil
 		}
-		return &AlbumCollection{Info: album, Photos: &PhotoFiles{len(photos), photos}}, nil
 	}
 }
 
 func (s *mserver) handleDeleteAlbum(r *http.Request) (interface{}, error) {
-	id, err := strconv.Atoi(Var(r, "id"))
-
-	album, err := s.db.Album(id)
-	if err != nil {
-		return nil, err
+	if id, err := uuid.Parse(Var(r, "id")); err != nil {
+		return nil, BadRequestError("Could not parse album id")
+	} else {
+		ret, _ := s.pg.Album.Get(id)
+		return ret, s.pg.Album.Delete(id)
 	}
-	if err = s.db.DeleteAlbum(id); err != nil {
-		return nil, err
-	}
-	return album, nil
 }
+
 func (s *mserver) handleAddAlbum(r *http.Request) (interface{}, error) {
 	type request struct {
 		Name        string
@@ -72,38 +50,31 @@ func (s *mserver) handleAddAlbum(r *http.Request) (interface{}, error) {
 	if err := decodeRequest(r, &param); err != nil {
 		return nil, err
 	}
-
-	if s.db.HasAlbumName(param.Name) {
+	if s.pg.Album.HasByName(param.Name) {
 		return nil, BadRequestError("Album name in use")
 	}
-	return s.db.AddAlbum(param.Name, param.Description, param.CoverPic)
+	return s.pg.Album.Add(param.Name, param.Description, param.CoverPic)
 }
 
 func (s *mserver) handlePhotoAlbums(r *http.Request, loggedIn bool) (interface{}, error) {
-	id := Var(r, "id")
-
-	if !s.db.HasPhoto(id, loggedIn) { //broken
-		return nil, NotFoundError("Could not find photo")
-	}
-	return s.db.PhotoAlbums(id)
-	/*if albums, err := s.db.PhotoAlbums(id); err != nil {
-		return nil, err
+	if photoId, err := uuid.Parse(Var(r, "id")); err != nil {
+		return nil, BadRequestError("could not parse photo id")
 	} else {
-		names := make([]string, 0)
-		for _, a := range albums {
-			names = append(names, a.Name)
+		if !s.pg.Photo.Has(photoId, loggedIn) {
+			return nil, NotFoundError("Could not find photo xxx")
+		} else {
+			return s.pg.Album.Albums(photoId)
 		}
-		return names, nil
-	}*/
+	}
 }
 
 func (s *mserver) handleUpdateAlbum(r *http.Request) (interface{}, error) {
-	var a model.Album
+	var a dao.Album
 	if err := decodeRequest(r, &a); err != nil {
 		return nil, err
 	}
-	if s.db.HasAlbum(a.Id) {
-		return s.db.UpdateAlbum(&a)
+	if s.pg.Album.Has(a.Id) {
+		return s.pg.Album.Update(&a)
 	} else {
 		return nil, NotFoundError("Album not found")
 	}

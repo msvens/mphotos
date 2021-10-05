@@ -47,14 +47,8 @@ func ResolveError(err error) *ApiError {
 	if ok {
 		return &ApiError{e1.Code, e1.Message}
 	}
-	//check for pg errors
-	/*e2, ok := err.(*pq.Error)
-	if ok {
-		if e2.Code == ""
-		return &ApiError{http.StatusInternalServerError, string(e2.Code)}
-	}*/
 	if err == sql.ErrNoRows {
-		return NotFoundError("No such data")
+		return NotFoundError("No such data in db")
 	}
 	//check for db error
 	return InternalError(err.Error())

@@ -8,14 +8,9 @@ func (s *mserver) routes() {
 
 	s.mGET("/albums").HandlerFunc(s.mResponse(s.handleAlbums))
 	s.mPUT("/albums").HandlerFunc(s.authOnly(s.handleAddAlbum))
-	s.mGET("/albums/{id:[0-9]+}").HandlerFunc(s.loginInfo(s.handleAlbum))
-	s.mDELETE("/albums/{id:[0-9]+}").HandlerFunc(s.authOnly(s.handleDeleteAlbum))
-	s.mPUT("/albums/{id:[0-9]+}").HandlerFunc(s.authOnly(s.handleUpdateAlbum))
-
-	/*
-		s.mGET("/smartalbum/camera").HandlerFunc(s.mResponse(s.handleAlbumCameras))
-		s.mGET("/smartalbum/camera/{name}").HandlerFunc(s.loginInfo(s.handleAlbumCamera))
-	*/
+	s.mGET("/albums/{id}").HandlerFunc(s.loginInfo(s.handleAlbum))
+	s.mDELETE("/albums/{id}").HandlerFunc(s.authOnly(s.handleDeleteAlbum))
+	s.mPUT("/albums/{id}").HandlerFunc(s.authOnly(s.handleUpdateAlbum))
 
 	s.path("/auth/login").HandlerFunc(s.handleGoogleLogin)
 	s.path("/auth/callback").HandlerFunc(s.handleGoogleCallback)

@@ -5,10 +5,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/msvens/mphotos/internal/config"
+	"github.com/msvens/mphotos/internal/dao"
 	"github.com/msvens/mphotos/internal/gdrive"
 	"github.com/msvens/mphotos/internal/gmail"
 	"github.com/msvens/mphotos/internal/img"
-	"github.com/msvens/mphotos/internal/model"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
@@ -21,7 +21,8 @@ import (
 )
 
 type mserver struct {
-	db           model.DataStore
+	//dbold           model.DataStore
+	pg           *dao.PGDB
 	ds           *gdrive.DriveService
 	ms           *gmail.GmailService
 	r            *mux.Router
@@ -70,8 +71,12 @@ func NewServer(prefixPath string) *mserver {
 	s.r = mux.NewRouter()
 
 	var err error
-	if s.db, err = model.NewDB(); err != nil {
+	/*if s.dbold, err = model.NewDB(); err != nil {
 		s.l.Panicw("could not create dbservice", "error", err)
+	}*/
+
+	if s.pg, err = dao.NewPGDB(); err != nil {
+		s.l.Panicw("could not create pgdb service", "error", err)
 	}
 
 	//init img paths:
@@ -163,8 +168,12 @@ func StartMServer() {
 		s.l.Fatalw("server shutdown failed", zap.Error(err))
 	}
 
-	if err := s.db.CloseDb(); err != nil {
+	/*if err := s.dbold.CloseDb(); err != nil {
 		s.l.Fatalw("db close failed", zap.Error(err))
+	}*/
+
+	if err := s.pg.Close(); err != nil {
+		s.l.Fatalw("PGDB close failed", zap.Error(err))
 	}
 
 	s.l.Info("server exited properly")

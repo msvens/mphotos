@@ -1,9 +1,10 @@
-package model
+package dao
 
 import (
 	"encoding/json"
 	"github.com/msvens/mexif"
 	"io/ioutil"
+	"strconv"
 )
 
 var testPhotos []Photo
@@ -15,11 +16,15 @@ func loadPhotoTestData() error {
 	if loadedTestData {
 		return nil
 	}
-	photoData, err := ioutil.ReadFile("../../testphotos.json")
+	photoData, err := ioutil.ReadFile("../../testphoto.json")
 	if err != nil {
 		return err
 	}
 	err = json.Unmarshal(photoData, &testPhotos)
+	//add dummy sourceId
+	for idx, p := range testPhotos {
+		p.SourceId = "sourceId" + strconv.Itoa(idx)
+	}
 	if err != nil {
 		return err
 	}

@@ -5,9 +5,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/msvens/mexif"
 	"github.com/msvens/mphotos/internal/config"
+	"github.com/msvens/mphotos/internal/dao"
 	"github.com/msvens/mphotos/internal/gdrive"
 	"github.com/msvens/mphotos/internal/img"
-	"github.com/msvens/mphotos/internal/model"
 	"go.uber.org/zap"
 	"google.golang.org/api/drive/v3"
 	"io"
@@ -18,16 +18,17 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type PhotoFiles struct {
-	Length int            `json:"length"`
-	Photos []*model.Photo `json:"photos,omitempty"`
+	Length int          `json:"length"`
+	Photos []*dao.Photo `json:"photos,omitempty"`
 }
 
-func deletePhoto(s *mserver, p *model.Photo, removeFiles bool) (*model.Photo, error) {
-	s.l.Infow("Delete Photo", "id", p.DriveId, "removeFiles", removeFiles)
-	if del, err := s.db.DeletePhoto(p.DriveId); err != nil {
+func deletePhoto(s *mserver, p *dao.Photo, removeFiles bool) (*dao.Photo, error) {
+	s.l.Infow("Delete Photo", "id", p.Id, "removeFiles", removeFiles)
+	if del, err := s.pg.Photo.Delete(p.Id); err != nil {
 		return nil, err
 	} else if !del {
 		return nil, NotFoundError("Photo not found")
@@ -42,7 +43,7 @@ func deletePhoto(s *mserver, p *model.Photo, removeFiles bool) (*model.Photo, er
 	if err := os.Remove(thumbPath(s, p.FileName)); err != nil {
 		s.l.Errorw("Could not remove thumbnail", zap.Error(err))
 	}
-	s.l.Infow("Photo deleted", "id", p.DriveId)
+	s.l.Infow("Photo deleted", "id", p.Id)
 	return p, nil
 }
 
@@ -50,7 +51,12 @@ func (s *mserver) handleDeletePhoto(r *http.Request) (interface{}, error) {
 	type request struct {
 		RemoveFiles bool `json:"removeFiles" schema:"removeFiles"`
 	}
-	if photo, err := s.db.Photo(Var(r, "id"), true); err != nil {
+
+	id, err := uuid.Parse(Var(r, "id"))
+	if err != nil {
+		return nil, BadRequestError("Could not parse Id")
+	}
+	if photo, err := s.pg.Photo.Get(id, true); err != nil {
 		return nil, err
 	} else {
 		var params request
@@ -70,12 +76,12 @@ func (s *mserver) handleDeletePhotos(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 	s.l.Infow("Delete All Photos", "removeFiles", params.RemoveFiles)
-	if photos, err := s.db.Photos(model.Range{}, model.None, model.PhotoFilter{Private: true}); err != nil {
+	if photos, err := s.pg.Photo.List(); err != nil {
 		return nil, err
 	} else {
 		for _, p := range photos {
 			if _, e := deletePhoto(s, p, params.RemoveFiles); e != nil {
-				s.l.Errorw("could not delete photo ", "photo", p.DriveId, zap.Error(e))
+				s.l.Errorw("could not delete photo ", "photo", p.Id, zap.Error(e))
 			}
 		}
 		return &PhotoFiles{len(photos), photos}, nil
@@ -83,12 +89,16 @@ func (s *mserver) handleDeletePhotos(r *http.Request) (interface{}, error) {
 }
 
 func (s *mserver) handleDownloadPhoto(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id, err := uuid.Parse(Var(r, "id"))
+	if err != nil {
+		http.Error(w, "Could not parse Id", http.StatusBadRequest)
+		return
+	}
 	loggedIn := ctxLoggedIn(r.Context())
-	p, err := s.db.Photo(id, loggedIn)
+	p, err := s.pg.Photo.Get(id, loggedIn)
 	if err != nil {
 		http.Error(w, "file not found", http.StatusNotFound)
+		return
 	}
 	file, err := os.Open(imgPath(s, p.FileName))
 	if err != nil {
@@ -122,11 +132,14 @@ func (s *mserver) handleDownloadPhoto(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *mserver) handleExif(r *http.Request, loggedIn bool) (interface{}, error) {
-	id := Var(r, "id")
-	if !loggedIn && !s.db.HasPhoto(id, false) {
+	id, err := uuid.Parse(Var(r, "id"))
+	if err != nil {
+		return nil, BadRequestError("Could not parse Id")
+	}
+	if !loggedIn && !s.pg.Photo.Has(id, false) {
 		return nil, NotFoundError("could not find photo")
 	}
-	if exif, err := s.db.Exif(id); err != nil {
+	if exif, err := s.pg.Photo.Exif(id); err != nil {
 		return nil, err
 	} else {
 		return exif, nil
@@ -134,7 +147,7 @@ func (s *mserver) handleExif(r *http.Request, loggedIn bool) (interface{}, error
 }
 
 func (s *mserver) handleLatestPhoto(_ *http.Request, loggedIn bool) (interface{}, error) {
-	photos, err := s.db.Photos(model.Range{Offset: 0, Limit: 1}, model.DriveDate, model.PhotoFilter{Private: loggedIn})
+	photos, err := s.pg.Photo.Select(dao.Range{Offset: 0, Limit: 1}, dao.UploadDate, dao.PhotoFilter{Private: loggedIn})
 	if err != nil {
 		return nil, err
 	} else if len(photos) < 1 {
@@ -145,8 +158,11 @@ func (s *mserver) handleLatestPhoto(_ *http.Request, loggedIn bool) (interface{}
 }
 
 func (s *mserver) handlePhoto(r *http.Request, loggedIn bool) (interface{}, error) {
-	id := Var(r, "id")
-	if photo, err := s.db.Photo(id, loggedIn); err != nil {
+	id, err := uuid.Parse(Var(r, "id"))
+	if err != nil {
+		return nil, BadRequestError("Could not parse Id")
+	}
+	if photo, err := s.pg.Photo.Get(id, loggedIn); err != nil {
 		return nil, err
 	} else {
 		return photo, nil
@@ -164,9 +180,9 @@ func (s *mserver) handlePhotos(r *http.Request, loggedIn bool) (interface{}, err
 	if err := decodeRequest(r, &params); err != nil {
 		return nil, err
 	} else {
-		r := model.Range{Offset: params.Offset, Limit: params.Limit}
-		f := model.PhotoFilter{Private: loggedIn}
-		if photos, err := s.db.Photos(r, model.DriveDate, f); err != nil {
+		r := dao.Range{Offset: params.Offset, Limit: params.Limit}
+		f := dao.PhotoFilter{Private: loggedIn}
+		if photos, err := s.pg.Photo.Select(r, dao.UploadDate, f); err != nil {
 			return nil, err
 		} else {
 			return &PhotoFiles{Length: len(photos), Photos: photos}, nil
@@ -205,8 +221,8 @@ func (s *mserver) handleSearchPhotos(r *http.Request, loggedIn bool) (interface{
 		return nil, err
 	}
 	if params.CameraModel != "" {
-		f := model.PhotoFilter{loggedIn, params.CameraModel}
-		if photos, err := s.db.Photos(model.Range{}, model.DriveDate, f); err != nil {
+		f := dao.PhotoFilter{loggedIn, params.CameraModel}
+		if photos, err := s.pg.Photo.Select(dao.Range{}, dao.UploadDate, f); err != nil {
 			return nil, err
 		} else {
 			return &PhotoFiles{Length: len(photos), Photos: photos}, nil
@@ -252,27 +268,24 @@ func (s *mserver) handleSquare(w http.ResponseWriter, r *http.Request) {
 
 func (s *mserver) handleThumb(w http.ResponseWriter, r *http.Request) {
 	s.handleImg(s.thumbDir, w, r)
-	/*vars := mux.Vars(r)
-	name := vars["name"]
-	http.ServeFile(w, r, thumbPath(s, name))*/
 }
 
 func (s *mserver) handleUpdatePhoto(r *http.Request) (interface{}, error) {
 	type request struct {
-		Id          string   `json:"id"`
-		Title       string   `json:"title"`
-		Description string   `json:"description"`
-		Keywords    []string `json:"keywords"`
-		Albums      []int    `json:"albums"`
+		Id          uuid.UUID   `json:"id"`
+		Title       string      `json:"title"`
+		Description string      `json:"description"`
+		Keywords    []string    `json:"keywords"`
+		Albums      []uuid.UUID `json:"albums"`
 	}
 	var par request
 	if err := decodeRequest(r, &par); err != nil {
 		return nil, err
 	}
-	if photo, err := s.db.UpdatePhoto(par.Title, par.Description, par.Keywords, par.Id); err != nil {
+	if photo, err := s.pg.Photo.Set(par.Title, par.Description, par.Keywords, par.Id); err != nil {
 		return nil, err
 	} else {
-		if err := s.db.UpdatePhotoAlbums(par.Albums, par.Id); err != nil {
+		if err := s.pg.Album.UpdatePhoto(par.Albums, par.Id); err != nil {
 			return nil, err
 		}
 		return photo, err
@@ -280,10 +293,15 @@ func (s *mserver) handleUpdatePhoto(r *http.Request) (interface{}, error) {
 }
 
 func (s *mserver) handleUpdatePhotoPrivate(r *http.Request) (interface{}, error) {
-	if photo, err := s.db.Photo(Var(r, "id"), true); err != nil {
+	id, err := uuid.Parse(Var(r, "id"))
+	if err != nil {
+		return nil, BadRequestError("Could not parse Id")
+	}
+
+	if photo, err := s.pg.Photo.Get(id, true); err != nil {
 		return nil, err
 	} else {
-		return s.db.SetPrivatePhoto(!photo.Private, photo.DriveId)
+		return s.pg.Photo.SetPrivate(!photo.Private, photo.Id)
 	}
 }
 
@@ -293,17 +311,18 @@ func (s *mserver) handleUpdatePhotos(_ *http.Request) (interface{}, error) {
 
 func addPhoto(s *mserver, f *drive.File, tool *mexif.MExifTool) (bool, error) {
 	var err error
-	if s.db.HasPhoto(f.Id, true) {
+	if s.pg.Photo.HasMd5(f.Md5Checksum) {
 		return false, nil
 	}
-	photo := model.Photo{}
-	photo.DriveId = f.Id
-	//photo.Title = f.Name
+	photo := dao.Photo{}
+	photo.Id = uuid.New()
+	photo.SourceId = f.Id
 	photo.Md5 = f.Md5Checksum
 	photo.FileName = f.Id + ".jpg"
 	if t, err := gdrive.ParseTime(f.CreatedTime); err == nil {
-		photo.DriveDate = t
+		photo.SourceDate = t
 	}
+	photo.UploadDate = time.Now()
 
 	if err = downloadPhoto(s, &photo); err != nil {
 		s.l.Errorw("error downloading photo", zap.Error(err))
@@ -332,41 +351,28 @@ func addPhoto(s *mserver, f *drive.File, tool *mexif.MExifTool) (bool, error) {
 		return false, err
 	}
 	photo.Private = true
-	photo.Likes = 0
 
-	if err = s.db.AddPhoto(&photo, exif); err != nil {
+	if err = s.pg.Photo.Add(&photo, exif); err != nil {
 		s.l.Errorw("error adding photo: ", zap.Error(err))
 		return false, err
 	}
-	if !s.db.HasCameraModel(photo.CameraModel) {
-		if err = s.db.AddCameraFromPhoto(&photo); err != nil {
+	if !s.pg.Camera.HasModel(photo.CameraModel) {
+		if err = s.pg.Camera.AddFromPhoto(&photo); err != nil {
 			s.l.Fatalw("error adding camera model: ", zap.Error(err))
 		}
 	}
-	s.l.Infow("added photo", "driveId", photo.DriveId)
+	s.l.Infow("added photo", "driveId", photo.Id)
 	return true, nil
 }
 
-func downloadPhoto(s *mserver, photo *model.Photo) error {
+func downloadPhoto(s *mserver, photo *dao.Photo) error {
 
-	if _, err := s.ds.Download(photo.DriveId, imgPath(s, photo.FileName)); err != nil {
+	if _, err := s.ds.Download(photo.SourceId, imgPath(s, photo.FileName)); err != nil {
 		return err
 	}
 
 	//create photo versions
 	return img.GenerateImages(imgPath(s, photo.FileName), config.ServiceRoot())
-	/*
-		//create thumbnail
-		//args := []string{ps.GetImgPath(photo.FileName), "-s", "640", "-m", "centre", "-o", ps.GetThumbPath(photo.FileName)}
-		args := []string{imgPath(s, photo.FileName), "-s", "640", "-c", "-o", thumbPath(s, photo.FileName)}
-		s.l.Infow("creating thumbnail", "args: ", strings.Join(args, " "))
-		cmd := exec.Command("vipsthumbnail", args...)
-
-		if err := cmd.Start(); err != nil {
-			s.l.Errorw("could not create thumbnail", zap.Error(err))
-			return InternalError(err.Error())
-		}
-	*/
 	return nil
 }
 

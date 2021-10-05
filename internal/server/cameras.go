@@ -3,9 +3,9 @@ package server
 import (
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/msvens/mphotos/internal/dao"
 	"github.com/msvens/mphotos/internal/gdrive"
 	"github.com/msvens/mphotos/internal/img"
-	"github.com/msvens/mphotos/internal/model"
 	"io"
 	"net/http"
 	"os"
@@ -15,21 +15,19 @@ var cameraSizes []int = []int{48, 192, 512}
 
 func (s *mserver) handleCamera(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	id := Var(r, "id")
-	return s.db.Camera(id)
+	return s.pg.Camera.Get(id)
 }
 
 func (s *mserver) handleCameras(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	return s.db.Cameras()
+	return s.pg.Camera.List()
 }
 
 func (s *mserver) handleUpdateCamera(r *http.Request) (interface{}, error) {
-	//id := Var(r, "id")
-	var params model.Camera
+	var params dao.Camera
 	if err := decodeRequest(r, &params); err != nil {
 		return nil, err
 	}
-	fmt.Println("update camera: ", params.Id, " ", params.Year)
-	return s.db.UpdateCamera(&params)
+	return s.pg.Camera.Update(&params)
 }
 
 func (s *mserver) handleCameraImage(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +47,7 @@ func (s *mserver) handleCameraImage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if camera, err := s.db.Camera(id); err != nil {
+	if camera, err := s.pg.Camera.Get(id); err != nil {
 		http.Error(w, "No Such Camera", http.StatusNotFound)
 	} else if camera.Image == "" {
 		http.Error(w, "No Camera Image", http.StatusNotFound)
@@ -65,6 +63,10 @@ func (s *mserver) handleCameraImage(w http.ResponseWriter, r *http.Request) {
 
 func (s *mserver) uploadCameraImageFromFile(r *http.Request) (interface{}, error) {
 	id := Var(r, "id")
+
+	if !s.pg.Camera.Has(id) {
+		return nil, NotFoundError("Camera not found: " + id)
+	}
 	r.ParseMultipartForm(10 << 20) //10M
 	file, _, err := r.FormFile("cameraImage")
 	if err != nil {
@@ -105,12 +107,12 @@ func (s *mserver) uploadCameraImageFromFile(r *http.Request) (interface{}, error
 	if err = img.ResizeImages(src, sizes); err != nil {
 		return nil, err
 	}
-	return s.db.UpdateCameraImage(ext, id)
+	return s.pg.Camera.UpdateImage(ext, id)
 }
 
 func (s *mserver) uploadCameraImageFromURL(r *http.Request) (interface{}, error) {
 	id := Var(r, "id")
-	if !s.db.HasCamera(id) {
+	if !s.pg.Camera.Has(id) {
 		return nil, NotFoundError("Camera not found: " + id)
 	}
 	type request struct {
@@ -151,5 +153,5 @@ func (s *mserver) uploadCameraImageFromURL(r *http.Request) (interface{}, error)
 	if err = img.ResizeImages(src, sizes); err != nil {
 		return nil, err
 	}
-	return s.db.UpdateCameraImage(ext, id)
+	return s.pg.Camera.UpdateImage(ext, id)
 }

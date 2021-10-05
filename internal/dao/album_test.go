@@ -1,7 +1,8 @@
-package model
+package dao
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"testing"
 )
 
@@ -17,13 +18,13 @@ func cmpAlbum(exp, act Album, id bool) error {
 
 func TestAlbums(t *testing.T) {
 	var err error
-	ds := openAndCreateTestDb(t)
+	pgdb := openAndCreateTestDb(t)
 
 	first := Album{Name: "album1", Description: "description1", CoverPic: "coverpic1"}
 	second := Album{Name: "album2", Description: "description2", CoverPic: "coverpic2"}
 
 	//add album: Three cases. 1. Add album 2. Add Another album with the same name 3. Add album with empty name
-	if act, err := ds.AddAlbum(first.Name, first.Description, first.CoverPic); err != nil {
+	if act, err := pgdb.Album.Add(first.Name, first.Description, first.CoverPic); err != nil {
 		t.Errorf("Could not add album. Got error: %s", err)
 	} else {
 		first.Id = act.Id
@@ -31,40 +32,40 @@ func TestAlbums(t *testing.T) {
 			t.Error(e1)
 		}
 	}
-	if _, err = ds.AddAlbum(first.Name, first.Description, first.CoverPic); err == nil {
+	if _, err = pgdb.Album.Add(first.Name, first.Description, first.CoverPic); err == nil {
 		t.Error("Expected error when trying to add album with the same name")
 	}
-	if _, err = ds.AddAlbum("", "", ""); err == nil {
+	if _, err = pgdb.Album.Add("", "", ""); err == nil {
 		t.Error("Expected error when adding an album with an empty name")
 	}
 	//Album existence:
-	if !ds.HasAlbum(first.Id) {
+	if !pgdb.Album.Has(first.Id) {
 		t.Error("Expected to find album: ", first.Id)
 	}
-	if !ds.HasAlbumName(first.Name) {
+	if !pgdb.Album.HasByName(first.Name) {
 		t.Error("Expected to find album: ", first.Name)
 	}
-	if ds.HasAlbum(-1) {
-		t.Error("No album with Id -1 should exist")
+	if pgdb.Album.Has(uuid.UUID{}) {
+		t.Error("No album with empty id should exist")
 	}
-	if ds.HasAlbumName("noname") {
+	if pgdb.Album.HasByName("noname") {
 		t.Error("No album with name noname should exist")
 	}
 	//Retrieving Albums. Add an additional album for testing slices
-	a2, _ := ds.AddAlbum(second.Name, second.Description, second.CoverPic)
+	a2, _ := pgdb.Album.Add(second.Name, second.Description, second.CoverPic)
 	second.Id = a2.Id
 
-	if act, err := ds.Album(first.Id); err != nil {
+	if act, err := pgdb.Album.Get(first.Id); err != nil {
 		t.Error("Expected to get album got error: ", err)
 	} else if e1 := cmpAlbum(first, *act, true); e1 != nil {
 		t.Error(e1)
 	}
 
-	if act, err := ds.Album(-1); err == nil {
+	if act, err := pgdb.Album.Get(uuid.UUID{}); err == nil {
 		t.Error("Expected error got album: ", act)
 	}
 
-	if albums, err := ds.Albums(); err != nil {
+	if albums, err := pgdb.Album.List(); err != nil {
 		t.Error("got error when retrieving albums: ", err)
 	} else if len(albums) != 2 {
 		t.Error("expected to get 2 errors got ", len(albums))
@@ -83,7 +84,7 @@ func TestAlbums(t *testing.T) {
 	//test update albums
 	updatedFirst := first
 	updatedFirst.Description = "new description"
-	if ret, err := ds.UpdateAlbum(&updatedFirst); err != nil {
+	if ret, err := pgdb.Album.Update(&updatedFirst); err != nil {
 		t.Error("albums could not be updated ", err)
 	} else if *ret != updatedFirst {
 		t.Errorf("expected %s got %s", updatedFirst, *ret)
@@ -91,7 +92,7 @@ func TestAlbums(t *testing.T) {
 
 	//expect failure if you try to update an album to an already existing name
 	updatedFirst.Name = second.Name
-	if _, err = ds.UpdateAlbum(&updatedFirst); err == nil {
+	if _, err = pgdb.Album.Update(&updatedFirst); err == nil {
 		t.Error("expected error when updating an album to an existing name")
 	}
 
@@ -100,27 +101,26 @@ func TestAlbums(t *testing.T) {
 	if err != nil {
 		t.Errorf("Could not load photo test data")
 	}
-	err = ds.AddPhoto(&testPhotos[0], &testExifs[0])
+	err = pgdb.Photo.Add(&testPhotos[0], &testExifs[0])
 	if err != nil {
 		t.Error("Could not create photo: ", err)
 	}
 
-	err = ds.UpdatePhotoAlbums([]int{updatedFirst.Id, second.Id}, testPhotos[0].DriveId)
+	err = pgdb.Album.UpdatePhoto([]uuid.UUID{updatedFirst.Id, second.Id}, testPhotos[0].Id)
 	if err != nil {
 		t.Error("could not update photos albums: ", err)
 	}
 
-	err = ds.UpdatePhotoAlbums([]int{updatedFirst.Id, second.Id}, "nonexistent")
-
+	err = pgdb.Album.UpdatePhoto([]uuid.UUID{updatedFirst.Id, second.Id}, uuid.UUID{})
 	if err == nil {
 		t.Error("Expected error when adding a non-existent photo to an album")
 	}
 
-	if err = ds.UpdatePhotoAlbums([]int{0}, testPhotos[0].DriveId); err == nil {
+	if err = pgdb.Album.UpdatePhoto([]uuid.UUID{uuid.New()}, testPhotos[0].Id); err == nil {
 		t.Error("Expected error when adding a photo to a non existent album")
 	}
 
-	albums, err := ds.PhotoAlbums(testPhotos[0].DriveId)
+	albums, err := pgdb.Album.Albums(testPhotos[0].Id)
 	if err != nil {
 		t.Error("could not retrieve photo albums ", err)
 	} else {
@@ -135,17 +135,17 @@ func TestAlbums(t *testing.T) {
 		}
 	}
 
-	if photos, err := ds.AlbumPhotos(updatedFirst.Id, PhotoFilter{}); err != nil {
+	if photos, err := pgdb.Album.Photos(updatedFirst.Id, false); err != nil {
 		t.Error("Could not get album photos got error: ", err)
 	} else {
 		if len(photos) != 1 {
 			t.Error("Expected 1 photo album got ", len(photos))
 		}
-		if photos[0].DriveId != testPhotos[0].DriveId {
-			t.Errorf("Expected photoId %v got %v", testPhotos[0].DriveId, photos[0].DriveId)
+		if photos[0].Id != testPhotos[0].Id {
+			t.Errorf("Expected photoId %v got %v", testPhotos[0].Id, photos[0].Id)
 		}
 	}
 
-	deleteAndCloseTestDb(ds, t)
+	deleteAndCloseTestDb(pgdb, t)
 
 }

@@ -10,7 +10,9 @@ require (
 	github.com/gorilla/schema v1.2.0
 	github.com/gorilla/sessions v1.2.1
 	github.com/h2non/bimg v1.1.4
-	github.com/lib/pq v1.8.0
+	github.com/jackc/pgx/v4 v4.13.0 // indirect
+	github.com/jmoiron/sqlx v1.3.4
+	github.com/lib/pq v1.10.2 // indirect
 	github.com/magiconair/properties v1.8.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
@@ -22,10 +24,12 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.1
+	github.com/stretchr/testify v1.7.0 // indirect
 	go.uber.org/zap v1.15.0
-	golang.org/x/net v0.0.0-20200822124328-c89045814202
+	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20200831180312-196b9ba8737a // indirect
+	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
+	golang.org/x/text v0.3.6 // indirect
 	google.golang.org/api v0.30.0
 	google.golang.org/genproto v0.0.0-20200831141814-d751682dd103 // indirect
 	google.golang.org/grpc v1.31.1 // indirect

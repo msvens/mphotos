@@ -5,10 +5,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 	"github.com/msvens/mphotos/internal/config"
-	"github.com/msvens/mphotos/internal/model"
+	"github.com/msvens/mphotos/internal/dao"
 	"html/template"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type SessionGuest struct {
@@ -52,7 +53,7 @@ func guestUUID(w http.ResponseWriter, r *http.Request, s *mserver) (uuid.UUID, e
 		fmt.Println("Could not parse session guest 1", ok)
 		return s.clearGuestCookie(w, r, session)
 	} else {
-		if s.db.HasGuest(uuid) {
+		if s.pg.Guest.Has(uuid) {
 			return uuid, nil
 		} else {
 			fmt.Println("Did not have guest ", ok)
@@ -70,6 +71,7 @@ func (s *mserver) clearGuestCookie(w http.ResponseWriter, r *http.Request, sessi
 func (s *mserver) saveGuestCookie(w http.ResponseWriter, r *http.Request, guest uuid.UUID, days int) error {
 	session, _ := s.store.Get(r, s.guestCookie)
 	gid := &SessionGuest{guest.String()}
+	fmt.Println("this is guest id: ", gid.Id)
 	session.Values["guest"] = gid
 	session.Options.MaxAge = days
 	if err := session.Save(r, w); err != nil {
@@ -78,69 +80,78 @@ func (s *mserver) saveGuestCookie(w http.ResponseWriter, r *http.Request, guest 
 	return nil
 }
 
-func (s *mserver) handleCommentPhoto(r *http.Request, uuid uuid.UUID) (interface{}, error) {
-	photo := Var(r, "photo")
-
-	type request struct {
-		Body string
+func (s *mserver) handleCommentPhoto(r *http.Request, uid uuid.UUID) (interface{}, error) {
+	if photoId, err := uuid.Parse(Var(r, "photo")); err != nil {
+		return nil, BadRequestError("Could not parse photo id")
+	} else {
+		type request struct {
+			Body string
+		}
+		var params request
+		if err := decodeRequest(r, &params); err != nil {
+			return nil, err
+		}
+		return s.pg.Comment.Add(uid, photoId, params.Body)
 	}
-	var params request
-	if err := decodeRequest(r, &params); err != nil {
-		return nil, err
-	}
-	return s.db.AddComment(uuid, photo, params.Body)
 }
 
 func (s *mserver) handlePhotoComments(r *http.Request, loggedIn bool) (interface{}, error) {
-	photo := Var(r, "photo")
-	if s.db.HasPhoto(photo, loggedIn) {
-		return s.db.PhotoComments(photo)
+	if photoId, err := uuid.Parse(Var(r, "photo")); err != nil {
+		return nil, BadRequestError("Could not parse photo id")
 	} else {
-		return nil, NotFoundError("photo not found")
+		type resp struct {
+			Id      int       `json:"id"`
+			Name    string    `json:"name"`
+			PhotoId uuid.UUID `json:"photoId"`
+			Time    time.Time `json:"time"`
+			Body    string    `json:"body"`
+		}
+		comments, err := s.pg.Comment.ListByPhoto(photoId)
+		if err != nil {
+			return nil, err
+		}
+		ret := []*resp{}
+		for _, c := range comments {
+			u, _ := s.pg.Guest.Get(c.GuestId)
+			ret = append(ret, &resp{Id: c.Id, Name: u.Name, PhotoId: c.PhotoId, Time: c.Time, Body: c.Body})
+		}
+		return ret, nil
 	}
 }
 
 func (s *mserver) handleGuest(r *http.Request, uuid uuid.UUID) (interface{}, error) {
-	type resp struct {
-		Name  string
-		Email string
-	}
-
-	return s.db.Guest(uuid)
+	return s.pg.Guest.Get(uuid)
 }
 
-func (s *mserver) handleLikePhoto(r *http.Request, uuid uuid.UUID) (interface{}, error) {
-	photo := Var(r, "photo")
-	if s.db.HasPhoto(photo, false) {
-		if err := s.db.AddLike(uuid, photo); err != nil {
-			return nil, err
-		} else {
-			return photo, nil
-		}
+func (s *mserver) handleLikePhoto(r *http.Request, guestId uuid.UUID) (interface{}, error) {
+	if photoId, err := uuid.Parse(Var(r, "photo")); err != nil {
+		return nil, BadRequestError("Could not parse photo id")
 	} else {
-		return nil, NotFoundError("photo not found")
+		if s.pg.Photo.Has(photoId, false) {
+			return photoId, s.pg.Reaction.Add(&dao.Reaction{GuestId: guestId, PhotoId: photoId, Kind: "like"})
+		} else {
+			return nil, NotFoundError("photo not found")
+		}
 	}
 }
 
-func (s *mserver) handleUnlikePhoto(r *http.Request, uuid uuid.UUID) (interface{}, error) {
-	photo := Var(r, "photo")
-	if s.db.HasPhoto(photo, false) {
-		if err := s.db.DeleteLike(uuid, photo); err != nil {
-			return nil, err
-		} else {
-			return photo, nil
-		}
+func (s *mserver) handleUnlikePhoto(r *http.Request, guestId uuid.UUID) (interface{}, error) {
+	var photoId uuid.UUID
+	if err := uid(r, "photo", &photoId); err != nil {
+		return nil, err
+	}
+	if s.pg.Photo.Has(photoId, false) {
+		return photoId, s.pg.Reaction.Delete(&dao.Reaction{GuestId: guestId, PhotoId: photoId, Kind: "like"})
 	} else {
 		return nil, NotFoundError("photo not found")
 	}
 }
 
 func (s *mserver) handlePhotoLikes(r *http.Request, loggedIn bool) (interface{}, error) {
-	photo := Var(r, "photo")
-	if s.db.HasPhoto(photo, loggedIn) {
-		return s.db.PhotoLikes(photo)
+	if photoId, err := uuid.Parse(Var(r, "photo")); err != nil {
+		return nil, BadRequestError("Could not parse photo id")
 	} else {
-		return nil, NotFoundError("photo not found")
+		return s.pg.Reaction.ListByPhoto(photoId)
 	}
 }
 
@@ -155,9 +166,9 @@ func (s *mserver) handleVerifyGuest(w http.ResponseWriter, r *http.Request) (int
 		return nil, err
 	}
 	if id, err = uuid.Parse(params.Code); err != nil {
-		return nil, BadRequestError("could not parse verification code: " + err.Error())
+		return nil, BadRequestError("could not parse guest id: " + err.Error())
 	}
-	if ver, err := s.db.VerifyGuest(id); err != nil {
+	if ver, err := s.pg.Guest.Verify(id); err != nil {
 		return nil, err
 	} else if ver.Verified {
 		return ver, s.saveGuestCookie(w, r, id, Session_Year)
@@ -168,6 +179,7 @@ func (s *mserver) handleVerifyGuest(w http.ResponseWriter, r *http.Request) (int
 
 func (s *mserver) handleIsGuest(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	var guest = ctxGuest(r.Context())
+	fmt.Println("Guest Id: ", guest)
 	if guest == emptyuuid {
 		return AuthUser{false}, nil
 	} else {
@@ -175,33 +187,34 @@ func (s *mserver) handleIsGuest(w http.ResponseWriter, r *http.Request) (interfa
 	}
 }
 
-func (s *mserver) handleGuestLikes(r *http.Request, uuid uuid.UUID) (interface{}, error) {
-	if likes, err := s.db.GuestLikes(uuid); err != nil {
+func (s *mserver) handleGuestLikes(r *http.Request, guestId uuid.UUID) (interface{}, error) {
+	if likes, err := s.pg.Reaction.ListByGuest(guestId); err != nil {
 		return nil, err
 	} else {
 		return likes, nil
 	}
-	return nil, nil
 }
 
 func (s *mserver) handleLogoutGuest(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	return AuthUser{false}, s.saveGuestCookie(w, r, emptyuuid, -1)
 }
 
-func (s *mserver) handleGuestLikePhoto(r *http.Request, uuid uuid.UUID) (interface{}, error) {
-	type ret struct {
-		Like bool `json:"like"`
+func (s *mserver) handleGuestLikePhoto(r *http.Request, guestId uuid.UUID) (interface{}, error) {
+	if photoId, err := uuid.Parse(Var(r, "photo")); err != nil {
+		return nil, BadRequestError("Could not parse photo id")
+	} else {
+		type ret struct {
+			Like bool `json:"like"`
+		}
+		return ret{s.pg.Reaction.Has(guestId, photoId)}, nil
 	}
-	photo := Var(r, "photo")
-	like := s.db.Like(uuid, photo)
-	return ret{like}, nil
 }
 
 func (s *mserver) handleCreateGuest(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 
-	sendEmail := func(g *model.Guest, uuid *uuid.UUID) error {
+	sendEmail := func(g *dao.Guest) error {
 		var b strings.Builder
-		we := WelcomeEmail{Name: g.Name, Code: uuid.String(), VerifyUrl: config.VerifyUrl()}
+		we := WelcomeEmail{Name: g.Name, Code: g.Id.String(), VerifyUrl: config.VerifyUrl()}
 		if err := templates.ExecuteTemplate(&b, "welcome-email.html", we); err != nil {
 			return err
 		}
@@ -219,40 +232,37 @@ func (s *mserver) handleCreateGuest(w http.ResponseWriter, r *http.Request) (int
 	if err := decodeRequest(r, &params); err != nil {
 		return nil, err
 	}
-	if s.db.HasGuestByEmail(params.Email) {
+	if s.pg.Guest.HasByEmail(params.Email) {
 		s.l.Debugw("guest already exists send a new verify email", "email", params.Email)
-		id, _ := s.db.GuestUUID(params.Email)
-		u, _ := s.db.Guest(*id)
+		guest, _ := s.pg.Guest.GetByEmail(params.Email)
 
-		if u.Name != params.Name {
+		if guest.Name != params.Name {
 			return nil, UnauthorizedError("name does not match provided email")
 		}
 		//here we should send a notification email...not a verify email
-		if err := sendEmail(u, id); err != nil {
+		if err := sendEmail(guest); err != nil {
 			return nil, err
 		}
-		return u, s.saveGuestCookie(w, r, *id, Session_Year)
+		return guest, s.saveGuestCookie(w, r, guest.Id, Session_Year)
 	}
 	//user email not found try to create new user
-	id := uuid.New()
-	u := model.Guest{
-		Email: params.Email,
-		Name:  params.Name,
-	}
-	if s.db.HasGuestByName(params.Name) {
+	if s.pg.Guest.HasByName(params.Name) {
 		return nil, UnauthorizedError("name already exists")
 	}
-	if err := s.db.AddGuest(id, &u); err != nil {
+	//add new guest
+	if guest, err := s.pg.Guest.Add(params.Name, params.Email); err != nil {
 		return nil, err
+	} else {
+		if err := sendEmail(guest); err != nil {
+			_ = s.pg.Guest.Delete(guest.Id)
+			return nil, err
+		}
+		return guest, s.saveGuestCookie(w, r, guest.Id, Session_Year)
 	}
-	if err := sendEmail(&u, &id); err != nil {
-		_, _ = s.db.DeleteGuest(id)
-		return nil, err
-	}
-	return u, s.saveGuestCookie(w, r, id, Session_Year)
+
 }
 
-func (s *mserver) handleUpdateGuest(r *http.Request, uuid uuid.UUID) (interface{}, error) {
+func (s *mserver) handleUpdateGuest(r *http.Request, guestId uuid.UUID) (interface{}, error) {
 
 	type request struct {
 		Email string
@@ -268,11 +278,10 @@ func (s *mserver) handleUpdateGuest(r *http.Request, uuid uuid.UUID) (interface{
 	if strings.TrimSpace(params.Name) == "" {
 		return nil, BadRequestError("name cannot contain only white space characters")
 	}
-	u, _ := s.db.Guest(uuid)
+	guest, _ := s.pg.Guest.Get(guestId)
 
-	if params.Email != "" && params.Email != u.Email {
+	if params.Email != "" && params.Email != guest.Email {
 		return nil, BadRequestError("change of email is not yet supported")
 	}
-	return s.db.UpdateGuest(uuid, params.Email, params.Name)
-
+	return s.pg.Guest.Update(params.Email, params.Name, guest.Id)
 }

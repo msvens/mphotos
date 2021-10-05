@@ -2,12 +2,12 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/msvens/mphotos/internal/model"
+	"github.com/msvens/mphotos/internal/dao"
 	"net/http"
 )
 
 func (s *mserver) handleUser(r *http.Request, loggedIn bool) (interface{}, error) {
-	if u, err := s.db.User(); err == nil {
+	if u, err := s.pg.User.Get(); err == nil {
 		if !loggedIn {
 			u.DriveFolderId = ""
 			u.DriveFolderName = ""
@@ -19,9 +19,9 @@ func (s *mserver) handleUser(r *http.Request, loggedIn bool) (interface{}, error
 }
 
 func (s *mserver) handleUserConfig(_ http.ResponseWriter, r *http.Request) (interface{}, error) {
-	if c, err := s.db.UserConfig(); err == nil {
+	if u, err := s.pg.User.Get(); err == nil {
 		var conf map[string]interface{}
-		if err := json.Unmarshal([]byte(c), &conf); err != nil {
+		if err := json.Unmarshal([]byte(u.Config), &conf); err != nil {
 			return nil, err
 		} else {
 			return &conf, nil
@@ -32,45 +32,51 @@ func (s *mserver) handleUserConfig(_ http.ResponseWriter, r *http.Request) (inte
 }
 
 func (s *mserver) handleUpdatePicUser(r *http.Request) (interface{}, error) {
-	var u model.User
+	var u dao.User
 	if err := decodeRequest(r, &u); err != nil {
 		return nil, err
 	}
-	if user, err := s.db.User(); err != nil {
+	if user, err := s.pg.User.Get(); err != nil {
 		return nil, InternalError(err.Error())
 	} else {
 		user.Pic = u.Pic
-		return s.db.UpdateUser(user)
+		return s.pg.User.Update(user)
 	}
 	//return s.ps.UpdateUserPic(u.Pic)
 }
 
 func (s *mserver) handleUpdateDriveUser(r *http.Request) (interface{}, error) {
-	var u model.User
+	var u dao.User
 	if err := decodeRequest(r, &u); err != nil {
 		return nil, err
 	}
 	if f, err := s.ds.GetByName(u.DriveFolderName, true, false, fileFields); err != nil {
 		return nil, err
 	} else {
-		if user, err := s.db.User(); err != nil {
+		if user, err := s.pg.User.Get(); err != nil {
 			return nil, InternalError(err.Error())
 		} else {
 			user.DriveFolderId = f.Id
 			user.DriveFolderName = f.Name
-			return s.db.UpdateUser(user)
+			return s.pg.User.Update(user)
 		}
 	}
 	//return s.ps.UpdateUserDrive(u.DriveFolderName)
 }
 
 func (s *mserver) handleUpdateUser(r *http.Request) (interface{}, error) {
-	var u model.User
+	var u dao.User
 	if err := decodeRequest(r, &u); err != nil {
 		return nil, err
 	}
-	return s.db.UpdateUser(&u)
-	//return s.ps.UpdateUser(&u)
+	if user, err := s.pg.User.Get(); err != nil {
+		return nil, InternalError(err.Error())
+	} else {
+		user.Bio = u.Bio
+		user.Pic = u.Pic
+		user.Name = u.Name
+		return s.pg.User.Update(user)
+	}
 }
 
 func (s *mserver) handleUpdateConfig(r *http.Request) (interface{}, error) {
@@ -82,6 +88,11 @@ func (s *mserver) handleUpdateConfig(r *http.Request) (interface{}, error) {
 	if b, err := json.Marshal(c); err != nil {
 		return nil, err
 	} else {
-		return c, s.db.UpdateUserConfig(string(b))
+		if user, err := s.pg.User.Get(); err != nil {
+			return nil, InternalError(err.Error())
+		} else {
+			user.Config = string(b)
+			return s.pg.User.Update(user)
+		}
 	}
 }
