@@ -1,0 +1,3644 @@
+[
+  {
+    "id": "05446e69-72a2-4549-ad53-1ef868d31185",
+    "data": {
+      "title": "Birds and a boat",
+      "software": "Adobe Photoshop Lightroom Classic 10.1.1 (Macintosh)",
+      "rating": 2,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 250
+      },
+      "exposureCompensationn": {
+        "Numerator": -6,
+        "Denominator": 10
+      },
+      "exposoureProgram": 4,
+      "fNumber": {
+        "Numerator": 56,
+        "Denominator": 10
+      },
+      "ISO": 100,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2021-02-02T11:34:46+02:00",
+      "modifyDate": "2021-02-07T18:56:29+01:00"
+    }
+  },
+  {
+    "id": "1798ee64-31de-4796-9dd1-5fad7167aeb8",
+    "data": {
+      "title": "pojken",
+      "keywords": [
+        "olle"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 10.1.1 (Macintosh)",
+      "cameraMake": "FUJIFILM",
+      "cameraModel": "X-E1",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 3500,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 3500,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 140,
+          "Denominator": 100
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 140,
+          "Denominator": 100
+        }
+      },
+      "lensModel": "XF35mmF1.4 R",
+      "lensMake": "FUJIFILM",
+      "focalLength": {
+        "Numerator": 3500,
+        "Denominator": 100
+      },
+      "focalLengthIn35mmFormat": 53,
+      "maxApertureValue": {
+        "Numerator": 100,
+        "Denominator": 100
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 125
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 100
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 2,
+        "Denominator": 1
+      },
+      "ISO": 320,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2014-12-26T16:04:48Z",
+      "modifyDate": "2021-02-07T18:56:26+01:00"
+    }
+  },
+  {
+    "id": "bc4173af-273b-4dbf-a8cb-94213bf3288d",
+    "data": {
+      "title": "kvällssol",
+      "software": "Adobe Photoshop Lightroom Classic 10.1 (Macintosh)",
+      "rating": 1,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 125
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 35,
+        "Denominator": 10
+      },
+      "ISO": 400,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2021-01-03T14:52:26+02:00",
+      "modifyDate": "2021-01-10T17:36:52+01:00"
+    }
+  },
+  {
+    "id": "f6333f97-3415-42e9-861d-19818b609253",
+    "data": {
+      "title": "haze",
+      "software": "Adobe Photoshop Lightroom Classic 10.1 (Macintosh)",
+      "rating": 3,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 250
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 35,
+        "Denominator": 10
+      },
+      "ISO": 200,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-12-31T13:03:28+02:00",
+      "modifyDate": "2021-01-10T17:36:54+01:00"
+    }
+  },
+  {
+    "id": "e5dc9db8-6710-4ddd-bad0-cfe216af2069",
+    "data": {
+      "title": "Morning Fog",
+      "software": "Adobe Photoshop Lightroom Classic 10.1 (Macintosh)",
+      "rating": 2,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 250
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 25,
+        "Denominator": 10
+      },
+      "ISO": 100,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-10-27T09:34:03+02:00",
+      "modifyDate": "2021-01-10T17:36:45+01:00"
+    }
+  },
+  {
+    "id": "43de1fa9-ee13-4c60-8b04-b52a411865d6",
+    "data": {
+      "title": "Calm",
+      "keywords": [
+        "bergsjö"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 10.0 (Macintosh)",
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 125
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 63,
+        "Denominator": 10
+      },
+      "ISO": 200,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-10-24T16:54:17+02:00",
+      "modifyDate": "2020-11-08T16:30:30+01:00"
+    }
+  },
+  {
+    "id": "7065f289-1ac6-4a4c-befe-b55c670edd16",
+    "data": {
+      "title": "Autumn",
+      "software": "Adobe Photoshop Lightroom Classic 10.0 (Macintosh)",
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 500
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 2,
+        "Denominator": 1
+      },
+      "ISO": 50,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-09-27T15:08:20+02:00",
+      "modifyDate": "2020-11-08T16:30:34+01:00"
+    }
+  },
+  {
+    "id": "bdb898e5-37f3-4f64-bf76-d4a68f7cc412",
+    "data": {
+      "title": "Waiting",
+      "keywords": [
+        "olle"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 10.1 (Macintosh)",
+      "rating": 4,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 125
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 17,
+        "Denominator": 10
+      },
+      "ISO": 400,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-10-11T12:57:39+02:00",
+      "modifyDate": "2021-01-10T17:36:47+01:00"
+    }
+  },
+  {
+    "id": "ec6603a8-c35f-475a-be6e-c0dcacdc4628",
+    "data": {
+      "keywords": [
+        "martin",
+        "olle"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 8.2.1 (Macintosh)",
+      "cameraMake": "FUJIFILM",
+      "cameraModel": "X-E3",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 3500,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 3500,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 140,
+          "Denominator": 100
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 140,
+          "Denominator": 100
+        }
+      },
+      "lensModel": "XF35mmF1.4 R",
+      "lensMake": "FUJIFILM",
+      "focalLength": {
+        "Numerator": 3500,
+        "Denominator": 100
+      },
+      "focalLengthIn35mmFormat": 53,
+      "maxApertureValue": {
+        "Numerator": 100,
+        "Denominator": 100
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 140
+      },
+      "exposureCompensationn": {
+        "Numerator": -33,
+        "Denominator": 100
+      },
+      "exposoureProgram": 2,
+      "fNumber": {
+        "Numerator": 25,
+        "Denominator": 10
+      },
+      "ISO": 400,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 240,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 240,
+        "Denominator": 1
+      },
+      "originalDate": "2019-02-17T14:02:27Z",
+      "modifyDate": "2019-04-16T17:05:04Z"
+    }
+  },
+  {
+    "id": "2b1744c9-f851-49be-b78b-731a24c58d78",
+    "data": {
+      "keywords": [
+        "amelie",
+        "olle"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 8.0 (Macintosh)",
+      "rating": 5,
+      "cameraMake": "LGE",
+      "cameraModel": "Nexus 5X",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "maxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        }
+      },
+      "focalLength": {
+        "Numerator": 4670,
+        "Denominator": 1000
+      },
+      "maxApertureValue": {
+        "Numerator": 200,
+        "Denominator": 100
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 750
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 6
+      },
+      "exposoureProgram": 2,
+      "fNumber": {
+        "Numerator": 2,
+        "Denominator": 1
+      },
+      "ISO": 60,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 240,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 240,
+        "Denominator": 1
+      },
+      "originalDate": "2017-07-29T16:46:39Z",
+      "modifyDate": "2018-12-16T10:22:35Z"
+    }
+  },
+  {
+    "id": "509331d6-8498-4a64-a26e-0c79b260f2a4",
+    "data": {
+      "keywords": [
+        "olle"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 8.0 (Macintosh)",
+      "rating": 5,
+      "cameraMake": "LGE",
+      "cameraModel": "Nexus 5X",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "maxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        }
+      },
+      "focalLength": {
+        "Numerator": 4670,
+        "Denominator": 1000
+      },
+      "focalLengthIn35mmFormat": 26,
+      "maxApertureValue": {
+        "Numerator": 200,
+        "Denominator": 100
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 16
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 6
+      },
+      "exposoureProgram": 2,
+      "fNumber": {
+        "Numerator": 2,
+        "Denominator": 1
+      },
+      "ISO": 1669,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 240,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 240,
+        "Denominator": 1
+      },
+      "originalDate": "2018-01-02T20:04:28Z",
+      "modifyDate": "2018-12-16T10:22:35Z"
+    }
+  },
+  {
+    "id": "0b3ece71-a39d-40a6-a0ca-e203d5d873e2",
+    "data": {
+      "software": "Adobe Photoshop Lightroom Classic 8.4.1 (Macintosh)",
+      "cameraMake": "FUJIFILM",
+      "cameraModel": "X-E3",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 3500,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 3500,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 140,
+          "Denominator": 100
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 140,
+          "Denominator": 100
+        }
+      },
+      "lensModel": "XF35mmF1.4 R",
+      "lensMake": "FUJIFILM",
+      "focalLength": {
+        "Numerator": 3500,
+        "Denominator": 100
+      },
+      "focalLengthIn35mmFormat": 53,
+      "maxApertureValue": {
+        "Numerator": 100,
+        "Denominator": 100
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 125
+      },
+      "exposureCompensationn": {
+        "Numerator": -33,
+        "Denominator": 100
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 14,
+        "Denominator": 10
+      },
+      "ISO": 200,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 240,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 240,
+        "Denominator": 1
+      },
+      "originalDate": "2019-08-02T17:29:31Z",
+      "modifyDate": "2019-10-06T17:59:08+02:00"
+    }
+  },
+  {
+    "id": "84190e89-08f2-4c63-9d20-9ad406b609b3",
+    "data": {
+      "title": "Filbert Street, One of the steeper streets you will find in SF",
+      "keywords": [
+        "vintage"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "rating": 5,
+      "cameraMake": "NIKON CORPORATION",
+      "cameraModel": "NIKON D90",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "maxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        }
+      },
+      "focalLength": {
+        "Numerator": 38,
+        "Denominator": 1
+      },
+      "focalLengthIn35mmFormat": 57,
+      "maxApertureValue": {
+        "Numerator": 9,
+        "Denominator": 2
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 200
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 1
+      },
+      "exposoureProgram": 4,
+      "fNumber": {
+        "Numerator": 71,
+        "Denominator": 10
+      },
+      "ISO": 200,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2010-03-13T16:21:36Z",
+      "modifyDate": "2020-06-21T09:00:42+02:00"
+    }
+  },
+  {
+    "id": "a72b20ff-d8b1-42c2-ab43-e36d8154cd98",
+    "data": {
+      "title": "Snow",
+      "keywords": [
+        "hdr"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "rating": 3,
+      "cameraMake": "NIKON CORPORATION",
+      "cameraModel": "NIKON D90",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "maxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        }
+      },
+      "focalLength": {
+        "Numerator": 42,
+        "Denominator": 1
+      },
+      "focalLengthIn35mmFormat": 63,
+      "maxApertureValue": {
+        "Numerator": 9,
+        "Denominator": 2
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 320
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 1
+      },
+      "fNumber": {
+        "Numerator": 18,
+        "Denominator": 1
+      },
+      "ISO": 1250,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2011-01-03T00:41:37Z",
+      "modifyDate": "2020-06-21T09:00:42+02:00"
+    }
+  },
+  {
+    "id": "b141f6f8-aa93-4631-bfa3-2c689f946f4e",
+    "data": {
+      "keywords": [
+        "anna",
+        "olle"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 8.0 (Macintosh)",
+      "cameraMake": "FUJIFILM",
+      "cameraModel": "X-E3",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2300,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2300,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 200,
+          "Denominator": 100
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 200,
+          "Denominator": 100
+        }
+      },
+      "lensModel": "XF23mmF2 R WR",
+      "lensMake": "FUJIFILM",
+      "focalLength": {
+        "Numerator": 2300,
+        "Denominator": 100
+      },
+      "focalLengthIn35mmFormat": 35,
+      "maxApertureValue": {
+        "Numerator": 200,
+        "Denominator": 100
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 3200
+      },
+      "exposureCompensationn": {
+        "Numerator": -33,
+        "Denominator": 100
+      },
+      "exposoureProgram": 3,
+      "fNumber": {
+        "Numerator": 2,
+        "Denominator": 1
+      },
+      "ISO": 400,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 240,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 240,
+        "Denominator": 1
+      },
+      "originalDate": "2018-08-05T19:23:32Z",
+      "modifyDate": "2018-12-16T10:23:33Z"
+    }
+  },
+  {
+    "id": "3ba10f36-84ac-4df8-8b35-5675c3836353",
+    "data": {
+      "software": "Adobe Photoshop Lightroom Classic 8.0 (Macintosh)",
+      "rating": 5,
+      "cameraMake": "Apple",
+      "cameraModel": "iPhone 8",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 4183519,
+          "Denominator": 1048501
+        },
+        "maxFocalLength": {
+          "Numerator": 4183519,
+          "Denominator": 1048501
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 9,
+          "Denominator": 5
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 9,
+          "Denominator": 5
+        }
+      },
+      "lensModel": "iPhone 8 back camera 3.99mm f/1.8",
+      "lensMake": "Apple",
+      "focalLength": {
+        "Numerator": 399,
+        "Denominator": 100
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 0,
+        "Denominator": 0
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 60
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 1
+      },
+      "exposoureProgram": 2,
+      "fNumber": {
+        "Numerator": 18,
+        "Denominator": 10
+      },
+      "ISO": 400,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 240,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 240,
+        "Denominator": 1
+      },
+      "originalDate": "2018-07-16T19:43:03Z",
+      "modifyDate": "2018-12-16T10:23:09Z"
+    }
+  },
+  {
+    "id": "1bdbe851-17ed-4df4-a3a4-549ebeb72fe5",
+    "data": {
+      "title": "Window Flower",
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "rating": 3,
+      "cameraMake": "FUJIFILM",
+      "cameraModel": "X-E1",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 3500,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 3500,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 140,
+          "Denominator": 100
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 140,
+          "Denominator": 100
+        }
+      },
+      "lensModel": "XF35mmF1.4 R",
+      "lensMake": "FUJIFILM",
+      "focalLength": {
+        "Numerator": 3500,
+        "Denominator": 100
+      },
+      "focalLengthIn35mmFormat": 53,
+      "maxApertureValue": {
+        "Numerator": 100,
+        "Denominator": 100
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 2400
+      },
+      "exposureCompensationn": {
+        "Numerator": -67,
+        "Denominator": 100
+      },
+      "exposoureProgram": 3,
+      "fNumber": {
+        "Numerator": 2,
+        "Denominator": 1
+      },
+      "ISO": 400,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2013-07-13T21:33:20Z",
+      "modifyDate": "2020-06-21T09:00:49+02:00"
+    }
+  },
+  {
+    "id": "81757545-2cbb-4b9d-8459-c39801e143c9",
+    "data": {
+      "keywords": [
+        "corwin",
+        "fest",
+        "fredrik",
+        "martin",
+        "svartvitt"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.2 (Macintosh)",
+      "rating": 5,
+      "cameraMake": "Canon",
+      "cameraModel": "Canon DIGITAL IXUS 75",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 29,
+          "Denominator": 5
+        },
+        "maxFocalLength": {
+          "Numerator": 87,
+          "Denominator": 5
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        }
+      },
+      "lensModel": "5.8-17.4 mm",
+      "focalLength": {
+        "Numerator": 29,
+        "Denominator": 5
+      },
+      "maxApertureValue": {
+        "Numerator": 95,
+        "Denominator": 32
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 10
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 1
+      },
+      "fNumber": {
+        "Numerator": 28,
+        "Denominator": 10
+      },
+      "ISO": 800,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2009-10-24T10:08:10Z",
+      "modifyDate": "2020-02-21T18:13:15+01:00",
+      "city": "San Francisco",
+      "country": "USA",
+      "state": "CA"
+    }
+  },
+  {
+    "id": "281aa07a-d1f3-4070-8926-152407598042",
+    "data": {
+      "keywords": [
+        "castro",
+        "naked men",
+        "vintage"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.1 (Macintosh)",
+      "rating": 5,
+      "cameraMake": "NIKON CORPORATION",
+      "cameraModel": "NIKON D90",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "maxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        }
+      },
+      "focalLength": {
+        "Numerator": 45,
+        "Denominator": 1
+      },
+      "focalLengthIn35mmFormat": 67,
+      "maxApertureValue": {
+        "Numerator": 9,
+        "Denominator": 2
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 2000
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 1
+      },
+      "exposoureProgram": 3,
+      "fNumber": {
+        "Numerator": 48,
+        "Denominator": 10
+      },
+      "ISO": 400,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2011-04-24T11:58:54Z",
+      "modifyDate": "2020-01-26T20:24:01+01:00",
+      "city": "San Francisco",
+      "country": "USA",
+      "state": "CA"
+    }
+  },
+  {
+    "id": "bd5a04da-155d-4f7b-a7f1-5c9a307a4e1e",
+    "data": {
+      "title": "Crossing Bridges",
+      "keywords": [
+        "gullmarsplan"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "rating": 4,
+      "cameraMake": "FUJIFILM",
+      "cameraModel": "X-E1",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 1800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 5500,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 280,
+          "Denominator": 100
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 400,
+          "Denominator": 100
+        }
+      },
+      "lensModel": "XF18-55mmF2.8-4 R LM OIS",
+      "lensMake": "FUJIFILM",
+      "focalLength": {
+        "Numerator": 2140,
+        "Denominator": 100
+      },
+      "focalLengthIn35mmFormat": 32,
+      "maxApertureValue": {
+        "Numerator": 300,
+        "Denominator": 100
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 1000
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 100
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 8,
+        "Denominator": 1
+      },
+      "ISO": 400,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2013-03-31T16:43:03Z",
+      "modifyDate": "2020-06-21T09:00:50+02:00",
+      "gpsInfo": {
+        "Latitude": {
+          "Orientation": 78,
+          "Degrees": 59,
+          "Minutes": 18.0783333,
+          "Seconds": 0
+        },
+        "Longitude": {
+          "Orientation": 69,
+          "Degrees": 18,
+          "Minutes": 4.59,
+          "Seconds": 0
+        },
+        "Altitude": 0,
+        "Timestamp": "0001-01-01T00:00:00Z"
+      },
+      "city": "Stockholm",
+      "country": "Sweden",
+      "state": "Stockholm County"
+    }
+  },
+  {
+    "id": "4782d5f9-d255-4dde-9a4a-c29f20a3c6bc",
+    "data": {
+      "title": "Midsommarkransen",
+      "keywords": [
+        "bw",
+        "midsommarkransen"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "rating": 3,
+      "cameraMake": "NIKON CORPORATION",
+      "cameraModel": "NIKON D90",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "maxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        }
+      },
+      "lensModel": "AF-S Micro Nikkor 60mm f/2.8G ED",
+      "focalLength": {
+        "Numerator": 60,
+        "Denominator": 1
+      },
+      "focalLengthIn35mmFormat": 90,
+      "maxApertureValue": {
+        "Numerator": 3,
+        "Denominator": 1
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 125
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 1
+      },
+      "exposoureProgram": 4,
+      "fNumber": {
+        "Numerator": 28,
+        "Denominator": 10
+      },
+      "ISO": 400,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2011-12-11T06:29:00Z",
+      "modifyDate": "2020-06-21T09:00:43+02:00",
+      "city": "Stockholm",
+      "country": "Sweden"
+    }
+  },
+  {
+    "id": "864f17a9-ad9f-4239-b135-fbd10c0ad632",
+    "data": {
+      "title": "Bird Watch",
+      "keywords": [
+        "vintage"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "rating": 3,
+      "cameraMake": "NIKON CORPORATION",
+      "cameraModel": "NIKON D90",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "maxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        }
+      },
+      "focalLength": {
+        "Numerator": 78,
+        "Denominator": 1
+      },
+      "focalLengthIn35mmFormat": 117,
+      "maxApertureValue": {
+        "Numerator": 5,
+        "Denominator": 1
+      },
+      "flashMode": 24,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 640
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 1
+      },
+      "fNumber": {
+        "Numerator": 13,
+        "Denominator": 1
+      },
+      "ISO": 1000,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2010-03-22T12:16:33Z",
+      "modifyDate": "2020-06-21T09:00:42+02:00"
+    }
+  },
+  {
+    "id": "906c6944-09bc-4158-b7b1-1376b4f7cc5d",
+    "data": {
+      "title": "After Rain",
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "rating": 5,
+      "cameraMake": "NIKON CORPORATION",
+      "cameraModel": "NIKON D90",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 35,
+          "Denominator": 1
+        },
+        "maxFocalLength": {
+          "Numerator": 35,
+          "Denominator": 1
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 9,
+          "Denominator": 5
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 9,
+          "Denominator": 5
+        }
+      },
+      "lensModel": "AF-S DX Nikkor 35mm f/1.8G",
+      "focalLength": {
+        "Numerator": 35,
+        "Denominator": 1
+      },
+      "focalLengthIn35mmFormat": 52,
+      "maxApertureValue": {
+        "Numerator": 8,
+        "Denominator": 5
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 1000
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 1
+      },
+      "exposoureProgram": 4,
+      "fNumber": {
+        "Numerator": 18,
+        "Denominator": 10
+      },
+      "ISO": 800,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2012-07-11T13:15:47Z",
+      "modifyDate": "2020-06-21T09:00:43+02:00"
+    }
+  },
+  {
+    "id": "012d6d12-080b-456a-a858-1e438a07b8ef",
+    "data": {
+      "title": "Shadow",
+      "keywords": [
+        "djur",
+        "hawaii",
+        "kauai",
+        "semester"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "rating": 5,
+      "cameraMake": "NIKON CORPORATION",
+      "cameraModel": "NIKON D90",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 16,
+          "Denominator": 1
+        },
+        "maxFocalLength": {
+          "Numerator": 85,
+          "Denominator": 1
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 7,
+          "Denominator": 2
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 28,
+          "Denominator": 5
+        }
+      },
+      "lensModel": "AF-S DX VR Zoom-Nikkor 16-85mm f/3.5-5.6G ED",
+      "focalLength": {
+        "Numerator": 56,
+        "Denominator": 1
+      },
+      "focalLengthIn35mmFormat": 84,
+      "maxApertureValue": {
+        "Numerator": 24,
+        "Denominator": 5
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 500
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 1
+      },
+      "exposoureProgram": 3,
+      "fNumber": {
+        "Numerator": 53,
+        "Denominator": 10
+      },
+      "ISO": 200,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2011-03-07T14:47:30Z",
+      "modifyDate": "2020-06-21T09:00:42+02:00",
+      "city": "Kauai",
+      "country": "USA, USA",
+      "state": "Hawaii"
+    }
+  },
+  {
+    "id": "03fcb648-2f62-42d4-8669-0793072f433a",
+    "data": {
+      "title": "Highway One",
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "rating": 5,
+      "cameraMake": "NIKON CORPORATION",
+      "cameraModel": "NIKON D90",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "maxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        }
+      },
+      "lensModel": "AF-S DX VR Zoom-Nikkor 16-85mm f/3.5-5.6G ED",
+      "focalLength": {
+        "Numerator": 16,
+        "Denominator": 1
+      },
+      "focalLengthIn35mmFormat": 24,
+      "maxApertureValue": {
+        "Numerator": 18,
+        "Denominator": 5
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 3200
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 1
+      },
+      "exposoureProgram": 3,
+      "fNumber": {
+        "Numerator": 35,
+        "Denominator": 10
+      },
+      "ISO": 320,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2010-10-29T13:35:40Z",
+      "modifyDate": "2020-06-21T09:00:42+02:00"
+    }
+  },
+  {
+    "id": "d8a4ec5b-c223-4ec1-9468-7778964b5f7a",
+    "data": {
+      "title": "Post Ranch Inn",
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "rating": 5,
+      "cameraMake": "NIKON CORPORATION",
+      "cameraModel": "NIKON D90",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 16,
+          "Denominator": 1
+        },
+        "maxFocalLength": {
+          "Numerator": 85,
+          "Denominator": 1
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 7,
+          "Denominator": 2
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 28,
+          "Denominator": 5
+        }
+      },
+      "lensModel": "AF-S DX VR Zoom-Nikkor 16-85mm f/3.5-5.6G ED",
+      "focalLength": {
+        "Numerator": 28,
+        "Denominator": 1
+      },
+      "focalLengthIn35mmFormat": 42,
+      "maxApertureValue": {
+        "Numerator": 41,
+        "Denominator": 10
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 1250
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 1
+      },
+      "exposoureProgram": 3,
+      "fNumber": {
+        "Numerator": 42,
+        "Denominator": 10
+      },
+      "ISO": 200,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2010-10-30T15:44:23Z",
+      "modifyDate": "2020-06-21T09:00:42+02:00"
+    }
+  },
+  {
+    "id": "63779ba0-e607-4c04-9452-b0da349550bc",
+    "data": {
+      "title": "Man with a Gun",
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "rating": 3,
+      "cameraMake": "NIKON CORPORATION",
+      "cameraModel": "NIKON D90",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 16,
+          "Denominator": 1
+        },
+        "maxFocalLength": {
+          "Numerator": 85,
+          "Denominator": 1
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 7,
+          "Denominator": 2
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 28,
+          "Denominator": 5
+        }
+      },
+      "lensModel": "AF-S DX VR Zoom-Nikkor 16-85mm f/3.5-5.6G ED",
+      "focalLength": {
+        "Numerator": 26,
+        "Denominator": 1
+      },
+      "focalLengthIn35mmFormat": 39,
+      "maxApertureValue": {
+        "Numerator": 41,
+        "Denominator": 10
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 2000
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 1
+      },
+      "exposoureProgram": 3,
+      "fNumber": {
+        "Numerator": 42,
+        "Denominator": 10
+      },
+      "ISO": 200,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2010-07-03T14:18:47Z",
+      "modifyDate": "2020-06-21T09:00:41+02:00"
+    }
+  },
+  {
+    "id": "61f29435-39d4-4c35-a024-5ac736afcf35",
+    "data": {
+      "title": "Olle and Martin",
+      "keywords": [
+        "olle"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "rating": 5,
+      "cameraMake": "FUJIFILM",
+      "cameraModel": "X-E3",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 3500,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 3500,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 140,
+          "Denominator": 100
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 140,
+          "Denominator": 100
+        }
+      },
+      "lensModel": "XF35mmF1.4 R",
+      "lensMake": "FUJIFILM",
+      "focalLength": {
+        "Numerator": 3500,
+        "Denominator": 100
+      },
+      "focalLengthIn35mmFormat": 53,
+      "maxApertureValue": {
+        "Numerator": 100,
+        "Denominator": 100
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 125
+      },
+      "exposureCompensationn": {
+        "Numerator": -33,
+        "Denominator": 100
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 14,
+        "Denominator": 10
+      },
+      "ISO": 640,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2018-11-24T15:06:01Z",
+      "modifyDate": "2020-06-21T09:00:58+02:00"
+    }
+  },
+  {
+    "id": "3c82c6e5-5009-403c-8504-a9105f3038ff",
+    "data": {
+      "title": "Under the Fountain",
+      "software": "Adobe Photoshop Lightroom Classic 10.1 (Macintosh)",
+      "rating": 4,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 250
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 2,
+        "Denominator": 1
+      },
+      "ISO": 100,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-01-29T11:53:43+02:00",
+      "modifyDate": "2021-01-10T17:36:32+01:00"
+    }
+  },
+  {
+    "id": "e0ed266d-e166-4e84-89c4-b3ffb9e8de88",
+    "data": {
+      "title": "Taking a Break",
+      "software": "Adobe Photoshop Lightroom Classic 10.1 (Macintosh)",
+      "rating": 3,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 250
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 4,
+      "fNumber": {
+        "Numerator": 17,
+        "Denominator": 10
+      },
+      "ISO": 1250,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-01-29T12:18:35+02:00",
+      "modifyDate": "2021-01-10T17:36:33+01:00"
+    }
+  },
+  {
+    "id": "e55ea8b9-5547-4ccd-b68c-58a4dba7e6a7",
+    "data": {
+      "title": "Bergsjö",
+      "keywords": [
+        "anna",
+        "olle"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "cameraMake": "FUJIFILM",
+      "cameraModel": "X-E3",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2300,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2300,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 200,
+          "Denominator": 100
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 200,
+          "Denominator": 100
+        }
+      },
+      "lensModel": "XF23mmF2 R WR",
+      "lensMake": "FUJIFILM",
+      "focalLength": {
+        "Numerator": 2300,
+        "Denominator": 100
+      },
+      "focalLengthIn35mmFormat": 35,
+      "maxApertureValue": {
+        "Numerator": 200,
+        "Denominator": 100
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 3200
+      },
+      "exposureCompensationn": {
+        "Numerator": -33,
+        "Denominator": 100
+      },
+      "exposoureProgram": 3,
+      "fNumber": {
+        "Numerator": 2,
+        "Denominator": 1
+      },
+      "ISO": 400,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2018-08-05T19:23:32Z",
+      "modifyDate": "2020-06-21T09:00:51+02:00"
+    }
+  },
+  {
+    "id": "cdf51e45-2cbb-45dd-9fb1-884b539deada",
+    "data": {
+      "title": "tre vänner",
+      "keywords": [
+        "martin"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "rating": 3,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 250
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 4,
+      "fNumber": {
+        "Numerator": 22,
+        "Denominator": 10
+      },
+      "ISO": 100,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-06-28T19:20:19+02:00",
+      "modifyDate": "2020-08-01T21:59:16+02:00"
+    }
+  },
+  {
+    "id": "263a6dc7-4d3e-4297-83a6-8c68adf5abe5",
+    "data": {
+      "title": "Degpojken",
+      "keywords": [
+        "jonas degerström"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "rating": 2,
+      "cameraMake": "FUJIFILM",
+      "cameraModel": "X-E3",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 3500,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 3500,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 140,
+          "Denominator": 100
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 140,
+          "Denominator": 100
+        }
+      },
+      "lensModel": "XF35mmF1.4 R",
+      "lensMake": "FUJIFILM",
+      "focalLength": {
+        "Numerator": 3500,
+        "Denominator": 100
+      },
+      "focalLengthIn35mmFormat": 53,
+      "maxApertureValue": {
+        "Numerator": 100,
+        "Denominator": 100
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 180
+      },
+      "exposureCompensationn": {
+        "Numerator": -33,
+        "Denominator": 100
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 14,
+        "Denominator": 10
+      },
+      "ISO": 1600,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2018-11-10T20:44:21Z",
+      "modifyDate": "2020-06-21T09:00:58+02:00"
+    }
+  },
+  {
+    "id": "615b23c8-c9f0-44bd-aa9a-8da0f5dc99c8",
+    "data": {
+      "title": "wild strawberry",
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "rating": 5,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 250
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 4,
+      "fNumber": {
+        "Numerator": 28,
+        "Denominator": 10
+      },
+      "ISO": 200,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-07-13T16:42:08+02:00",
+      "modifyDate": "2020-08-01T17:24:52+02:00"
+    }
+  },
+  {
+    "id": "1f6a4f96-3cef-4a61-864f-2b0bac29a3c3",
+    "data": {
+      "title": "Siggesta Gård",
+      "software": "Adobe Photoshop Lightroom Classic 9.3 (Macintosh)",
+      "rating": 3,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 125
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 4,
+        "Denominator": 1
+      },
+      "ISO": 400,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-02-02T10:22:39+02:00",
+      "modifyDate": "2020-06-21T09:01:00+02:00"
+    }
+  },
+  {
+    "id": "6dc497a8-502c-4dd3-90ba-30538cbdcf6d",
+    "data": {
+      "title": "boat",
+      "keywords": [
+        "bergsjö"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.4 (Macintosh)",
+      "rating": 3,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 500
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 63,
+        "Denominator": 10
+      },
+      "ISO": 100,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-08-09T11:29:46+02:00",
+      "modifyDate": "2020-09-06T11:26:16+02:00"
+    }
+  },
+  {
+    "id": "ca8ad336-29e8-4816-94fc-a24bbaaf3580",
+    "data": {
+      "title": "gloom",
+      "keywords": [
+        "bergsjö"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 10.1 (Macintosh)",
+      "rating": 4,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 250
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 8,
+        "Denominator": 1
+      },
+      "ISO": 50,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-08-09T12:20:37+02:00",
+      "modifyDate": "2021-01-10T17:36:42+01:00"
+    }
+  },
+  {
+    "id": "ac88bdef-d9ce-4016-bcc2-ae478e135f5e",
+    "data": {
+      "title": "birds in the sky",
+      "keywords": [
+        "bergsjö"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.4 (Macintosh)",
+      "rating": 3,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 250
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 4,
+      "fNumber": {
+        "Numerator": 45,
+        "Denominator": 10
+      },
+      "ISO": 100,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-08-08T20:33:43+02:00",
+      "modifyDate": "2020-09-20T12:45:11+02:00"
+    }
+  },
+  {
+    "id": "fc9ce547-1732-46d4-a4b3-485328ca1aa1",
+    "data": {
+      "title": "sea",
+      "keywords": [
+        "bergsjö"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 10.1 (Macintosh)",
+      "rating": 2,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 500
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 4,
+      "fNumber": {
+        "Numerator": 63,
+        "Denominator": 10
+      },
+      "ISO": 50,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-08-07T11:27:19+02:00",
+      "modifyDate": "2021-01-10T17:36:38+01:00"
+    }
+  },
+  {
+    "id": "1e768723-75e9-43bc-843b-5b88639dcbac",
+    "data": {
+      "title": "golden",
+      "keywords": [
+        "bergsjö"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 10.1 (Macintosh)",
+      "rating": 3,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 250
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 4,
+      "fNumber": {
+        "Numerator": 28,
+        "Denominator": 10
+      },
+      "ISO": 1250,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-08-07T09:09:56+02:00",
+      "modifyDate": "2021-01-10T17:36:37+01:00"
+    }
+  },
+  {
+    "id": "3c4ba58e-3c8d-4236-bdef-8ea976f44edf",
+    "data": {
+      "title": "at the cove",
+      "keywords": [
+        "bergsjö",
+        "olle"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 10.1 (Macintosh)",
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 500
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 4,
+        "Denominator": 1
+      },
+      "ISO": 50,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-08-09T12:02:17+02:00",
+      "modifyDate": "2021-01-10T17:36:39+01:00"
+    }
+  },
+  {
+    "id": "4a7b9fd9-b042-49a8-83e6-2d05fad920b0",
+    "data": {
+      "title": "Winter Chanterelle",
+      "software": "Adobe Photoshop Lightroom Classic 10.0 (Macintosh)",
+      "rating": 3,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 125
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 18,
+        "Denominator": 10
+      },
+      "ISO": 400,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-10-27T09:09:42+02:00",
+      "modifyDate": "2020-11-08T16:30:32+01:00"
+    }
+  },
+  {
+    "id": "67cbbced-9450-44ff-b099-2371614e9158",
+    "data": {
+      "title": "ice",
+      "software": "Adobe Photoshop Lightroom Classic 10.1 (Macintosh)",
+      "rating": 4,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 250
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 25,
+        "Denominator": 10
+      },
+      "ISO": 100,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-12-31T12:55:47+02:00",
+      "modifyDate": "2021-01-10T17:36:49+01:00"
+    }
+  },
+  {
+    "id": "fe472337-3b12-4759-ad04-40adc3ac8f1e",
+    "data": {
+      "keywords": [
+        "agneta",
+        "hans",
+        "olle"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 10.1 (Macintosh)",
+      "rating": 5,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 250
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 25,
+        "Denominator": 10
+      },
+      "ISO": 200,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-11-08T14:51:22+02:00",
+      "modifyDate": "2021-01-10T17:36:48+01:00"
+    }
+  },
+  {
+    "id": "0929b160-2753-4e0c-ba93-26a508fbd496",
+    "data": {
+      "keywords": [
+        "martin",
+        "pelle"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.4 (Macintosh)",
+      "rating": 4,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 125
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 4,
+      "fNumber": {
+        "Numerator": 17,
+        "Denominator": 10
+      },
+      "ISO": 3200,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-01-17T19:56:34+02:00",
+      "modifyDate": "2020-09-20T12:45:01+02:00"
+    }
+  },
+  {
+    "id": "b8bae232-9d7a-4942-babe-28c0e8c77a30",
+    "data": {
+      "keywords": [
+        "My man"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 10.1.1 (Macintosh)",
+      "rating": 2,
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 60
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 4,
+      "fNumber": {
+        "Numerator": 17,
+        "Denominator": 10
+      },
+      "ISO": 1600,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2021-01-29T20:57:10+02:00",
+      "modifyDate": "2021-02-07T18:56:28+01:00"
+    }
+  },
+  {
+    "id": "e337da91-2ba2-4ad7-a44a-04270cb85106",
+    "data": {
+      "title": "Trosa by night",
+      "software": "Adobe Photoshop Lightroom Classic 10.1.1 (Macintosh)",
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 30
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 4,
+      "fNumber": {
+        "Numerator": 2,
+        "Denominator": 1
+      },
+      "ISO": 1600,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2021-01-29T21:13:22+02:00",
+      "modifyDate": "2021-02-07T18:56:24+01:00"
+    }
+  },
+  {
+    "id": "2fa186de-d3da-41f1-baa6-4c5e4c64d9ea",
+    "data": {
+      "title": "Cars",
+      "software": "Adobe Photoshop Lightroom Classic 10.0 (Macintosh)",
+      "cameraMake": "LEICA CAMERA AG",
+      "cameraModel": "LEICA Q2",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 2800,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 392,
+          "Denominator": 256
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 761,
+          "Denominator": 256
+        }
+      },
+      "lensModel": "SUMMILUX 1:1.7/28 ASPH.",
+      "focalLength": {
+        "Numerator": 280,
+        "Denominator": 10
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 392,
+        "Denominator": 256
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 500
+      },
+      "exposureCompensationn": {
+        "Numerator": -3,
+        "Denominator": 10
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 5,
+        "Denominator": 1
+      },
+      "ISO": 50,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2020-10-05T11:14:42+02:00",
+      "modifyDate": "2020-11-08T16:30:23+01:00"
+    }
+  },
+  {
+    "id": "aefa67bc-d788-4b14-b12f-afffd04ab2ab",
+    "data": {
+      "software": "Adobe Photoshop Lightroom Classic 9.4 (Macintosh)",
+      "rating": 3,
+      "cameraMake": "FUJIFILM",
+      "cameraModel": "X-E1",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 3500,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 3500,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 140,
+          "Denominator": 100
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 140,
+          "Denominator": 100
+        }
+      },
+      "lensModel": "XF35mmF1.4 R",
+      "lensMake": "FUJIFILM",
+      "focalLength": {
+        "Numerator": 3500,
+        "Denominator": 100
+      },
+      "focalLengthIn35mmFormat": 53,
+      "maxApertureValue": {
+        "Numerator": 100,
+        "Denominator": 100
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 50
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 100
+      },
+      "exposoureProgram": 3,
+      "fNumber": {
+        "Numerator": 2,
+        "Denominator": 1
+      },
+      "ISO": 800,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2013-08-27T20:30:27Z",
+      "modifyDate": "2020-09-20T12:44:57+02:00"
+    }
+  },
+  {
+    "id": "31e0be06-b7c7-4a8e-9aba-996f4aa67221",
+    "data": {
+      "keywords": [
+        "sunset"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.4 (Macintosh)",
+      "cameraMake": "FUJIFILM",
+      "cameraModel": "X-E1",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 1800,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 5500,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 280,
+          "Denominator": 100
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 400,
+          "Denominator": 100
+        }
+      },
+      "lensModel": "XF18-55mmF2.8-4 R LM OIS",
+      "lensMake": "FUJIFILM",
+      "focalLength": {
+        "Numerator": 1880,
+        "Denominator": 100
+      },
+      "focalLengthIn35mmFormat": 28,
+      "maxApertureValue": {
+        "Numerator": 300,
+        "Denominator": 100
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 4
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 100
+      },
+      "exposoureProgram": 1,
+      "fNumber": {
+        "Numerator": 45,
+        "Denominator": 10
+      },
+      "ISO": 800,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2013-04-18T00:41:31Z",
+      "modifyDate": "2020-09-20T12:44:59+02:00"
+    }
+  },
+  {
+    "id": "8e5eafeb-5ec5-489b-9c64-87b28f3fcf61",
+    "data": {
+      "keywords": [
+        "castro"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.4 (Macintosh)",
+      "cameraMake": "FUJIFILM",
+      "cameraModel": "X-E1",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 3500,
+          "Denominator": 100
+        },
+        "maxFocalLength": {
+          "Numerator": 3500,
+          "Denominator": 100
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 140,
+          "Denominator": 100
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 140,
+          "Denominator": 100
+        }
+      },
+      "lensModel": "XF35mmF1.4 R",
+      "lensMake": "FUJIFILM",
+      "focalLength": {
+        "Numerator": 3500,
+        "Denominator": 100
+      },
+      "focalLengthIn35mmFormat": 53,
+      "maxApertureValue": {
+        "Numerator": 100,
+        "Denominator": 100
+      },
+      "flashMode": 16,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 150
+      },
+      "exposureCompensationn": {
+        "Numerator": -33,
+        "Denominator": 100
+      },
+      "exposoureProgram": 2,
+      "fNumber": {
+        "Numerator": 16,
+        "Denominator": 10
+      },
+      "ISO": 200,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2013-02-14T18:21:44Z",
+      "modifyDate": "2020-09-20T12:44:58+02:00",
+      "gpsInfo": {
+        "Latitude": {
+          "Orientation": 78,
+          "Degrees": 13,
+          "Minutes": 3.617,
+          "Seconds": 0
+        },
+        "Longitude": {
+          "Orientation": 69,
+          "Degrees": 80,
+          "Minutes": 15.0708333,
+          "Seconds": 0
+        },
+        "Altitude": 0,
+        "Timestamp": "0001-01-01T00:00:00Z"
+      }
+    }
+  },
+  {
+    "id": "8d8e2587-7fa6-4b8a-90b2-345aee8305d2",
+    "data": {
+      "keywords": [
+        "bergsjö"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.4 (Macintosh)",
+      "rating": 5,
+      "cameraMake": "NIKON CORPORATION",
+      "cameraModel": "NIKON D90",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 35,
+          "Denominator": 1
+        },
+        "maxFocalLength": {
+          "Numerator": 35,
+          "Denominator": 1
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 9,
+          "Denominator": 5
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 9,
+          "Denominator": 5
+        }
+      },
+      "lensModel": "AF-S DX Nikkor 35mm f/1.8G",
+      "focalLength": {
+        "Numerator": 35,
+        "Denominator": 1
+      },
+      "focalLengthIn35mmFormat": 52,
+      "maxApertureValue": {
+        "Numerator": 8,
+        "Denominator": 5
+      },
+      "flashMode": 24,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 320
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 1
+      },
+      "fNumber": {
+        "Numerator": 9,
+        "Denominator": 1
+      },
+      "ISO": 400,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2012-07-11T13:09:09Z",
+      "modifyDate": "2020-09-20T12:44:52+02:00"
+    }
+  },
+  {
+    "id": "d6eee7ce-a23b-4589-8872-9fb3f04305df",
+    "data": {
+      "title": "Portland Bird",
+      "keywords": [
+        "martin",
+        "portland",
+        "semester",
+        "vintage"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 9.4 (Macintosh)",
+      "rating": 5,
+      "cameraMake": "NIKON CORPORATION",
+      "cameraModel": "NIKON D90",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "maxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        }
+      },
+      "focalLength": {
+        "Numerator": 16,
+        "Denominator": 1
+      },
+      "focalLengthIn35mmFormat": 24,
+      "maxApertureValue": {
+        "Numerator": 18,
+        "Denominator": 5
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 2000
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 1
+      },
+      "exposoureProgram": 3,
+      "fNumber": {
+        "Numerator": 35,
+        "Denominator": 10
+      },
+      "ISO": 200,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2010-08-11T10:40:50Z",
+      "modifyDate": "2020-09-20T12:44:52+02:00",
+      "city": "Portland",
+      "country": "USA",
+      "state": "OR"
+    }
+  },
+  {
+    "id": "76ff575c-16f3-465f-9ac6-19df864714f4",
+    "data": {
+      "software": "Adobe Photoshop Lightroom Classic 9.4 (Macintosh)",
+      "rating": 4,
+      "cameraMake": "NIKON CORPORATION",
+      "cameraModel": "NIKON D90",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 16,
+          "Denominator": 1
+        },
+        "maxFocalLength": {
+          "Numerator": 85,
+          "Denominator": 1
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 7,
+          "Denominator": 2
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 28,
+          "Denominator": 5
+        }
+      },
+      "lensModel": "AF-S DX VR Zoom-Nikkor 16-85mm f/3.5-5.6G ED",
+      "focalLength": {
+        "Numerator": 35,
+        "Denominator": 1
+      },
+      "focalLengthIn35mmFormat": 52,
+      "maxApertureValue": {
+        "Numerator": 22,
+        "Denominator": 5
+      },
+      "flashMode": 24,
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 200
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 1
+      },
+      "fNumber": {
+        "Numerator": 14,
+        "Denominator": 1
+      },
+      "ISO": 1000,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2011-01-03T00:24:34Z",
+      "modifyDate": "2020-09-20T12:44:52+02:00"
+    }
+  },
+  {
+    "id": "78f507c4-00f8-41e3-944e-84f22a728e39",
+    "data": {
+      "title": "Downtown SF",
+      "keywords": [
+        "vintage"
+      ],
+      "software": "Adobe Photoshop Lightroom Classic 10.1 (Macintosh)",
+      "rating": 5,
+      "cameraMake": "NIKON CORPORATION",
+      "cameraModel": "NIKON D90",
+      "lensInfo": {
+        "minFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "maxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "minFNumberMinFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        },
+        "MinFNumberMaxFocalLength": {
+          "Numerator": 0,
+          "Denominator": 0
+        }
+      },
+      "focalLength": {
+        "Numerator": 32,
+        "Denominator": 1
+      },
+      "focalLengthIn35mmFormat": 48,
+      "maxApertureValue": {
+        "Numerator": 43,
+        "Denominator": 10
+      },
+      "exposureTime": {
+        "Numerator": 1,
+        "Denominator": 125
+      },
+      "exposureCompensationn": {
+        "Numerator": 0,
+        "Denominator": 1
+      },
+      "exposoureProgram": 4,
+      "fNumber": {
+        "Numerator": 13,
+        "Denominator": 1
+      },
+      "ISO": 200,
+      "colorSpace": 1,
+      "xResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "yResolution": {
+        "Numerator": 144,
+        "Denominator": 1
+      },
+      "originalDate": "2010-03-13T16:53:44Z",
+      "modifyDate": "2021-01-10T17:36:31+01:00"
+    }
+  }
+]
