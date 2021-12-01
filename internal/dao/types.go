@@ -2,7 +2,7 @@ package dao
 
 import (
 	"github.com/google/uuid"
-	"github.com/msvens/mexif"
+	"github.com/msvens/mimage/metadata"
 	"time"
 )
 
@@ -59,8 +59,8 @@ type Comment struct {
 }
 
 type Exif struct {
-	Id   uuid.UUID          `json:"id"`
-	Data *mexif.ExifCompact `json:"data"`
+	Id   uuid.UUID                 `json:"id"`
+	Data *metadata.MetaDataSummary `json:"data"`
 }
 
 type Guest struct {
@@ -83,7 +83,7 @@ type Photo struct {
 	Source       string    `json:"source"`
 	SourceId     string    `json:"-"`
 	SourceOther  string    `json:"-"`
-	SourceDate   time.Time `json:"-"`
+	SourceDate   time.Time `json:"sourceDate"`
 	UploadDate   time.Time `json:"uploadDate"`
 	OriginalDate time.Time `json:"originalDate"`
 

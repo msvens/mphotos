@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/msvens/mexif"
+	"github.com/msvens/mimage/metadata"
 	"strings"
 )
 
@@ -18,10 +18,10 @@ type PhotoPG struct {
 func NewPhotoPG(db *sqlx.DB) *PhotoPG {
 	p := &Photo{}
 	fields := getStructFields(p)
-	return &PhotoPG{db, fields, buildInsertNamed("photo", fields)}
+	return &PhotoPG{db, fields, buildInsertNamed("img", fields)}
 }
 
-func (dao *PhotoPG) Add(p *Photo, exif *mexif.ExifCompact) error {
+func (dao *PhotoPG) Add(p *Photo, exif *metadata.MetaDataSummary) error {
 	if p.Id == uuid.Nil {
 		p.Id = uuid.New()
 	}
@@ -39,7 +39,7 @@ func (dao *PhotoPG) Add(p *Photo, exif *mexif.ExifCompact) error {
 func (dao *PhotoPG) Delete(id uuid.UUID) (bool, error) {
 
 	deleted := false
-	if res, err := dao.db.Exec("DELETE FROM photo WHERE id = $1", id); err != nil {
+	if res, err := dao.db.Exec("DELETE FROM img WHERE id = $1", id); err != nil {
 		return false, err
 	} else {
 		cnt, _ := res.RowsAffected()
@@ -61,12 +61,11 @@ func (dao *PhotoPG) Delete(id uuid.UUID) (bool, error) {
 }
 
 func (dao *PhotoPG) Exif(id uuid.UUID) (*Exif, error) {
-	const stmt = "SELECT data FROM exif WHERE id = $1"
 	var data string
-	if err := dao.db.QueryRow("SELECT data FROM exif WHERE id = $1", id).Scan(&data); err != nil {
+	if err := dao.db.QueryRow("SELECT data FROM exifdata WHERE id = $1", id).Scan(&data); err != nil {
 		return nil, err
 	}
-	resp := Exif{Id: id, Data: &mexif.ExifCompact{}}
+	resp := Exif{Id: id, Data: &metadata.MetaDataSummary{}}
 	if err := json.Unmarshal([]byte(data), resp.Data); err != nil {
 		return nil, err
 	}
@@ -74,9 +73,9 @@ func (dao *PhotoPG) Exif(id uuid.UUID) (*Exif, error) {
 }
 
 func (dao *PhotoPG) Has(id uuid.UUID, private bool) bool {
-	stmt := "SELECT 1 FROM photo WHERE id = $1 AND private = false"
+	stmt := "SELECT 1 FROM img WHERE id = $1 AND private = false"
 	if private {
-		stmt = "SELECT 1 FROM photo WHERE id = $1"
+		stmt = "SELECT 1 FROM img WHERE id = $1"
 	}
 	if rows, err := dao.db.Query(stmt, id); err == nil {
 		defer rows.Close()
@@ -87,7 +86,7 @@ func (dao *PhotoPG) Has(id uuid.UUID, private bool) bool {
 }
 
 func (dao *PhotoPG) HasMd5(md5 string) bool {
-	if rows, err := dao.db.Query("SELECT 1 FROM photo WHERE md5 = $1", md5); err == nil {
+	if rows, err := dao.db.Query("SELECT 1 FROM img WHERE md5 = $1", md5); err == nil {
 		defer rows.Close()
 		return rows.Next()
 	} else {
@@ -97,9 +96,9 @@ func (dao *PhotoPG) HasMd5(md5 string) bool {
 
 func (dao *PhotoPG) Get(id uuid.UUID, private bool) (*Photo, error) {
 	ret := &Photo{}
-	stmt := "SELECT * FROM photo WHERE id = $1 AND private = false"
+	stmt := "SELECT * FROM img WHERE id = $1 AND private = false"
 	if private {
-		stmt = "SELECT * FROM photo WHERE id = $1"
+		stmt = "SELECT * FROM img WHERE id = $1"
 	}
 	err := dao.db.Get(ret, stmt, id)
 	return ret, err
@@ -107,19 +106,19 @@ func (dao *PhotoPG) Get(id uuid.UUID, private bool) (*Photo, error) {
 
 func (dao *PhotoPG) List() ([]*Photo, error) {
 	ret := []*Photo{}
-	err := dao.db.Select(&ret, "SELECT * FROM photo")
+	err := dao.db.Select(&ret, "SELECT * FROM img")
 	return ret, err
 }
 
 func (dao *PhotoPG) ListSource(source string) ([]*Photo, error) {
 	ret := []*Photo{}
-	err := dao.db.Select(&ret, "SELECT * from photo WHERE source = $1", source)
+	err := dao.db.Select(&ret, "SELECT * from img WHERE source = $1", source)
 	return ret, err
 }
 
 func (dao *PhotoPG) Select(r Range, order PhotoOrder, filter PhotoFilter) ([]*Photo, error) {
 	var stmt strings.Builder
-	stmt.WriteString("SELECT * FROM photo")
+	stmt.WriteString("SELECT * FROM img")
 
 	if !filter.Private && filter.CameraModel != "" {
 		stmt.WriteString(" WHERE private = false AND cameramodel = $1")
@@ -158,7 +157,7 @@ func (dao *PhotoPG) Set(title string, description string, keywords []string, id 
 			b.WriteByte(',')
 		}
 	}
-	stmt := "UPDATE photo SET title = $1, description = $2, keywords = $3 WHERE id = $4"
+	stmt := "UPDATE img SET title = $1, description = $2, keywords = $3 WHERE id = $4"
 	if _, err := dao.db.Exec(stmt, title, description, b.String(), id); err != nil {
 		return nil, err
 	}
@@ -166,7 +165,7 @@ func (dao *PhotoPG) Set(title string, description string, keywords []string, id 
 }
 
 func (dao *PhotoPG) SetPrivate(private bool, id uuid.UUID) (*Photo, error) {
-	if _, err := dao.db.Exec("UPDATE photo SET private = $1 WHERE id = $2", private, id); err != nil {
+	if _, err := dao.db.Exec("UPDATE img SET private = $1 WHERE id = $2", private, id); err != nil {
 		return nil, err
 	}
 	return dao.Get(id, true)

@@ -15,7 +15,9 @@ limitations under the License.
 */
 package main
 
-import "github.com/msvens/mphotos/cmd"
+import (
+	"github.com/msvens/mphotos/cmd"
+)
 
 func main() {
 	cmd.Execute()

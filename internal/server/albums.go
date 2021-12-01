@@ -58,10 +58,10 @@ func (s *mserver) handleAddAlbum(r *http.Request) (interface{}, error) {
 
 func (s *mserver) handlePhotoAlbums(r *http.Request, loggedIn bool) (interface{}, error) {
 	if photoId, err := uuid.Parse(Var(r, "id")); err != nil {
-		return nil, BadRequestError("could not parse photo id")
+		return nil, BadRequestError("could not parse img id")
 	} else {
 		if !s.pg.Photo.Has(photoId, loggedIn) {
-			return nil, NotFoundError("Could not find photo xxx")
+			return nil, NotFoundError("Could not find img xxx")
 		} else {
 			return s.pg.Album.Albums(photoId)
 		}

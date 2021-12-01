@@ -25,8 +25,8 @@ import (
 // deletedbCmd represents the deletedb command
 var deletedbCmd = &cobra.Command{
 	Use:   "deletedb",
-	Short: "Delete photo database",
-	Long:  `Permanently deletes all photo database tables`,
+	Short: "Delete img database",
+	Long:  `Permanently deletes all img database tables`,
 	Run: func(cmd *cobra.Command, args []string) {
 		config.InitConfig()
 		dbs, err := dao.NewPGDB()

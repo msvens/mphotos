@@ -19,47 +19,50 @@ import (
 	"fmt"
 	"github.com/msvens/mphotos/internal/config"
 	"github.com/msvens/mphotos/internal/dao"
-	"github.com/msvens/mphotos/internal/img"
+	"github.com/msvens/mphotos/internal/server"
 	"github.com/spf13/cobra"
-	"path/filepath"
 )
 
-// photosCmd represents the photos command
-var photosCmd = &cobra.Command{
-	Use:   "photos",
-	Short: "Generate any missing photos",
-	Long:  `This commands goes through all photos and generates new cropped versions of them`,
+// cleanPhotosCmd represents the photos command
+var cleanPhotosCmd = &cobra.Command{
+	Use:   "cleanphotos",
+	Short: "Clean photos from server",
+	Long:  `This command goes through all image files and removes those that are no longer in the photo database`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("generate photos crops")
 		config.InitConfig()
-		imgDir := config.ServicePath("img")
-		baseDir := config.ServiceRoot()
+		//imgDir := config.ServicePath("img")
+		//baseDir := config.ServiceRoot()
 		db, err := dao.NewPGDB()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		photos, err := db.Photo.List()
-		if err != nil {
+		if err = server.CleanImageDirs(db); err != nil {
 			fmt.Println(err)
-			return
 		}
-		if err = img.CreateImageDir(baseDir); err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		for _, photo := range photos {
-			if err = img.GenerateImages(filepath.Join(imgDir, photo.FileName), baseDir); err != nil {
+		/*
+			photos, err := db.Photo.List()
+			if err != nil {
 				fmt.Println(err)
 				return
 			}
-		}
+			if err = server.CreateImageDirs(); err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			for _, photo := range photos {
+				if err = server.GenerateImages(filepath.Join(imgDir, photo.FileName), baseDir); err != nil {
+					fmt.Println(err)
+					return
+				}
+			}
+		*/
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(photosCmd)
+	rootCmd.AddCommand(cleanPhotosCmd)
 
 	// Here you will define your flags and configuration settings.
 

@@ -44,9 +44,10 @@ func (dao *AlbumPG) List() ([]*Album, error) {
 
 func (dao *AlbumPG) Photos(id uuid.UUID, private bool) ([]*Photo, error) {
 	ret := []*Photo{}
-	stmt := "SELECT * FROM photo WHERE private = false AND id IN (SELECT photoId FROM albumphotos WHERE albumId = $1)"
+	stmt := "SELECT * FROM img WHERE private = false AND id IN (SELECT photoId FROM albumphotos WHERE albumId = $1)"
 	if private {
-		stmt = "SELECT * FROM photo WHERE id IN (SELECT photoId FROM albumphotos WHERE albumId = $1)"
+		fmt.Println("executing private...")
+		stmt = "SELECT * FROM img WHERE id IN (SELECT photoId FROM albumphotos WHERE albumId = $1)"
 	}
 	err := dao.db.Select(&ret, stmt, id)
 	return ret, err
@@ -87,8 +88,8 @@ func (dao *AlbumPG) Update(album *Album) (*Album, error) {
 }
 
 func (dao *AlbumPG) UpdatePhoto(albumIds []uuid.UUID, photoId uuid.UUID) error {
-	//check photo
-	if !has(dao.db, "photo", "id", photoId) {
+	//check img
+	if !has(dao.db, "img", "id", photoId) {
 		return fmt.Errorf("photoId does not exist")
 	}
 

@@ -25,8 +25,8 @@ import (
 // createdbCmd represents the createdb command
 var createdbCmd = &cobra.Command{
 	Use:   "createdb",
-	Short: "Create photo database",
-	Long:  `Create the underlying postgres photo database tables if not existing`,
+	Short: "Create img database",
+	Long:  `Create the underlying postgres img database tables if not existing`,
 	Run: func(cmd *cobra.Command, args []string) {
 		config.InitConfig()
 		db, err := dao.NewPGDB()

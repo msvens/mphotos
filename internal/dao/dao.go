@@ -5,7 +5,9 @@ import (
 	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
-	"github.com/msvens/mexif"
+	"github.com/msvens/mimage/metadata"
+
+	//"github.com/msvens/mexif"
 	"github.com/msvens/mphotos/internal/config"
 	"go.uber.org/zap"
 )
@@ -14,7 +16,7 @@ type AlbumDAO interface {
 	Add(name, description, coverpic string) (*Album, error)
 	Get(id uuid.UUID) (*Album, error)
 	List() ([]*Album, error)
-	Photos(id uuid.UUID, public bool) ([]*Photo, error)
+	Photos(id uuid.UUID, private bool) ([]*Photo, error)
 	Delete(id uuid.UUID) error
 	Has(id uuid.UUID) bool
 	HasByName(name string) bool
@@ -71,7 +73,7 @@ type ReactionDAO interface {
 }
 
 type PhotoDAO interface {
-	Add(p *Photo, exif *mexif.ExifCompact) error
+	Add(p *Photo, exif *metadata.MetaDataSummary) error
 	Delete(id uuid.UUID) (bool, error)
 	Exif(id uuid.UUID) (*Exif, error)
 	Has(id uuid.UUID, private bool) bool

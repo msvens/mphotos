@@ -16,34 +16,58 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
 	"github.com/msvens/mphotos/internal/config"
 	"github.com/msvens/mphotos/internal/dao"
+	"github.com/msvens/mphotos/internal/server"
 	"github.com/spf13/cobra"
+	"path/filepath"
 )
 
-// upgradedbCmd represents the upgradedb command
-var upgradedbCmd = &cobra.Command{
-	Use:   "upgradedb",
-	Short: "Upgrade mphotos database",
-	Long:  `Upgrades the mphotos database to the latest version if possible`,
+// photosCmd represents the photos command
+var photosCmd = &cobra.Command{
+	Use:   "genphotos",
+	Short: "Generate any missing photos",
+	Long:  `This commands goes through all photos and generates new cropped versions of them`,
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("generate photos crops")
 		config.InitConfig()
-		if err := dao.MigrateFromModelToDAO(); err != nil {
-			println(err.Error())
+		imgDir := config.ServicePath("img")
+		baseDir := config.ServiceRoot()
+		db, err := dao.NewPGDB()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		photos, err := db.Photo.List()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		if err = server.CreateImageDirs(); err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		for _, photo := range photos {
+			if err = server.GenerateImages(filepath.Join(imgDir, photo.FileName), baseDir); err != nil {
+				fmt.Println(err)
+				return
+			}
 		}
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(upgradedbCmd)
+	rootCmd.AddCommand(photosCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// upgradedbCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// photosCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// upgradedbCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// photosCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

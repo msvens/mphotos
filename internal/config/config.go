@@ -1,11 +1,51 @@
 package config
 
 import (
+	"fmt"
 	"github.com/spf13/viper"
 	"path/filepath"
 )
 
 var configed bool = false
+
+type PhotoType int
+
+const (
+	Original PhotoType = iota
+	Thumb
+	Landscape
+	Square
+	Portrait
+	Resize
+)
+
+const CameraDir = "camera"
+
+var photoTypeDirNames = map[PhotoType]string{
+	Original:  "img",
+	Thumb:     "thumb",
+	Landscape: "landscape",
+	Square:    "square",
+	Portrait:  "portrait",
+	Resize:    "resize",
+}
+
+func (pt PhotoType) String() string {
+	return photoTypeDirNames[pt]
+}
+
+var photoTypePaths map[PhotoType]string
+
+func setPhotoTypePaths() error {
+	if ServiceRoot() == "" {
+		return fmt.Errorf("No Serviceroot defined")
+	}
+	photoTypePaths = make(map[PhotoType]string)
+	for k, v := range photoTypeDirNames {
+		photoTypePaths[k] = ServicePath(v)
+	}
+	return nil
+}
 
 func InitConfig() error {
 	if configed {
@@ -18,6 +58,9 @@ func InitConfig() error {
 	viper.AddConfigPath(".")
 
 	err := viper.ReadInConfig()
+	if err == nil {
+		err = setPhotoTypePaths()
+	}
 	configed = true
 	return err
 }
@@ -30,6 +73,9 @@ func NewConfig(name string) error {
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("../..")
 	err := viper.ReadInConfig()
+	if err == nil {
+		err = setPhotoTypePaths()
+	}
 	configed = true
 	return err
 }
@@ -40,6 +86,9 @@ func testConfig() error {
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("../..")
 	err := viper.ReadInConfig()
+	if err == nil {
+		err = setPhotoTypePaths()
+	}
 	configed = true
 	return err
 }
@@ -100,16 +149,28 @@ func ServicePath(fileName string) string {
 	return filepath.Join(ServiceRoot(), fileName)
 }
 
-func ServiceImgDir() string {
-	return viper.GetString("service.imgDir")
+func PhotoPath(pt PhotoType) string {
+	return photoTypePaths[pt]
+}
+
+func PhotoPaths() map[PhotoType]string {
+	return photoTypePaths
+}
+
+func PhotoFilePath(pt PhotoType, fname string) string {
+	return filepath.Join(PhotoPath(pt), fname)
+}
+
+func CameraPath() string {
+	return filepath.Join(ServiceRoot(), CameraDir)
+}
+
+func CameraFilePath(fname string) string {
+	return filepath.Join(CameraPath(), fname)
 }
 
 func ServicePassword() string {
 	return viper.GetString("service.password")
-}
-
-func ServiceThumbDir() string {
-	return viper.GetString("service.thumbDir")
 }
 
 func SessionAuthcKey() string {

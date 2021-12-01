@@ -81,8 +81,8 @@ func (s *mserver) saveGuestCookie(w http.ResponseWriter, r *http.Request, guest 
 }
 
 func (s *mserver) handleCommentPhoto(r *http.Request, uid uuid.UUID) (interface{}, error) {
-	if photoId, err := uuid.Parse(Var(r, "photo")); err != nil {
-		return nil, BadRequestError("Could not parse photo id")
+	if photoId, err := uuid.Parse(Var(r, "img")); err != nil {
+		return nil, BadRequestError("Could not parse img id")
 	} else {
 		type request struct {
 			Body string
@@ -96,8 +96,8 @@ func (s *mserver) handleCommentPhoto(r *http.Request, uid uuid.UUID) (interface{
 }
 
 func (s *mserver) handlePhotoComments(r *http.Request, loggedIn bool) (interface{}, error) {
-	if photoId, err := uuid.Parse(Var(r, "photo")); err != nil {
-		return nil, BadRequestError("Could not parse photo id")
+	if photoId, err := uuid.Parse(Var(r, "img")); err != nil {
+		return nil, BadRequestError("Could not parse img id")
 	} else {
 		type resp struct {
 			Id      int       `json:"id"`
@@ -124,32 +124,32 @@ func (s *mserver) handleGuest(r *http.Request, uuid uuid.UUID) (interface{}, err
 }
 
 func (s *mserver) handleLikePhoto(r *http.Request, guestId uuid.UUID) (interface{}, error) {
-	if photoId, err := uuid.Parse(Var(r, "photo")); err != nil {
-		return nil, BadRequestError("Could not parse photo id")
+	if photoId, err := uuid.Parse(Var(r, "img")); err != nil {
+		return nil, BadRequestError("Could not parse img id")
 	} else {
 		if s.pg.Photo.Has(photoId, false) {
 			return photoId, s.pg.Reaction.Add(&dao.Reaction{GuestId: guestId, PhotoId: photoId, Kind: "like"})
 		} else {
-			return nil, NotFoundError("photo not found")
+			return nil, NotFoundError("img not found")
 		}
 	}
 }
 
 func (s *mserver) handleUnlikePhoto(r *http.Request, guestId uuid.UUID) (interface{}, error) {
 	var photoId uuid.UUID
-	if err := uid(r, "photo", &photoId); err != nil {
+	if err := uid(r, "img", &photoId); err != nil {
 		return nil, err
 	}
 	if s.pg.Photo.Has(photoId, false) {
 		return photoId, s.pg.Reaction.Delete(&dao.Reaction{GuestId: guestId, PhotoId: photoId, Kind: "like"})
 	} else {
-		return nil, NotFoundError("photo not found")
+		return nil, NotFoundError("img not found")
 	}
 }
 
 func (s *mserver) handlePhotoLikes(r *http.Request, loggedIn bool) (interface{}, error) {
-	if photoId, err := uuid.Parse(Var(r, "photo")); err != nil {
-		return nil, BadRequestError("Could not parse photo id")
+	if photoId, err := uuid.Parse(Var(r, "img")); err != nil {
+		return nil, BadRequestError("Could not parse img id")
 	} else {
 		return s.pg.Reaction.ListByPhoto(photoId)
 	}
@@ -200,8 +200,8 @@ func (s *mserver) handleLogoutGuest(w http.ResponseWriter, r *http.Request) (int
 }
 
 func (s *mserver) handleGuestLikePhoto(r *http.Request, guestId uuid.UUID) (interface{}, error) {
-	if photoId, err := uuid.Parse(Var(r, "photo")); err != nil {
-		return nil, BadRequestError("Could not parse photo id")
+	if photoId, err := uuid.Parse(Var(r, "img")); err != nil {
+		return nil, BadRequestError("Could not parse img id")
 	} else {
 		type ret struct {
 			Like bool `json:"like"`

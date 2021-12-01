@@ -11,6 +11,10 @@ func openAndCreateTestDb(t *testing.T) *PGDB {
 	if err != nil {
 		t.Errorf("Could no open DataStore got error: %s", err)
 	}
+	err = pg.DeleteTables()
+	if err != nil {
+		t.Errorf("Could not Create Data Store got error: %s", err)
+	}
 	err = pg.CreateTables()
 	if err != nil {
 		t.Errorf("Could not Create Data Store got error: %s", err)

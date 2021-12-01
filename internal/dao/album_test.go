@@ -99,11 +99,11 @@ func TestAlbums(t *testing.T) {
 	//Tests to add, get album photos and photos in albums
 	err = loadPhotoTestData()
 	if err != nil {
-		t.Errorf("Could not load photo test data")
+		t.Errorf("Could not load img test data: %v", err)
 	}
-	err = pgdb.Photo.Add(&testPhotos[0], &testExifs[0])
+	err = pgdb.Photo.Add(&testPhotos[0], testExifs[0].Data)
 	if err != nil {
-		t.Error("Could not create photo: ", err)
+		t.Error("Could not create img: ", err)
 	}
 
 	err = pgdb.Album.UpdatePhoto([]uuid.UUID{updatedFirst.Id, second.Id}, testPhotos[0].Id)
@@ -113,16 +113,16 @@ func TestAlbums(t *testing.T) {
 
 	err = pgdb.Album.UpdatePhoto([]uuid.UUID{updatedFirst.Id, second.Id}, uuid.UUID{})
 	if err == nil {
-		t.Error("Expected error when adding a non-existent photo to an album")
+		t.Error("Expected error when adding a non-existent img to an album")
 	}
 
 	if err = pgdb.Album.UpdatePhoto([]uuid.UUID{uuid.New()}, testPhotos[0].Id); err == nil {
-		t.Error("Expected error when adding a photo to a non existent album")
+		t.Error("Expected error when adding a img to a non existent album")
 	}
 
 	albums, err := pgdb.Album.Albums(testPhotos[0].Id)
 	if err != nil {
-		t.Error("could not retrieve photo albums ", err)
+		t.Error("could not retrieve img albums ", err)
 	} else {
 		if len(albums) != 2 {
 			t.Error("Expected 2 albums got: ", len(albums))
@@ -135,16 +135,16 @@ func TestAlbums(t *testing.T) {
 		}
 	}
 	if albums, err = pgdb.Album.Albums(testPhotos[3].Id); err != nil {
-		t.Error("could not retrive photo albums ", err)
+		t.Error("could not retrive img albums ", err)
 	} else if len(albums) != 0 {
 		t.Errorf("expected 0 albums got %v albums", len(albums))
 	}
 
-	if photos, err := pgdb.Album.Photos(updatedFirst.Id, false); err != nil {
+	if photos, err := pgdb.Album.Photos(updatedFirst.Id, true); err != nil {
 		t.Error("Could not get album photos got error: ", err)
 	} else {
 		if len(photos) != 1 {
-			t.Error("Expected 1 photo album got ", len(photos))
+			t.Error("Expected 1 img album got ", len(photos))
 		}
 		if photos[0].Id != testPhotos[0].Id {
 			t.Errorf("Expected photoId %v got %v", testPhotos[0].Id, photos[0].Id)

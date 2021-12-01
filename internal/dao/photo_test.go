@@ -2,13 +2,13 @@ package dao
 
 import (
 	"encoding/json"
-	"github.com/msvens/mexif"
+	"fmt"
 	"io/ioutil"
 	"strconv"
 )
 
 var testPhotos []Photo
-var testExifs []mexif.ExifCompact
+var testExifs []Exif
 
 var loadedTestData = false
 
@@ -16,7 +16,7 @@ func loadPhotoTestData() error {
 	if loadedTestData {
 		return nil
 	}
-	photoData, err := ioutil.ReadFile("../../testphoto.json")
+	photoData, err := ioutil.ReadFile("../../assets/photos.json")
 	if err != nil {
 		return err
 	}
@@ -29,12 +29,14 @@ func loadPhotoTestData() error {
 		return err
 	}
 
-	exifData, err := ioutil.ReadFile("../../testexif.json")
+	fmt.Println("Now read exif data")
+	exifData, err := ioutil.ReadFile("../../assets/exif.json")
 	err = json.Unmarshal(exifData, &testExifs)
 	if err != nil {
 		return err
 	}
 
+	fmt.Println("exif data unmarshalled")
 	loadedTestData = true
 	return nil
 }

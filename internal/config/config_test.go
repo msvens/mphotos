@@ -63,16 +63,9 @@ func TestConfigFile(t *testing.T) {
 	if ServiceRoot() != ".server" {
 		t.Errorf("expected .server got %v", ServiceRoot())
 	}
-	if ServiceImgDir() != "img" {
-		t.Errorf("expected img got %v", ServiceImgDir())
-	}
 	if ServicePassword() != "password" {
 		t.Errorf("expected password got %v", ServicePassword())
 	}
-	if ServiceThumbDir() != "thumb" {
-		t.Errorf("expected thumb got %v", ServiceThumbDir())
-	}
-
 	//google config:
 	if GoogleClientId() != "clientId" {
 		t.Errorf("expected clientId got %v", GoogleClientId())

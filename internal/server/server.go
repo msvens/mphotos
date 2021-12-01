@@ -8,7 +8,6 @@ import (
 	"github.com/msvens/mphotos/internal/dao"
 	"github.com/msvens/mphotos/internal/gdrive"
 	"github.com/msvens/mphotos/internal/gmail"
-	"github.com/msvens/mphotos/internal/img"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
@@ -22,24 +21,24 @@ import (
 
 type mserver struct {
 	//dbold           model.DataStore
-	pg           *dao.PGDB
-	ds           *gdrive.DriveService
-	ms           *gmail.GmailService
-	r            *mux.Router
-	l            *zap.SugaredLogger
-	prefixPath   string
-	store        *sessions.CookieStore
-	cookieName   string
-	guestCookie  string
-	tokenFile    string
-	gconfig      *oauth2.Config
-	imgDir       string
+	pg          *dao.PGDB
+	ds          *gdrive.DriveService
+	ms          *gmail.GmailService
+	r           *mux.Router
+	l           *zap.SugaredLogger
+	prefixPath  string
+	store       *sessions.CookieStore
+	cookieName  string
+	guestCookie string
+	tokenFile   string
+	gconfig     *oauth2.Config
+	/*imgDir       string
 	cameraDir    string
 	thumbDir     string
 	portraitDir  string
 	landscapeDir string
 	squareDir    string
-	resizeDir    string
+	resizeDir    string*/
 }
 
 func NewServer(prefixPath string) *mserver {
@@ -79,25 +78,29 @@ func NewServer(prefixPath string) *mserver {
 		s.l.Panicw("could not create pgdb service", "error", err)
 	}
 
-	//init img paths:
+	//init photo paths:
 	//s.rootDir = config.ServiceRoot()
-	s.imgDir = config.ServicePath("img")
+	/*s.imgDir = config.ServicePath(ImgDir)
 	s.cameraDir = config.ServicePath("cameras")
-	s.thumbDir = config.ServicePath("thumb")
-	s.portraitDir = config.ServicePath("portrait")
-	s.landscapeDir = config.ServicePath("landscape")
-	s.squareDir = config.ServicePath("square")
-	s.resizeDir = config.ServicePath("resize")
-	if err = os.MkdirAll(s.imgDir, 0744); err != nil {
+	s.thumbDir = config.ServicePath(ThumbDir)
+	s.portraitDir = config.ServicePath(PortraitDir)
+	s.landscapeDir = config.ServicePath(LandscapeDir)
+	s.squareDir = config.ServicePath(SquareDir)
+	s.resizeDir = config.ServicePath(ResizeDir)*/
+	if err = CreateImageDirs(); err != nil {
+		s.l.Panicw("could not create img dirs", zap.Error(err))
+	}
+	/*
+		if err = os.MkdirAll(config.ImgPath(), 0744); err != nil {
+			s.l.Panicw("could not create img dir", zap.Error(err))
+		}
+		if err = CreateImageDir(config.ServiceRoot()); err != nil {
+			s.l.Panicw("could not create image dirs", zap.Error(err))
+		}*/
+	/*if err = os.MkdirAll(s.imgDir, 0744); err != nil {
 		s.l.Panicw("could not create img dir", zap.Error(err))
-	}
-	if err = img.CreateImageDir(config.ServiceRoot()); err != nil {
-		s.l.Panicw("could not create image dirs", zap.Error(err))
-	}
-	if err = os.MkdirAll(s.imgDir, 0744); err != nil {
-		s.l.Panicw("could not create img dir", zap.Error(err))
-	}
-	if err = os.MkdirAll(s.cameraDir, 0744); err != nil {
+	}*/
+	if err = os.MkdirAll(config.CameraPath(), 0744); err != nil {
 		s.l.Panicw("could not camera dir", zap.Error(err))
 	}
 

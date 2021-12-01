@@ -59,7 +59,7 @@ func ctxGuest(ctx context.Context) uuid.UUID {
 
 func uid(r *http.Request, idname string, uuID *uuid.UUID) error {
 	if id, err := uuid.Parse(Var(r, idname)); err != nil {
-		return BadRequestError("Could not parse photo id")
+		return BadRequestError("Could not parse img id")
 	} else {
 		*uuID = id
 		return nil

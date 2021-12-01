@@ -182,5 +182,6 @@ func (ds *DriveService) SearchAll(q *Query, fileFields string) ([]*drive.File, e
 			break
 		}
 	}
+	fmt.Println("search all: ", len(fs))
 	return fs, nil
 }

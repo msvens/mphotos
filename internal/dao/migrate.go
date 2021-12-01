@@ -1,10 +1,12 @@
 package dao
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/msvens/mexif"
+	"github.com/msvens/mimage/metadata"
+	"github.com/msvens/mphotos/internal/config"
+	"os"
+	"path"
 	"time"
 )
 
@@ -109,7 +111,7 @@ func migrateAlbums(pgdb *PGDB) error {
 	for _, ap := range oldAlbumPhotos {
 		photoId, found := pMap[ap.DriveId]
 		if !found {
-			return fmt.Errorf("Could not find photo Id for Drive Id")
+			return fmt.Errorf("Could not find img Id for Drive Id")
 		}
 		albumId, found := aMap[ap.AlbumId]
 		if !found {
@@ -146,7 +148,7 @@ func migrateLikes(pgdb *PGDB) error {
 	}
 	for _, l := range oldLikes {
 		if pId, found := pMap[l.DriveId]; !found {
-			println("skipping like could not find photo")
+			println("skipping like could not find img")
 		} else if !pgdb.Guest.Has(l.Guest) {
 			println("skipping like...could not find user")
 		} else {
@@ -224,7 +226,7 @@ func migrateComments(pgdb *PGDB) error {
 			println("skipping comment with no user")
 		} else {
 			if pId, found := pMap[c.Driveid]; !found {
-				println("skpping comment with non existent photo")
+				println("skpping comment with non existent img")
 			} else {
 				newC := Comment{GuestId: c.Guestid, PhotoId: pId, Body: c.Body, Time: c.Ts}
 				if _, err := pgdb.db.NamedExec(stmt, &newC); err != nil {
@@ -286,13 +288,35 @@ func migratePhotos(pgdb *PGDB) error {
 	var err error
 	//Get all photos
 	oldphotos := []OldPhoto{}
-	if err := pgdb.db.Select(&oldphotos, "SELECT * FROM photos"); err != nil {
+	if err = pgdb.db.Select(&oldphotos, "SELECT * FROM photos"); err != nil {
 		return nil
 	}
 	//oldphotos, err := mdb.Photos(model.Range{}, model.DriveDate, model.PhotoFilter{true, ""})
 	if err != nil {
 		return err
 	}
+
+	imgPath := func(fName string) string {
+		return path.Join(config.ServicePath("img"), fName)
+	}
+
+	renameImg := func(oldName, newName string) error {
+		imgDirs := []string{"img", "thumb", "landscape", "square", "portrait", "resize"}
+		for _, imgD := range imgDirs {
+			oldImg := path.Join(config.ServicePath(imgD), oldName)
+			newImg := path.Join(config.ServicePath(imgD), newName)
+			_, e1 := os.Stat(oldImg)
+			if e1 != nil {
+				return e1
+			}
+			e1 = os.Rename(oldImg, newImg)
+			if e1 != nil {
+				return e1
+			}
+		}
+		return nil
+	}
+
 	for _, p := range oldphotos {
 		nid := uuid.New()
 		newPhoto := Photo{}
@@ -304,7 +328,7 @@ func migratePhotos(pgdb *PGDB) error {
 		newPhoto.SourceDate = p.DriveDate
 		newPhoto.UploadDate = p.DriveDate
 		newPhoto.OriginalDate = p.OriginalDate
-		newPhoto.FileName = p.FileName
+		newPhoto.FileName = newPhoto.Id.String() + ".jpg"
 		newPhoto.Keywords = p.Keywords
 		newPhoto.Description = p.Description
 		newPhoto.CameraMake = p.CameraMake
@@ -320,19 +344,23 @@ func migratePhotos(pgdb *PGDB) error {
 		newPhoto.Height = p.Height
 		newPhoto.Private = p.Private
 
-		//get exif information
-		exifdata := ""
-		if e := pgdb.db.Get(&exifdata, "SELECT data FROM exif WHERE driveid = $1", p.DriveId); e != nil {
-			return nil
+		//rename existing images
+		e1 := renameImg(p.FileName, newPhoto.FileName)
+		if e1 != nil {
+			return e1
 		}
-		resp := Exif{Data: &mexif.ExifCompact{}}
-		if err := json.Unmarshal([]byte(exifdata), resp.Data); err != nil {
-			return err
+
+		//migrate exif by reading metadata from file
+		md, e1 := metadata.ParseFile(imgPath(newPhoto.FileName))
+		if e1 != nil {
+			fmt.Println(p.FileName)
+			return e1
 		}
-		err = pgdb.Photo.Add(&newPhoto, resp.Data)
-		if err != nil {
-			return err
+		e1 = pgdb.Photo.Add(&newPhoto, md.Summary)
+		if e1 != nil {
+			return e1
 		}
 	}
 	return err
+
 }

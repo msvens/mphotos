@@ -3,22 +3,13 @@ package server
 import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/msvens/mexif"
 	"github.com/msvens/mphotos/internal/config"
 	"github.com/msvens/mphotos/internal/dao"
-	"github.com/msvens/mphotos/internal/gdrive"
-	"github.com/msvens/mphotos/internal/img"
 	"go.uber.org/zap"
-	"google.golang.org/api/drive/v3"
 	"io"
-	"math"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
-	"strings"
-	"sync"
-	"time"
 )
 
 type PhotoFiles struct {
@@ -36,13 +27,31 @@ func deletePhoto(s *mserver, p *dao.Photo, removeFiles bool) (*dao.Photo, error)
 	if !removeFiles {
 		return p, nil
 	}
+	if err := deleteImg(p.FileName); err != nil {
+		s.l.Errorw("Could not remove "+p.FileName, zap.Error(err))
+	}
 	//remove files
-	if err := os.Remove(imgPath(s, p.FileName)); err != nil {
-		s.l.Errorw("Could not remove img", zap.Error(err))
-	}
-	if err := os.Remove(thumbPath(s, p.FileName)); err != nil {
-		s.l.Errorw("Could not remove thumbnail", zap.Error(err))
-	}
+	/*
+		for pt,_ := range config.PhotoPaths() {
+			fname := config.PhotoFilePath(pt,p.FileName)
+			if err := os.Remove(fname); err != nil {
+				s.l.Errorw("Could not remove "+fname, zap.Error(err))
+			}
+		}*/
+	/*
+		if err := os.Remove(imgPath(s, p.FileName)); err != nil {
+			s.l.Errorw("Could not remove img", zap.Error(err))
+		}
+		if err := os.Remove(thumbPath(s, p.FileName)); err != nil {
+			s.l.Errorw("Could not remove thumbnail", zap.Error(err))
+		}
+		if err := os.Remove(resizePath(s, p.FileName)); err != nil {
+			s.l.Errorw("Could not remove thumbnail", zap.Error(err))
+		}
+		if err := os.Remove(resizePath(s, p.FileName)); err != nil {
+			s.l.Errorw("Could not remove thumbnail", zap.Error(err))
+		}
+	*/
 	s.l.Infow("Photo deleted", "id", p.Id)
 	return p, nil
 }
@@ -81,7 +90,7 @@ func (s *mserver) handleDeletePhotos(r *http.Request) (interface{}, error) {
 	} else {
 		for _, p := range photos {
 			if _, e := deletePhoto(s, p, params.RemoveFiles); e != nil {
-				s.l.Errorw("could not delete photo ", "photo", p.Id, zap.Error(e))
+				s.l.Errorw("could not delete img ", "img", p.Id, zap.Error(e))
 			}
 		}
 		return &PhotoFiles{len(photos), photos}, nil
@@ -100,7 +109,8 @@ func (s *mserver) handleDownloadPhoto(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "file not found", http.StatusNotFound)
 		return
 	}
-	file, err := os.Open(imgPath(s, p.FileName))
+	//file, err := os.Open(imgPath(s, p.FileName))
+	file, err := os.Open(config.PhotoFilePath(config.Original, p.FileName))
 	if err != nil {
 		s.l.Infow("could not download file", zap.Error(err))
 		http.Error(w, "File not found.", http.StatusNotFound)
@@ -137,7 +147,7 @@ func (s *mserver) handleExif(r *http.Request, loggedIn bool) (interface{}, error
 		return nil, BadRequestError("Could not parse Id")
 	}
 	if !loggedIn && !s.pg.Photo.Has(id, false) {
-		return nil, NotFoundError("could not find photo")
+		return nil, NotFoundError("could not find img")
 	}
 	if exif, err := s.pg.Photo.Exif(id); err != nil {
 		return nil, err
@@ -190,22 +200,6 @@ func (s *mserver) handlePhotos(r *http.Request, loggedIn bool) (interface{}, err
 	}
 }
 
-func (s *mserver) handleScheduleJob(_ *http.Request) (interface{}, error) {
-	fl, err := checkPhotosDrive(s)
-	if err != nil {
-		return nil, err
-	}
-	job := Job{}
-	job.Id = uuid.New().String()
-	job.files = fl
-	job.s = s
-	job.NumFiles = len(fl)
-	job.State = StateScheduled
-	jobMap[job.Id] = &job
-	jobChan <- &job
-	return &job, nil
-}
-
 func (s *mserver) handleSearchPhotos(r *http.Request, loggedIn bool) (interface{}, error) {
 	type request struct {
 		CameraModel string
@@ -232,42 +226,35 @@ func (s *mserver) handleSearchPhotos(r *http.Request, loggedIn bool) (interface{
 	}
 }
 
-func (s *mserver) handleStatusJob(r *http.Request) (interface{}, error) {
-	if job, found := jobMap[Var(r, "id")]; found {
-		return job, nil
-	} else {
-		return nil, NotFoundError("job not found")
-	}
-}
-
-func (s *mserver) handleImg(dir string, w http.ResponseWriter, r *http.Request) {
+func (s *mserver) handleImg(pt config.PhotoType, w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
-	http.ServeFile(w, r, filepath.Join(dir, name))
+	//http.ServeFile(w, r, filepath.Join(dir, name))
+	http.ServeFile(w, r, config.PhotoFilePath(pt, name))
 }
 
 func (s *mserver) handleImage(w http.ResponseWriter, r *http.Request) {
-	s.handleImg(s.imgDir, w, r)
+	s.handleImg(config.Original, w, r)
 }
 
 func (s *mserver) handleResize(w http.ResponseWriter, r *http.Request) {
-	s.handleImg(s.resizeDir, w, r)
+	s.handleImg(config.Resize, w, r)
 }
 
 func (s *mserver) handlePortrait(w http.ResponseWriter, r *http.Request) {
-	s.handleImg(s.portraitDir, w, r)
+	s.handleImg(config.Portrait, w, r)
 }
 
 func (s *mserver) handleLandscape(w http.ResponseWriter, r *http.Request) {
-	s.handleImg(s.landscapeDir, w, r)
+	s.handleImg(config.Landscape, w, r)
 }
 
 func (s *mserver) handleSquare(w http.ResponseWriter, r *http.Request) {
-	s.handleImg(s.squareDir, w, r)
+	s.handleImg(config.Square, w, r)
 }
 
 func (s *mserver) handleThumb(w http.ResponseWriter, r *http.Request) {
-	s.handleImg(s.thumbDir, w, r)
+	s.handleImg(config.Thumb, w, r)
 }
 
 func (s *mserver) handleUpdatePhoto(r *http.Request) (interface{}, error) {
@@ -305,103 +292,7 @@ func (s *mserver) handleUpdatePhotoPrivate(r *http.Request) (interface{}, error)
 	}
 }
 
-func (s *mserver) handleUpdatePhotos(_ *http.Request) (interface{}, error) {
-	return addPhotos(s)
-}
-
-func addPhoto(s *mserver, f *drive.File, tool *mexif.MExifTool) (bool, error) {
-	var err error
-	if s.pg.Photo.HasMd5(f.Md5Checksum) {
-		return false, nil
-	}
-	photo := dao.Photo{}
-	photo.Id = uuid.New()
-	photo.SourceId = f.Id
-	photo.Md5 = f.Md5Checksum
-	photo.FileName = f.Id + ".jpg"
-	if t, err := gdrive.ParseTime(f.CreatedTime); err == nil {
-		photo.SourceDate = t
-	}
-	photo.UploadDate = time.Now()
-
-	if err = downloadPhoto(s, &photo); err != nil {
-		s.l.Errorw("error downloading photo", zap.Error(err))
-		return false, err
-	}
-	var exif *mexif.ExifCompact
-
-	if exif, err = tool.ExifCompact(imgPath(s, photo.FileName)); err == nil {
-		photo.CameraMake = exif.CameraMake
-		photo.CameraModel = exif.CameraModel
-		photo.FocalLength = exif.FocalLength
-		photo.FocalLength35 = exif.FocalLengthIn35mmFormat
-		photo.LensMake = exif.LensMake
-		photo.LensModel = exif.LensModel
-		photo.Exposure = exif.ExposureTime
-		photo.Width = exif.ImageWidth
-		photo.Height = exif.ImageHeight
-		photo.FNumber = exif.FNumber
-		photo.Iso = exif.ISO
-		photo.Title = exif.Title
-		if len(exif.Keywords) > 0 {
-			photo.Keywords = strings.Join(exif.Keywords, ",")
-		}
-		photo.OriginalDate = exif.OriginalDate
-	} else {
-		return false, err
-	}
-	photo.Private = true
-
-	if err = s.pg.Photo.Add(&photo, exif); err != nil {
-		s.l.Errorw("error adding photo: ", zap.Error(err))
-		return false, err
-	}
-	if !s.pg.Camera.HasModel(photo.CameraModel) {
-		if err = s.pg.Camera.AddFromPhoto(&photo); err != nil {
-			s.l.Fatalw("error adding camera model: ", zap.Error(err))
-		}
-	}
-	s.l.Infow("added photo", "driveId", photo.Id)
-	return true, nil
-}
-
-func downloadPhoto(s *mserver, photo *dao.Photo) error {
-
-	if _, err := s.ds.Download(photo.SourceId, imgPath(s, photo.FileName)); err != nil {
-		return err
-	}
-
-	//create photo versions
-	return img.GenerateImages(imgPath(s, photo.FileName), config.ServiceRoot())
-	return nil
-}
-
-func addPhotos(s *mserver) (*DriveFiles, error) {
-	fl, err := listDriveFiles(s)
-	if err != nil {
-		return nil, err
-	}
-
-	tool, err := mexif.NewMExifTool()
-	if err != nil {
-		return nil, err
-	}
-
-	defer tool.Close()
-
-	var files []*drive.File
-	for _, f := range fl {
-		added, err := addPhoto(s, f, tool)
-		if err != nil {
-			return nil, err
-		}
-		if added {
-			files = append(files, f)
-		}
-	}
-	return toDriveFiles(files), nil
-}
-
+/*
 func cameraPath(s *mserver, fileName string) string {
 	return filepath.Join(s.cameraDir, fileName)
 }
@@ -409,76 +300,11 @@ func cameraPath(s *mserver, fileName string) string {
 func imgPath(s *mserver, fileName string) string {
 	return filepath.Join(s.imgDir, fileName)
 }
+*/
 
+/*
 func thumbPath(s *mserver, fileName string) string {
 	return filepath.Join(s.thumbDir, fileName)
 }
 
-//async
-const StateScheduled = "SCHEDULED"
-const StateStarted = "STARTED"
-const StateFinished = "FINISHED"
-const StateAborted = "ABORTED"
-
-type Job struct {
-	Id           string `json:"id"`
-	State        string `json:"state"`
-	Percent      int    `json:"percent"`
-	files        []*drive.File
-	s            *mserver
-	NumFiles     int       `json:"numFiles"`
-	NumProcessed int       `json:"numProcessed"`
-	Err          *ApiError `json:"error,omitempty"`
-}
-
-var jobChan = make(chan *Job, 10)
-var wg sync.WaitGroup
-var jobMap = make(map[string]*Job)
-
-func worker(jobChan <-chan *Job) {
-
-	defer wg.Done()
-
-	for job := range jobChan {
-		job.s.l.Infow("Processing job", "jobid", job.Id, "files", job.NumFiles)
-		process(job)
-	}
-}
-
-func process(job *Job) {
-
-	tool, err := mexif.NewMExifTool()
-	defer tool.Close()
-
-	if err != nil {
-		finishJob(job, err)
-		return
-	}
-
-	job.State = StateStarted
-
-	for _, f := range job.files {
-		if _, err := addPhoto(job.s, f, tool); err != nil {
-			finishJob(job, err)
-			return
-		}
-		job.NumProcessed = job.NumProcessed + 1
-		percent := float64(job.NumProcessed) / float64(job.NumFiles)
-		job.Percent = int(math.Round(percent * 100))
-		//fmt.Println(job.Percent, job.NumFiles, job.NumProcessed)
-		job.s.l.Debugw("", "jobid", job.Id, "progress", job.Percent)
-	}
-	finishJob(job, nil)
-}
-
-func finishJob(job *Job, err error) {
-	job.files = nil
-	job.s = nil
-	if err != nil {
-		job.State = StateAborted
-		job.Err = ResolveError(err)
-	} else {
-		job.Percent = 100
-		job.State = StateFinished
-	}
-}
+*/
