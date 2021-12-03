@@ -16,18 +16,15 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-	"github.com/msvens/mphotos/internal/config"
-	"github.com/msvens/mphotos/internal/dao"
 	"github.com/spf13/cobra"
 )
 
 // createdbCmd represents the createdb command
-var createdbCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create img database",
-	Long:  `Create the underlying postgres img database tables if not existing`,
-	Run: func(cmd *cobra.Command, args []string) {
+var dbCmd = &cobra.Command{
+	Use:   "db",
+	Short: "DB Commands",
+	Long:  `Manipulate the underlying Database`,
+	/*Run: func(cmd *cobra.Command, args []string) {
 		config.InitConfig()
 		db, err := dao.NewPGDB()
 		if err != nil {
@@ -37,11 +34,11 @@ var createdbCmd = &cobra.Command{
 		if err != nil {
 			fmt.Println("could not create tables: ", err)
 		}
-	},
+	},*/
 }
 
 func init() {
-	dbCmd.AddCommand(createdbCmd)
+	rootCmd.AddCommand(dbCmd)
 
 	// Here you will define your flags and configuration settings.
 

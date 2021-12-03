@@ -21,6 +21,9 @@ func MigrateFromModelToDAO() error {
 		return err
 	}
 	err = pgdb.CreateTables()
+	if err != nil {
+		return err
+	}
 
 	/*
 		mdb, err := model.NewDB()
@@ -286,6 +289,11 @@ type OldPhoto struct {
 
 func migratePhotos(pgdb *PGDB) error {
 	var err error
+
+	if err = CreateImageDirs(); err != nil {
+		return err
+	}
+
 	//Get all photos
 	oldphotos := []OldPhoto{}
 	if err = pgdb.db.Select(&oldphotos, "SELECT * FROM photos"); err != nil {
@@ -300,7 +308,7 @@ func migratePhotos(pgdb *PGDB) error {
 		return path.Join(config.ServicePath("img"), fName)
 	}
 
-	renameImg := func(oldName, newName string) error {
+	/*renameImg := func(oldName, newName string) error {
 		imgDirs := []string{"img", "thumb", "landscape", "square", "portrait", "resize"}
 		for _, imgD := range imgDirs {
 			oldImg := path.Join(config.ServicePath(imgD), oldName)
@@ -315,6 +323,15 @@ func migratePhotos(pgdb *PGDB) error {
 			}
 		}
 		return nil
+	}*/
+	renameImg := func(oldName, newName string) error {
+		oldImg := config.PhotoFilePath(config.Original, oldName)
+		newImg := config.PhotoFilePath(config.Original, newName)
+		_, e1 := os.Stat(oldImg)
+		if e1 != nil {
+			return e1
+		}
+		return os.Rename(oldImg, newImg)
 	}
 
 	for _, p := range oldphotos {
@@ -329,6 +346,7 @@ func migratePhotos(pgdb *PGDB) error {
 		newPhoto.UploadDate = p.DriveDate
 		newPhoto.OriginalDate = p.OriginalDate
 		newPhoto.FileName = newPhoto.Id.String() + ".jpg"
+		fmt.Printf("Migrating %s to %s and regenerating image versions and metadata\n", p.FileName, newPhoto.FileName)
 		newPhoto.Keywords = p.Keywords
 		newPhoto.Description = p.Description
 		newPhoto.CameraMake = p.CameraMake
@@ -347,6 +365,11 @@ func migratePhotos(pgdb *PGDB) error {
 		//rename existing images
 		e1 := renameImg(p.FileName, newPhoto.FileName)
 		if e1 != nil {
+			fmt.Println(p)
+			return e1
+		}
+		//now generate img versions
+		if e1 = GenerateImages(newPhoto.FileName); err != nil {
 			return e1
 		}
 

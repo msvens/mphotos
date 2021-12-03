@@ -27,7 +27,7 @@ func deletePhoto(s *mserver, p *dao.Photo, removeFiles bool) (*dao.Photo, error)
 	if !removeFiles {
 		return p, nil
 	}
-	if err := deleteImg(p.FileName); err != nil {
+	if err := dao.DeleteImg(p.FileName); err != nil {
 		s.l.Errorw("Could not remove "+p.FileName, zap.Error(err))
 	}
 	//remove files

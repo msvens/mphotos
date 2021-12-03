@@ -19,13 +19,12 @@ import (
 	"fmt"
 	"github.com/msvens/mphotos/internal/config"
 	"github.com/msvens/mphotos/internal/dao"
-	"github.com/msvens/mphotos/internal/server"
 	"github.com/spf13/cobra"
 )
 
 // cleanPhotosCmd represents the photos command
 var cleanPhotosCmd = &cobra.Command{
-	Use:   "cleanphotos",
+	Use:   "clean",
 	Short: "Clean photos from server",
 	Long:  `This command goes through all image files and removes those that are no longer in the photo database`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -37,7 +36,7 @@ var cleanPhotosCmd = &cobra.Command{
 			fmt.Println(err)
 			return
 		}
-		if err = server.CleanImageDirs(db); err != nil {
+		if err = dao.CleanImageDirs(db); err != nil {
 			fmt.Println(err)
 		}
 		/*
@@ -62,7 +61,7 @@ var cleanPhotosCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(cleanPhotosCmd)
+	photoCmd.AddCommand(cleanPhotosCmd)
 
 	// Here you will define your flags and configuration settings.
 

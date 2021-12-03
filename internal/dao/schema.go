@@ -123,6 +123,16 @@ CREATE TABLE IF NOT EXISTS usert (
 	config TEXT NOT NULL
 );
 
+CREATE TABLE version (
+	id bool PRIMARY KEY DEFAULT TRUE,
+	version INT NOT NULL,
+    description TEXT,
+    CONSTRAINT version_unique CHECK (id)
+);
+
+
+INSERT INTO version (version,description) VALUES (0,'before versioning') ON CONFLICT (id) DO NOTHING;
+
 INSERT INTO usert (id, name, bio, pic, driveFolderId, driveFolderName, config) VALUES (23657, '', '', '', '','','{}') ON CONFLICT (id) DO NOTHING;
 `
 
@@ -136,4 +146,5 @@ DROP TABLE IF EXISTS guest;
 DROP TABLE IF EXISTS reaction;
 DROP TABLE IF EXISTS img;
 DROP TABLE IF EXISTS usert;
+DROP TABLE IF EXISTS version;
 `

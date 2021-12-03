@@ -19,21 +19,17 @@ import (
 	"fmt"
 	"github.com/msvens/mphotos/internal/config"
 	"github.com/msvens/mphotos/internal/dao"
-	"github.com/msvens/mphotos/internal/server"
 	"github.com/spf13/cobra"
-	"path/filepath"
 )
 
 // photosCmd represents the photos command
 var photosCmd = &cobra.Command{
-	Use:   "genphotos",
+	Use:   "generate",
 	Short: "Generate any missing photos",
 	Long:  `This commands goes through all photos and generates new cropped versions of them`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("generate photos crops")
 		config.InitConfig()
-		imgDir := config.ServicePath("img")
-		baseDir := config.ServiceRoot()
 		db, err := dao.NewPGDB()
 		if err != nil {
 			fmt.Println(err)
@@ -44,13 +40,13 @@ var photosCmd = &cobra.Command{
 			fmt.Println(err)
 			return
 		}
-		if err = server.CreateImageDirs(); err != nil {
+		if err = dao.CreateImageDirs(); err != nil {
 			fmt.Println(err)
 			return
 		}
 
 		for _, photo := range photos {
-			if err = server.GenerateImages(filepath.Join(imgDir, photo.FileName), baseDir); err != nil {
+			if err = dao.GenerateImages(photo.FileName); err != nil {
 				fmt.Println(err)
 				return
 			}
@@ -59,7 +55,7 @@ var photosCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(photosCmd)
+	photoCmd.AddCommand(photosCmd)
 
 	// Here you will define your flags and configuration settings.
 

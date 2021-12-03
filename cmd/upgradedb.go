@@ -23,7 +23,7 @@ import (
 
 // upgradedbCmd represents the upgradedb command
 var upgradedbCmd = &cobra.Command{
-	Use:   "upgradedb",
+	Use:   "upgrade",
 	Short: "Upgrade mphotos database",
 	Long:  `Upgrades the mphotos database to the latest version if possible`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -35,7 +35,7 @@ var upgradedbCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(upgradedbCmd)
+	dbCmd.AddCommand(upgradedbCmd)
 
 	// Here you will define your flags and configuration settings.
 

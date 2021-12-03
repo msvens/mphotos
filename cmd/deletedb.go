@@ -24,7 +24,7 @@ import (
 
 // deletedbCmd represents the deletedb command
 var deletedbCmd = &cobra.Command{
-	Use:   "deletedb",
+	Use:   "delete",
 	Short: "Delete img database",
 	Long:  `Permanently deletes all img database tables`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -41,7 +41,7 @@ var deletedbCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(deletedbCmd)
+	dbCmd.AddCommand(deletedbCmd)
 
 	// Here you will define your flags and configuration settings.
 

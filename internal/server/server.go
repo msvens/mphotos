@@ -87,7 +87,7 @@ func NewServer(prefixPath string) *mserver {
 	s.landscapeDir = config.ServicePath(LandscapeDir)
 	s.squareDir = config.ServicePath(SquareDir)
 	s.resizeDir = config.ServicePath(ResizeDir)*/
-	if err = CreateImageDirs(); err != nil {
+	if err = dao.CreateImageDirs(); err != nil {
 		s.l.Panicw("could not create img dirs", zap.Error(err))
 	}
 	/*

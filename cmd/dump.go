@@ -74,7 +74,7 @@ var dumpPhotosCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(dumpPhotosCmd)
+	dbCmd.AddCommand(dumpPhotosCmd)
 
 	dumpPhotosCmd.Flags().BoolVarP(&dumpJson, "json", "j", true, "Dump as Json")
 	dumpPhotosCmd.Flags().UintVarP(&table, "table", "t", 0, "0 - photos, 1 - exif")

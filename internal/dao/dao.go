@@ -91,6 +91,12 @@ type UserDAO interface {
 	Get() (*User, error)
 }
 
+type VersionDAO interface {
+	Get() (*Version, error)
+	Update() error
+	IsCurrent() bool
+}
+
 type PGDB struct {
 	db       *sqlx.DB
 	Album    AlbumDAO

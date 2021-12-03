@@ -93,7 +93,11 @@ func (s *mserver) handleUploadLocalPhoto(r *http.Request) (interface{}, error) {
 	}
 	dst.Close()
 
-	if err := GenerateImages(config.PhotoFilePath(config.Original, photo.FileName), config.ServiceRoot()); err != nil {
+	/*
+		if err := GenerateImages(config.PhotoFilePath(config.Original, photo.FileName), config.ServiceRoot()); err != nil {
+			return nil, err
+		}*/
+	if err := dao.GenerateImages(photo.FileName); err != nil {
 		return nil, err
 	}
 

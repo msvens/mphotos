@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const DBVERSION = 1
+
 type Album struct {
 	Id          uuid.UUID `json:"id"`
 	Name        string    `json:"name"`
@@ -141,4 +143,9 @@ type User struct {
 	DriveFolderId   string `json:"driveFolderId,omitempty"`
 	DriveFolderName string `json:"driveFolderName,omitempty"`
 	Config          string `json:"config,omitempty"`
+}
+
+type Version struct {
+	Id          int    `json:"id"`
+	Description string `json:"description"`
 }

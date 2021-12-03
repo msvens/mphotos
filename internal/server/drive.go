@@ -230,7 +230,8 @@ func downloadDrivePhoto(s *mserver, photo *dao.Photo) error {
 	}
 
 	//create img versions
-	return GenerateImages(config.PhotoFilePath(config.Original, photo.FileName), config.ServiceRoot())
+	//return GenerateImages(config.PhotoFilePath(config.Original, photo.FileName), config.ServiceRoot())
+	return dao.GenerateImages(photo.FileName)
 	return nil
 }
 
