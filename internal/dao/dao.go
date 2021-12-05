@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -93,8 +94,8 @@ type UserDAO interface {
 
 type VersionDAO interface {
 	Get() (*Version, error)
-	Update() error
-	IsCurrent() bool
+	Update() (*Version, error)
+	IsCurrent() (bool, error)
 }
 
 type PGDB struct {
@@ -106,6 +107,7 @@ type PGDB struct {
 	Photo    PhotoDAO
 	Reaction ReactionDAO
 	User     UserDAO
+	Version  VersionDAO
 }
 
 var logger *zap.SugaredLogger
@@ -138,6 +140,7 @@ func NewPGDB() (*PGDB, error) {
 			Photo:    NewPhotoPG(db),
 			Reaction: NewReactionPG(db),
 			User:     NewUserPG(db),
+			Version:  NewVersionPG(db),
 		}, nil
 	}
 }
@@ -145,6 +148,18 @@ func NewPGDB() (*PGDB, error) {
 func (pgd *PGDB) Close() error {
 	err := pgd.db.Close()
 	return err
+}
+
+func (pgd *PGDB) tableExists(table string) bool {
+	var rel sql.NullString
+	q := fmt.Sprintf("SELECT to_regclass('public.%s')", table)
+	row := pgd.db.QueryRow(q)
+	if err := row.Scan(&rel); err != nil {
+		return false
+	} else {
+		return rel.Valid
+	}
+
 }
 
 func (pgd *PGDB) CreateTables() error {

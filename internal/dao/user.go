@@ -29,7 +29,7 @@ func (dao *UserPG) Update(u *User) (*User, error) {
 	if _, err := dao.db.NamedExec(dao.updateUserStmt, u); err != nil {
 		return nil, err
 	}
-	return u, nil
+	//return u, nil
 	return dao.Get()
 }
 

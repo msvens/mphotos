@@ -32,11 +32,15 @@ var deletedbCmd = &cobra.Command{
 		dbs, err := dao.NewPGDB()
 		if err != nil {
 			fmt.Println("could not open db service: ", err)
+			return
 		}
+		fmt.Println("Deleting all database tables...")
 		err = dbs.DeleteTables()
 		if err != nil {
 			fmt.Println("could not drop tables: ", err)
+			return
 		}
+		fmt.Println("Delete done")
 	},
 }
 

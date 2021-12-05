@@ -10,13 +10,44 @@ import (
 	"time"
 )
 
-func MigrateFromModelToDAO() error {
-	pgdb, err := NewPGDB()
+func UpgradeDb() error {
+	var err error
+	var pgdb *PGDB
+	if pgdb, err = NewPGDB(); err != nil {
+		return err
+	}
+	hasVersion := pgdb.tableExists("version") //new db model
+	hasPhotos := pgdb.tableExists("photos")   //old db model
+	if !hasVersion && hasPhotos {             //we will migrate db
+		if err = migrateFromModelToDAO(pgdb); err != nil {
+			return err
+		}
+	} else if !hasVersion { //no database nothing to upgrade
+		fmt.Println("No database exists. Creating a fresh db")
+		if err = pgdb.CreateTables(); err != nil {
+			return err
+		}
+	} else {
+		if isCurrent, err := pgdb.Version.IsCurrent(); err != nil {
+			return err
+		} else if isCurrent {
+			fmt.Println("Database is up to date")
+			return nil
+		}
+	}
+	//Finally update version information
+	fmt.Println("Updating version information")
+	v, err := pgdb.Version.Update()
 	if err != nil {
 		return err
 	}
+	fmt.Println("Database upgraded to version:", v.VersionId)
+	return nil
+}
 
-	err = pgdb.DeleteTables()
+func migrateFromModelToDAO(pgdb *PGDB) error {
+	fmt.Println("Migrating from old Model to DAO")
+	err := pgdb.DeleteTables()
 	if err != nil {
 		return err
 	}
@@ -25,12 +56,6 @@ func MigrateFromModelToDAO() error {
 		return err
 	}
 
-	/*
-		mdb, err := model.NewDB()
-		if err != nil {
-			return err
-		}
-	*/
 	//migrate entities
 	if err = migrateCamera(pgdb); err != nil {
 		fmt.Println("migrating camera error")
@@ -60,10 +85,13 @@ func MigrateFromModelToDAO() error {
 	}
 
 	if err = migrateAlbums(pgdb); err != nil {
-		return nil
+		return err
 	}
 
-	return nil
+	//finally delete old tables
+	fmt.Println("Deleting old schema")
+	_, err = pgdb.db.Exec(deleteSchemaV0)
+	return err
 }
 
 type OldAlbumPhoto struct {

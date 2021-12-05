@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/msvens/mimage/img"
 	"github.com/msvens/mphotos/internal/config"
-	"io/ioutil"
 	"os"
 )
 
@@ -46,6 +45,27 @@ func DeleteImg(fname string) error {
 	return nil
 }
 
+func cleanImgDir(keep map[string]bool, pt config.PhotoType) error {
+	files, err := os.ReadDir(config.PhotoPath(pt))
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Cleaning: %s\n", config.PhotoPath(pt))
+	numDeleted := 0
+	for _, f := range files {
+		if !keep[f.Name()] {
+			fpath := config.PhotoFilePath(pt, f.Name())
+			err = os.Remove(fpath)
+			if err != nil && !os.IsNotExist(err) {
+				return err
+			}
+			numDeleted++
+		}
+	}
+	fmt.Printf("Deleted %v files from %v\n", numDeleted, config.PhotoPath(pt))
+	return nil
+}
+
 func CleanImageDirs(db *PGDB) error {
 	photos, err := db.Photo.List()
 	if err != nil {
@@ -55,8 +75,16 @@ func CleanImageDirs(db *PGDB) error {
 	for _, p := range photos {
 		fNames[p.FileName] = true
 	}
+	for k, _ := range config.PhotoPaths() {
+		err := cleanImgDir(fNames, k)
+		if err != nil {
+			fmt.Println("Error cleaning imgDir: ", err)
+		}
+	}
+	return nil
+
 	//list image dir:
-	files, err := ioutil.ReadDir(config.PhotoPath(config.Original))
+	/*files, err := ioutil.ReadDir(config.PhotoPath(config.Original))
 	if err != nil {
 		return nil
 	}
@@ -71,6 +99,7 @@ func CleanImageDirs(db *PGDB) error {
 		DeleteImg(td)
 	}
 	return nil
+	*/
 }
 
 /*

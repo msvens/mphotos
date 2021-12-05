@@ -6,7 +6,8 @@ import (
 	"time"
 )
 
-const DBVERSION = 1
+const DbVersion = 1
+const DbDescription = "Initial Db with version information"
 
 type Album struct {
 	Id          uuid.UUID `json:"id"`
@@ -146,6 +147,6 @@ type User struct {
 }
 
 type Version struct {
-	Id          int    `json:"id"`
+	VersionId   int    `json:"versionId"`
 	Description string `json:"description"`
 }
