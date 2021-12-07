@@ -393,8 +393,8 @@ func migratePhotos(pgdb *PGDB) error {
 		//rename existing images
 		e1 := renameImg(p.FileName, newPhoto.FileName)
 		if e1 != nil {
-			fmt.Println(p)
-			return e1
+			fmt.Println("File no longer exists...skip migration of ", p.DriveId)
+			continue
 		}
 		//now generate img versions
 		if e1 = GenerateImages(newPhoto.FileName); err != nil {
