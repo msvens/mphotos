@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/msvens/mexif"
 	"github.com/msvens/mimage/metadata"
 	"github.com/msvens/mphotos/internal/config"
 	"github.com/msvens/mphotos/internal/dao"
@@ -56,7 +55,7 @@ func (s *mserver) handleDrive(_ *http.Request) (interface{}, error) {
 	}
 }
 
-func (s *mserver) handleAuthenticatedDrive(r *http.Request) (interface{}, error) {
+func (s *mserver) handleAuthenticatedDrive(_ *http.Request) (interface{}, error) {
 	return AuthUser{s.isGoogleConnected()}, nil
 }
 
@@ -70,7 +69,7 @@ func (s *mserver) handleCheckDrive(_ *http.Request) (interface{}, error) {
 	}
 }
 
-func addDrivePhoto(s *mserver, f *drive.File, tool *mexif.MExifTool) (bool, error) {
+func addDrivePhoto(s *mserver, f *drive.File) (bool, error) {
 	var err error
 	if s.pg.Photo.HasMd5(f.Md5Checksum) {
 		return false, nil
@@ -203,16 +202,17 @@ func addDrivePhotos(s *mserver) (*DriveFiles, error) {
 		return nil, err
 	}
 
-	tool, err := mexif.NewMExifTool()
-	if err != nil {
-		return nil, err
-	}
+	/*
+		tool, err := mexif.NewMExifTool()
+		if err != nil {
+			return nil, err
+		}
 
-	defer tool.Close()
-
+		defer tool.Close()
+	*/
 	var files []*drive.File
 	for _, f := range fl {
-		added, err := addDrivePhoto(s, f, tool)
+		added, err := addDrivePhoto(s, f)
 		if err != nil {
 			return nil, err
 		}
@@ -232,7 +232,6 @@ func downloadDrivePhoto(s *mserver, photo *dao.Photo) error {
 	//create img versions
 	//return GenerateImages(config.PhotoFilePath(config.Original, photo.FileName), config.ServiceRoot())
 	return dao.GenerateImages(photo.FileName)
-	return nil
 }
 
 func checkDrivePhotos(s *mserver) ([]*drive.File, error) {
@@ -355,18 +354,20 @@ func worker(jobChan <-chan *Job) {
 
 func process(job *Job) {
 
-	tool, err := mexif.NewMExifTool()
-	defer tool.Close()
+	/*
+		tool, err := mexif.NewMExifTool()
+		defer tool.Close()
 
-	if err != nil {
-		finishJob(job, err)
-		return
-	}
+		if err != nil {
+			finishJob(job, err)
+			return
+		}
+	*/
 
 	job.State = StateStarted
 
 	for _, f := range job.files {
-		if _, err := addDrivePhoto(job.s, f, tool); err != nil {
+		if _, err := addDrivePhoto(job.s, f); err != nil {
 			finishJob(job, err)
 			return
 		}
