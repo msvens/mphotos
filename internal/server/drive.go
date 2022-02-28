@@ -93,33 +93,33 @@ func addDrivePhoto(s *mserver, f *drive.File) (bool, error) {
 	}
 	var md *metadata.MetaData
 
-	if md, err = metadata.ParseFile(config.PhotoFilePath(config.Original, photo.FileName)); err == nil {
-		photo.CameraMake = md.Summary.CameraMake
-		photo.CameraModel = md.Summary.CameraModel
-		photo.FocalLength = fmt.Sprintf("%v mm", md.Summary.FocalLength.Float32())
-		photo.FocalLength35 = fmt.Sprintf("%v mm", md.Summary.FocalLengthIn35mmFormat)
-		photo.LensMake = md.Summary.LensMake
-		photo.LensModel = md.Summary.LensModel
-		photo.Exposure = md.Summary.ExposureTime.String()
+	if md, err = metadata.NewMetaDataFromFile(config.PhotoFilePath(config.Original, photo.FileName)); err == nil {
+		photo.CameraMake = md.Summary().CameraMake
+		photo.CameraModel = md.Summary().CameraModel
+		photo.FocalLength = fmt.Sprintf("%v mm", md.Summary().FocalLength.Float32())
+		photo.FocalLength35 = fmt.Sprintf("%v mm", md.Summary().FocalLengthIn35mmFormat)
+		photo.LensMake = md.Summary().LensMake
+		photo.LensModel = md.Summary().LensModel
+		photo.Exposure = md.Summary().ExposureTime.String()
 		photo.Width = md.ImageWidth
 		photo.Height = md.ImageHeight
-		photo.FNumber = md.Summary.FNumber.Float32()
-		photo.Iso = uint(md.Summary.ISO)
-		photo.Title = md.Summary.Title
-		if len(md.Summary.Keywords) > 0 {
-			photo.Keywords = strings.Join(md.Summary.Keywords, ",")
+		photo.FNumber = md.Summary().FNumber.Float32()
+		photo.Iso = uint(md.Summary().ISO)
+		photo.Title = md.Summary().Title
+		if len(md.Summary().Keywords) > 0 {
+			photo.Keywords = strings.Join(md.Summary().Keywords, ",")
 		}
-		if md.Summary.OriginalDate.IsZero() {
+		if md.Summary().OriginalDate.IsZero() {
 			photo.OriginalDate = photo.SourceDate
 		} else {
-			photo.OriginalDate = md.Summary.OriginalDate
+			photo.OriginalDate = md.Summary().OriginalDate
 		}
 	} else {
 		return false, err
 	}
 	photo.Private = true
 
-	if err = s.pg.Photo.Add(&photo, md.Summary); err != nil {
+	if err = s.pg.Photo.Add(&photo, md.Summary()); err != nil {
 		s.l.Errorw("error adding img: ", zap.Error(err))
 		return false, err
 	}

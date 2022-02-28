@@ -402,12 +402,12 @@ func migratePhotos(pgdb *PGDB) error {
 		}
 
 		//migrate exif by reading metadata from file
-		md, e1 := metadata.ParseFile(imgPath(newPhoto.FileName))
+		md, e1 := metadata.NewMetaDataFromFile(imgPath(newPhoto.FileName))
 		if e1 != nil {
 			fmt.Println(p.FileName)
 			return e1
 		}
-		e1 = pgdb.Photo.Add(&newPhoto, md.Summary)
+		e1 = pgdb.Photo.Add(&newPhoto, md.Summary())
 		if e1 != nil {
 			return e1
 		}
