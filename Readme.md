@@ -8,5 +8,5 @@ mphotos exposes an api for working with images and is tightly integrated with go
 - Create a long lived connection to a remote google drive folder containing pictures
 - (Automatic) download of new images to local storage
 - Full automation of
-  - Image information extraction using [exiftool](https://sno.phy.queensu.ca/~phil/exiftool/)
-  - Thumbnail creation using [libvips](https://libvips.github.io/libvips/)
+  - Image information extraction using [mimage](https://www.github.com/msvens/image)
+  - Thumbnail creation using [mimage](https://www.github.com/msvens/image/)
