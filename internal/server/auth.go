@@ -2,12 +2,14 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/msvens/mphotos/internal/config"
+    "fmt"
+    "github.com/msvens/mphotos/internal/config"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"net/http"
-	"os"
+    "net/url"
+    "os"
 )
 
 type AuthUser struct {
@@ -87,6 +89,7 @@ func (s *mserver) tokenFromFile(file string) (*oauth2.Token, error) {
 	defer f.Close()
 	tok := &oauth2.Token{}
 	err = json.NewDecoder(f).Decode(tok)
+    fmt.Println("This is refresh token: ",tok.RefreshToken)
 	return tok, err
 }
 
@@ -108,17 +111,27 @@ func (s *mserver) authFromFile() error {
 	}
 }
 
-func (s *mserver) getToken(r *http.Request) (*oauth2.Token, error) {
+func (s *mserver) getToken(r *http.Request) (*oauth2.Token, string, error) {
 	state := r.FormValue("state")
 	code := r.FormValue("code")
-	if state != "state-token" {
+    if state == "" {
+        return nil, "", BadRequestError("invalid oauth state")
+    }
+	/*if state != "state-token" {
 		return nil, BadRequestError("invalid oauth state")
-	}
+	}*/
+    fmt.Println("in getToken, state: ", state)
 	if token, err := s.gconfig.Exchange(context.TODO(), code); err != nil {
 		s.l.Errorw("code exchage error", zap.Error(err))
-		return nil, UnauthorizedError(err.Error())
+		return nil, state, UnauthorizedError(err.Error())
 	} else {
-		return token, nil
+        fmt.Println("exchanged token with refresh: ",token.RefreshToken)
+        if u, e := url.QueryUnescape(state); e != nil {
+            s.l.Errorw("could not unescape state", zap.Error(e))
+            return nil, state, BadRequestError("invalid ouath state")
+        } else {
+            return token, u, nil
+        }
 	}
 
 }
@@ -135,44 +148,50 @@ func (s *mserver) saveToken(path string, token *oauth2.Token) {
 }
 
 func (s *mserver) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
-	if token, err := s.getToken(r); err != nil {
+	if token, redir, err := s.getToken(r); err != nil {
 		s.l.Errorw("", zap.Error(err))
-		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, redir, http.StatusTemporaryRedirect)
 		return
 	} else {
 		s.saveToken(s.tokenFile, token)
 		if err := s.setGoogleServices(token); err == nil {
-			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, redir, http.StatusTemporaryRedirect)
 		}
-		/*if drv, err := gdrive.NewDriveService(token, s.gconfig); err != nil {
-			s.l.Errorw("cannot create google drive service", zap.Error(err))
-		} else {
-			s.setDriveService(drv)
-			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
-		}*/
 	}
 }
 
 //TODO: make sure you can only do this if you are logged in
+//TODO: create a better state token
 func (s *mserver) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
+    redir := r.URL.Query().Get("redir")
+    redirUrl := "/"
+    if unescape, err := url.QueryUnescape(redir); err != nil {
+        s.l.Info("could not parse redirection url:  ", redir)
+    } else {
+        redirUrl = unescape
+    }
+    //now parse url (it should be a relative one
+    if parsedUrl, err := url.Parse(redirUrl); err != nil {
+        s.l.Info("redirection url not correct: ", redirUrl)
+    } else if parsedUrl.IsAbs() {
+        s.l.Info("url is absolute, not allowed: ", redirUrl)
+        redirUrl = "/"
+    }
+    fmt.Println("redirUrl: ", redirUrl)
 	token, err := s.tokenFromFile(s.tokenFile)
 	if err != nil {
-		s.l.Info("could not token from file, redirect to google")
-		url := s.gconfig.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+		s.l.Info("could not read token from file, redirect to google")
+		u := s.gconfig.AuthCodeURL(redirUrl, oauth2.AccessTypeOffline)
+		http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 	} else {
 		s.l.Info("read token from file")
 		if err = s.setGoogleServices(token); err == nil {
-			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
-		}
-		//gtoken = token
-		/*drv, err := gdrive.NewDriveService(token, s.gconfig)
-		if err != nil {
-			s.l.Errorw("could not create google drive service", zap.Error(err))
-		}
-
-		s.setDriveService(drv)
-		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)*/
+			http.Redirect(w, r, redirUrl, http.StatusTemporaryRedirect)
+		} else {
+            s.l.Info("Token not valid...trying to get a new one from google")
+            u := s.gconfig.AuthCodeURL(url.QueryEscape(redirUrl), oauth2.AccessTypeOffline)
+            http.Redirect(w, r, u, http.StatusTemporaryRedirect)
+        }
 	}
 }
 

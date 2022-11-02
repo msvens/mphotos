@@ -74,7 +74,7 @@ type ReactionDAO interface {
 }
 
 type PhotoDAO interface {
-	Add(p *Photo, exif *metadata.MetaDataSummary) error
+	Add(p *Photo, exif *metadata.Summary) error
 	Delete(id uuid.UUID) (bool, error)
 	Exif(id uuid.UUID) (*Exif, error)
 	Has(id uuid.UUID, private bool) bool

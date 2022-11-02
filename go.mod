@@ -1,6 +1,6 @@
 module github.com/msvens/mphotos
 
-go 1.17
+go 1.19
 
 require (
 	github.com/google/uuid v1.3.0
@@ -10,7 +10,7 @@ require (
 	github.com/jackc/pgx/v4 v4.14.0
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/msvens/mimage v0.0.8
+	github.com/msvens/mimage v0.0.10
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.0
 	go.uber.org/zap v1.19.1

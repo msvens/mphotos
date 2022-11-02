@@ -63,7 +63,7 @@ type Comment struct {
 
 type Exif struct {
 	Id   uuid.UUID                 `json:"id"`
-	Data *metadata.MetaDataSummary `json:"data"`
+	Data *metadata.Summary `json:"data"`
 }
 
 type Guest struct {

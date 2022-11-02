@@ -272,6 +272,7 @@ func searchDriveFiles(s *mserver, id string, name string) ([]*drive.File, error)
 	}
 	fmt.Println("Finding folder: ", id)
 	query := gdrive.NewQuery().Parents().In(id).And().MimeType().Eq(gdrive.Jpeg).TrashedEq(false)
+    fmt.Println("Query done: ", id)
 	return s.ds.SearchAll(query, fileFields)
 }
 

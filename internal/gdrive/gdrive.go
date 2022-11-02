@@ -2,7 +2,7 @@ package gdrive
 
 import (
 	"fmt"
-	"golang.org/x/net/context"
+    "golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/googleapi"
@@ -154,6 +154,11 @@ func (ds *DriveService) SearchFolder(parentId string, query *Query, fileFields s
 }
 
 func (ds *DriveService) SearchAll(q *Query, fileFields string) ([]*drive.File, error) {
+    if ds == nil {
+        fmt.Println("ds service is nil: ")
+        return nil, fmt.Errorf("ds service is nil")
+    }
+
 	lcall := ds.service.Files.List()
 	if q.Err() != nil {
 		return nil, q.Err()
@@ -173,6 +178,7 @@ func (ds *DriveService) SearchAll(q *Query, fileFields string) ([]*drive.File, e
 		}
 		r, err := lcall.Do()
 		if err != nil {
+
 			return nil, err
 		}
 

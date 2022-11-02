@@ -21,7 +21,7 @@ func NewPhotoPG(db *sqlx.DB) *PhotoPG {
 	return &PhotoPG{db, fields, buildInsertNamed("img", fields)}
 }
 
-func (dao *PhotoPG) Add(p *Photo, exif *metadata.MetaDataSummary) error {
+func (dao *PhotoPG) Add(p *Photo, exif *metadata.Summary) error {
 	if p.Id == uuid.Nil {
 		p.Id = uuid.New()
 	}
@@ -65,7 +65,7 @@ func (dao *PhotoPG) Exif(id uuid.UUID) (*Exif, error) {
 	if err := dao.db.QueryRow("SELECT data FROM exifdata WHERE id = $1", id).Scan(&data); err != nil {
 		return nil, err
 	}
-	resp := Exif{Id: id, Data: &metadata.MetaDataSummary{}}
+	resp := Exif{Id: id, Data: &metadata.Summary{}}
 	if err := json.Unmarshal([]byte(data), resp.Data); err != nil {
 		return nil, err
 	}
