@@ -12,7 +12,7 @@ func (s *mserver) routes() {
 	s.mDELETE("/albums/{id}").HandlerFunc(s.authOnly(s.handleDeleteAlbum))
 	s.mPUT("/albums/{id}").HandlerFunc(s.authOnly(s.handleUpdateAlbum))
 
-	s.path("/auth/login").HandlerFunc(s.handleGoogleLogin)
+	//s.path("/auth/login").HandlerFunc(s.handleGoogleLogin)
 	s.path("/auth/callback").HandlerFunc(s.handleGoogleCallback)
 
 	s.mGET("/cameras").HandlerFunc(s.mResponse(s.handleCameras))

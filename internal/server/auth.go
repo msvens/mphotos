@@ -163,33 +163,47 @@ func (s *mserver) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 //TODO: make sure you can only do this if you are logged in
 //TODO: create a better state token
 func (s *mserver) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
-    redir := r.URL.Query().Get("redir")
-    redirUrl := "/"
-    if unescape, err := url.QueryUnescape(redir); err != nil {
-        s.l.Info("could not parse redirection url:  ", redir)
-    } else {
-        redirUrl = unescape
+    parseDir := func() (string,string) {
+        root := url.QueryEscape("/")
+        redir := r.URL.Query().Get("redir")
+        if redir == "" {
+            return root, "/"
+        }
+        unesc, err := url.QueryUnescape(redir)
+        if err != nil {
+            s.l.Error("could not unescape redirection url:  ", err)
+            return root, "/"
+        }
+        parsed, err := url.Parse(unesc)
+        if err != nil {
+            s.l.Error("could not parse redirection url:  ", err)
+            return root, "/"
+        } else if parsed.IsAbs() {
+            s.l.Error("Absolut url not allowed: ", unesc)
+            return root, "/"
+        } else {
+            return redir, unesc
+        }
     }
-    //now parse url (it should be a relative one
-    if parsedUrl, err := url.Parse(redirUrl); err != nil {
-        s.l.Info("redirection url not correct: ", redirUrl)
-    } else if parsedUrl.IsAbs() {
-        s.l.Info("url is absolute, not allowed: ", redirUrl)
-        redirUrl = "/"
+    //make sure only logged in users can execute this
+    if !ctxLoggedIn(r.Context()) {
+        psResponse(nil, UnauthorizedError("user not logged in"), w)
+        return
     }
-    fmt.Println("redirUrl: ", redirUrl)
+    redirUrl, unesc := parseDir()
+    fmt.Println("redirUrl: ", unesc)
 	token, err := s.tokenFromFile(s.tokenFile)
 	if err != nil {
 		s.l.Info("could not read token from file, redirect to google")
-		u := s.gconfig.AuthCodeURL(redirUrl, oauth2.AccessTypeOffline)
+        u := s.gconfig.AuthCodeURL(redirUrl, oauth2.AccessTypeOffline)
 		http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 	} else {
 		s.l.Info("read token from file")
 		if err = s.setGoogleServices(token); err == nil {
-			http.Redirect(w, r, redirUrl, http.StatusTemporaryRedirect)
+			http.Redirect(w, r, unesc, http.StatusTemporaryRedirect)
 		} else {
             s.l.Info("Token not valid...trying to get a new one from google")
-            u := s.gconfig.AuthCodeURL(url.QueryEscape(redirUrl), oauth2.AccessTypeOffline)
+            u := s.gconfig.AuthCodeURL(redirUrl, oauth2.AccessTypeOffline)
             http.Redirect(w, r, u, http.StatusTemporaryRedirect)
         }
 	}
