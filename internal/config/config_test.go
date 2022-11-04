@@ -34,6 +34,9 @@ func TestConfigFile(t *testing.T) {
 	if ServerHost() != "localhost" {
 		t.Errorf("expected localhost got %v", ServerHost())
 	}
+    if ServerAddr() != "localhost:8050" {
+        t.Errorf("expected localhost:8050 got %v", ServerAddr())
+    }
 	if VerifyUrl() != "http://localhost:8050/api/guest/verify" {
 		t.Errorf("expected http://localhost:8050/api/guest/verify got #{VerifyUrl()}")
 	}

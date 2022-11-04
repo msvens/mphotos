@@ -133,6 +133,10 @@ func ServerHost() string {
 	return viper.GetString("server.host")
 }
 
+func ServerAddr() string {
+    return fmt.Sprintf("%s:%d",ServerHost(),ServerPort())
+}
+
 func VerifyUrl() string {
 	return viper.GetString("server.verifyUrl")
 }

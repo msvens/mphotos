@@ -1,7 +1,7 @@
 package server
 
 import (
-	"fmt"
+    "fmt"
 	"github.com/google/uuid"
 	"github.com/msvens/mimage/metadata"
 	"github.com/msvens/mphotos/internal/config"
@@ -61,10 +61,8 @@ func (s *mserver) handleAuthenticatedDrive(_ *http.Request) (interface{}, error)
 
 func (s *mserver) handleCheckDrive(_ *http.Request) (interface{}, error) {
 	if files, err := checkDrivePhotos(s); err != nil {
-		fmt.Println("in checkDrivePhotos failed: ", err)
 		return nil, err
 	} else {
-		fmt.Println("in toDriveFiles")
 		return toDriveFiles(files), nil
 	}
 }
@@ -132,84 +130,12 @@ func addDrivePhoto(s *mserver, f *drive.File) (bool, error) {
 	return true, nil
 }
 
-/*
-func addDrivePhoto(s *mserver, f *drive.File, tool *mexif.MExifTool) (bool, error) {
-	var err error
-	if s.pg.Photo.HasMd5(f.Md5Checksum) {
-		return false, nil
-	}
-	photo := dao.Photo{}
-	photo.Id = uuid.New()
-	photo.SourceId = f.Id
-	photo.Md5 = f.Md5Checksum
-	photo.Source = dao.SourceGoogle
-
-	photo.FileName = f.Id + ".jpg" //this needs to change to actually check the filename
-	if t, err := gdrive.ParseTime(f.CreatedTime); err == nil {
-		photo.SourceDate = t
-	}
-	photo.UploadDate = time.Now()
-
-	if err = downloadDrivePhoto(s, &photo); err != nil {
-		s.l.Errorw("error downloading img", zap.Error(err))
-		return false, err
-	}
-	var exif *mexif.ExifCompact
-
-	if exif, err = tool.ExifCompact(imgPath(s, photo.FileName)); err == nil {
-		photo.CameraMake = exif.CameraMake
-		photo.CameraModel = exif.CameraModel
-		photo.FocalLength = exif.FocalLength
-		photo.FocalLength35 = exif.FocalLengthIn35mmFormat
-		photo.LensMake = exif.LensMake
-		photo.LensModel = exif.LensModel
-		photo.Exposure = exif.ExposureTime
-		photo.Width = exif.ImageWidth
-		photo.Height = exif.ImageHeight
-		photo.FNumber = exif.FNumber
-		photo.Iso = exif.ISO
-		photo.Title = exif.Title
-		if len(exif.Keywords) > 0 {
-			photo.Keywords = strings.Join(exif.Keywords, ",")
-		}
-		if exif.OriginalDate.IsZero() {
-			photo.OriginalDate = photo.SourceDate
-		} else {
-			photo.OriginalDate = exif.OriginalDate
-		}
-	} else {
-		return false, err
-	}
-	photo.Private = true
-
-	if err = s.pg.Photo.Add(&photo, exif); err != nil {
-		s.l.Errorw("error adding img: ", zap.Error(err))
-		return false, err
-	}
-	if !s.pg.Camera.HasModel(photo.CameraModel) {
-		if err = s.pg.Camera.AddFromPhoto(&photo); err != nil {
-			s.l.Fatalw("error adding camera model: ", zap.Error(err))
-		}
-	}
-	s.l.Infow("added img", "driveId", photo.Id)
-	return true, nil
-}
-*/
-
 func addDrivePhotos(s *mserver) (*DriveFiles, error) {
 	fl, err := listDriveFiles(s)
 	if err != nil {
 		return nil, err
 	}
 
-	/*
-		tool, err := mexif.NewMExifTool()
-		if err != nil {
-			return nil, err
-		}
-
-		defer tool.Close()
-	*/
 	var files []*drive.File
 	for _, f := range fl {
 		added, err := addDrivePhoto(s, f)
@@ -224,19 +150,15 @@ func addDrivePhotos(s *mserver) (*DriveFiles, error) {
 }
 
 func downloadDrivePhoto(s *mserver, photo *dao.Photo) error {
-
 	if _, err := s.ds.Download(photo.SourceId, config.PhotoFilePath(config.Original, photo.FileName)); err != nil {
 		return err
 	}
-
 	//create img versions
-	//return GenerateImages(config.PhotoFilePath(config.Original, photo.FileName), config.ServiceRoot())
 	return dao.GenerateImages(photo.FileName)
 }
 
 func checkDrivePhotos(s *mserver) ([]*drive.File, error) {
 	fl, err := listDriveFiles(s)
-	fmt.Println("list drive files: ", len(fl), "error: ", err)
 	if err != nil {
 		return nil, err
 	}
@@ -250,7 +172,6 @@ func checkDrivePhotos(s *mserver) ([]*drive.File, error) {
 }
 
 func listDriveFiles(s *mserver) ([]*drive.File, error) {
-	fmt.Println("in listDriveFiles")
 	if u, err := s.pg.User.Get(); err != nil {
 		return nil, InternalError("user not found")
 	} else if u.DriveFolderId == "" {
@@ -261,18 +182,17 @@ func listDriveFiles(s *mserver) ([]*drive.File, error) {
 }
 
 func searchDriveFiles(s *mserver, id string, name string) ([]*drive.File, error) {
-	fmt.Println("in searchDriveFiles")
+	if s.ds == nil {
+        return nil, UnauthorizedError("No Drive Service Connected")
+    }
 	if name != "" {
-		fmt.Println("search files: ", name)
 		if f, err := s.ds.GetByName(name, true, false, fileFields); err != nil {
 			return nil, err
 		} else {
 			id = f.Id
 		}
 	}
-	fmt.Println("Finding folder: ", id)
 	query := gdrive.NewQuery().Parents().In(id).And().MimeType().Eq(gdrive.Jpeg).TrashedEq(false)
-    fmt.Println("Query done: ", id)
 	return s.ds.SearchAll(query, fileFields)
 }
 

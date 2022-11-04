@@ -1,8 +1,9 @@
 package server
 
 import (
+    "fmt"
 	"encoding/gob"
-	"github.com/gorilla/mux"
+    "github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/msvens/mphotos/internal/config"
 	"github.com/msvens/mphotos/internal/dao"
@@ -41,9 +42,10 @@ type mserver struct {
 	resizeDir    string*/
 }
 
-func NewServer(prefixPath string) *mserver {
+func newServer(prefixPath string, logger *zap.SugaredLogger) *mserver {
 
 	s := mserver{}
+    s.l = logger
 	s.prefixPath = prefixPath
 
 	//Initialize session
@@ -63,45 +65,21 @@ func NewServer(prefixPath string) *mserver {
 	gob.Register(AuthUser{})
 	gob.Register(SessionGuest{})
 
-	//setup logging
-	l, _ := zap.NewDevelopment()
-	s.l = l.Sugar()
 
 	s.r = mux.NewRouter()
 
 	var err error
-	/*if s.dbold, err = model.NewDB(); err != nil {
-		s.l.Panicw("could not create dbservice", "error", err)
-	}*/
 
 	if s.pg, err = dao.NewPGDB(); err != nil {
-		s.l.Panicw("could not create pgdb service", "error", err)
+		s.l.Panicw("could not create pgdb service", zap.Error(err))
 	}
 
-	//init photo paths:
-	//s.rootDir = config.ServiceRoot()
-	/*s.imgDir = config.ServicePath(ImgDir)
-	s.cameraDir = config.ServicePath("cameras")
-	s.thumbDir = config.ServicePath(ThumbDir)
-	s.portraitDir = config.ServicePath(PortraitDir)
-	s.landscapeDir = config.ServicePath(LandscapeDir)
-	s.squareDir = config.ServicePath(SquareDir)
-	s.resizeDir = config.ServicePath(ResizeDir)*/
 	if err = dao.CreateImageDirs(); err != nil {
 		s.l.Panicw("could not create img dirs", zap.Error(err))
 	}
-	/*
-		if err = os.MkdirAll(config.ImgPath(), 0744); err != nil {
-			s.l.Panicw("could not create img dir", zap.Error(err))
-		}
-		if err = CreateImageDir(config.ServiceRoot()); err != nil {
-			s.l.Panicw("could not create image dirs", zap.Error(err))
-		}*/
-	/*if err = os.MkdirAll(s.imgDir, 0744); err != nil {
-		s.l.Panicw("could not create img dir", zap.Error(err))
-	}*/
+
 	if err = os.MkdirAll(config.CameraPath(), 0744); err != nil {
-		s.l.Panicw("could not camera dir", zap.Error(err))
+		s.l.Panicw("could not create camera dir", zap.Error(err))
 	}
 
 	//start async job channel:
@@ -123,20 +101,33 @@ func NewServer(prefixPath string) *mserver {
 }
 
 func StartMServer() {
-	config.InitConfig()
+    //setup logging
+    l, err := zap.NewDevelopment()
+    if err != nil {
+        fmt.Println("Could not create logger exiting: ", err)
+        os.Exit(1)
+    }
+    defer func() {
+        _ = l.Sync()
+    }()
 
-	s := NewServer("/api")
+    //init config
+    err = config.InitConfig()
+    if err != nil {
+        l.Sugar().Panicw("Could not init config", zap.Error(err))
+    }
+
+	s := newServer("/api", l.Sugar())
 	s.routes()
-	defer s.l.Sync()
 
 	//auth
-	err := s.authFromFile()
+	err = s.authFromFile()
 	if err != nil {
-		s.l.Errorw("google auth", zap.Error(err))
+        s.l.Infow("auth from file", zap.Error(err))
 	}
 
 	srv := &http.Server{
-		Addr:    ":8050",
+		Addr:    config.ServerAddr(),
 		Handler: s.r,
 	}
 
@@ -182,23 +173,16 @@ func StartMServer() {
 	s.l.Info("server exited properly")
 }
 
-/*
-func (s *mserver) setDriveService(ds *gdrive.DriveService) {
-	s.ds = ds
-	//s.ps.DriveSrv = s.ds
-}
-*/
-
 func (s *mserver) setGoogleServices(token *oauth2.Token) error {
 	if drv, err := gdrive.NewDriveService(token, s.gconfig); err != nil {
-		s.l.Errorw("cannot create google drive service", zap.Error(err))
+		s.l.Infow("cannot create google drive service", zap.Error(err))
 		s.ds = nil
 		return err
 	} else {
 		s.ds = drv
 	}
 	if srv, err := gmail.NewGmailService(token, s.gconfig); err != nil {
-		s.l.Errorw("cannot create google mail service", zap.Error(err))
+		s.l.Infow("cannot create google mail service", zap.Error(err))
 		s.ms = nil
 		return err
 	} else {

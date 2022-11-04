@@ -122,7 +122,6 @@ func psResponse(data interface{}, err error, w http.ResponseWriter) {
 	enc.SetIndent("", "  ")
 	var resp PSResponse
 	if err != nil {
-		fmt.Println("request error", err)
 		resp = PSResponse{ResolveError(err), nil}
 	} else if data != nil {
 		resp = PSResponse{nil, data}

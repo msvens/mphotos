@@ -1,7 +1,7 @@
 package gdrive
 
 import (
-	"fmt"
+    "fmt"
     "golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/drive/v3"
@@ -65,6 +65,12 @@ func (ds *DriveService) About(fields ...googleapi.Field) (*drive.About, error) {
 		return nil, err
 	}
 	return about, nil
+}
+
+//Checks if the Root folder can be retrieved
+func (ds *DriveService) Check() error {
+    _, err := ds.Get(ds.Root.Id)
+    return err
 }
 
 func (ds *DriveService) Download(id string, path string) (int64, error) {
@@ -154,11 +160,6 @@ func (ds *DriveService) SearchFolder(parentId string, query *Query, fileFields s
 }
 
 func (ds *DriveService) SearchAll(q *Query, fileFields string) ([]*drive.File, error) {
-    if ds == nil {
-        fmt.Println("ds service is nil: ")
-        return nil, fmt.Errorf("ds service is nil")
-    }
-
 	lcall := ds.service.Files.List()
 	if q.Err() != nil {
 		return nil, q.Err()
@@ -188,6 +189,5 @@ func (ds *DriveService) SearchAll(q *Query, fileFields string) ([]*drive.File, e
 			break
 		}
 	}
-	fmt.Println("search all: ", len(fs))
 	return fs, nil
 }

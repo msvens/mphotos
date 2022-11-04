@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-    "fmt"
     "github.com/msvens/mphotos/internal/config"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -89,7 +88,6 @@ func (s *mserver) tokenFromFile(file string) (*oauth2.Token, error) {
 	defer f.Close()
 	tok := &oauth2.Token{}
 	err = json.NewDecoder(f).Decode(tok)
-    fmt.Println("This is refresh token: ",tok.RefreshToken)
 	return tok, err
 }
 
@@ -117,15 +115,11 @@ func (s *mserver) getToken(r *http.Request) (*oauth2.Token, string, error) {
     if state == "" {
         return nil, "", BadRequestError("invalid oauth state")
     }
-	/*if state != "state-token" {
-		return nil, BadRequestError("invalid oauth state")
-	}*/
-    fmt.Println("in getToken, state: ", state)
+
 	if token, err := s.gconfig.Exchange(context.TODO(), code); err != nil {
 		s.l.Errorw("code exchage error", zap.Error(err))
 		return nil, state, UnauthorizedError(err.Error())
 	} else {
-        fmt.Println("exchanged token with refresh: ",token.RefreshToken)
         if u, e := url.QueryUnescape(state); e != nil {
             s.l.Errorw("could not unescape state", zap.Error(e))
             return nil, state, BadRequestError("invalid ouath state")
@@ -160,8 +154,6 @@ func (s *mserver) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//TODO: make sure you can only do this if you are logged in
-//TODO: create a better state token
 func (s *mserver) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
     parseDir := func() (string,string) {
         root := url.QueryEscape("/")
@@ -171,15 +163,15 @@ func (s *mserver) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
         }
         unesc, err := url.QueryUnescape(redir)
         if err != nil {
-            s.l.Error("could not unescape redirection url:  ", err)
+            s.l.Info("could not unescape redirection url:  ", err)
             return root, "/"
         }
         parsed, err := url.Parse(unesc)
         if err != nil {
-            s.l.Error("could not parse redirection url:  ", err)
+            s.l.Info("could not parse redirection url:  ", err)
             return root, "/"
         } else if parsed.IsAbs() {
-            s.l.Error("Absolut url not allowed: ", unesc)
+            s.l.Info("Absolut url not allowed: ", unesc)
             return root, "/"
         } else {
             return redir, unesc
@@ -191,7 +183,6 @@ func (s *mserver) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
         return
     }
     redirUrl, unesc := parseDir()
-    fmt.Println("redirUrl: ", unesc)
 	token, err := s.tokenFromFile(s.tokenFile)
 	if err != nil {
 		s.l.Info("could not read token from file, redirect to google")
@@ -212,8 +203,8 @@ func (s *mserver) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 func (s *mserver) isGoogleConnected() bool {
 	if s.ds == nil {
 		return false
-	} else if _, err := s.ds.Get(s.ds.Root.Id); err != nil {
-		s.l.Errorw("could not retrieve root folder", zap.Error(err))
+	} else if err := s.ds.Check(); err != nil {
+		s.l.Errorw("Drive Service Check failed", zap.Error(err))
 		return false
 	}
 	return true
