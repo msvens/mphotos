@@ -52,6 +52,8 @@ func (s *mserver) routes() {
 	s.path("/photos/{id}/albums").Methods("GET").HandlerFunc(s.loginInfo(s.handlePhotoAlbums))
 	s.path("/photos/{id}/orig").Methods("GET").HandlerFunc(s.handleDownloadPhoto)
 	s.path("/photos/{id}/exif").Methods("GET").HandlerFunc(s.loginInfo(s.handleExif))
+	s.path("/photos/{id}/edit/preview").Methods("GET").HandlerFunc(s.handleEditPreviewImage)
+	s.path("/photos/{id}/edit").Methods("POST", "PUT").HandlerFunc(s.authOnly(s.handleEditImage))
 	s.path("/photos/latest").Methods("GET").HandlerFunc(s.loginInfo(s.handleLatestPhoto))
 	s.path("/photos/{id}").Methods("GET").HandlerFunc(s.loginInfo(s.handlePhoto))
 	s.path("/photos/{id}").Methods("POST", "PUT").HandlerFunc(s.authOnly(s.handleUpdatePhoto))
