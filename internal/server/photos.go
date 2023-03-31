@@ -156,9 +156,9 @@ func (s *mserver) handlePhoto(r *http.Request, loggedIn bool) (interface{}, erro
 
 func (s *mserver) handlePhotos(r *http.Request, loggedIn bool) (interface{}, error) {
 	type request struct {
-		Limit        int
-		Offset       int
-		OriginalDate bool
+		Limit  int
+		Offset int
+		Order  string
 	}
 
 	var params request
@@ -167,7 +167,15 @@ func (s *mserver) handlePhotos(r *http.Request, loggedIn bool) (interface{}, err
 	} else {
 		r := dao.Range{Offset: params.Offset, Limit: params.Limit}
 		f := dao.PhotoFilter{Private: loggedIn}
-		if photos, err := s.pg.Photo.Select(r, dao.UploadDate, f); err != nil {
+		var o dao.PhotoOrder
+		switch params.Order {
+		case "original":
+			o = dao.OriginalDate
+		default:
+			o = dao.UploadDate
+
+		}
+		if photos, err := s.pg.Photo.Select(r, o, f); err != nil {
 			return nil, err
 		} else {
 			return &PhotoFiles{Length: len(photos), Photos: photos}, nil
