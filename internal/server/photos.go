@@ -2,14 +2,10 @@ package server
 
 import (
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"github.com/msvens/mphotos/internal/config"
 	"github.com/msvens/mphotos/internal/dao"
 	"go.uber.org/zap"
-	"io"
 	"net/http"
-	"os"
-	"strconv"
 )
 
 type PhotoFiles struct {
@@ -30,28 +26,6 @@ func deletePhoto(s *mserver, p *dao.Photo, removeFiles bool) (*dao.Photo, error)
 	if err := dao.DeleteImg(p.FileName); err != nil {
 		s.l.Errorw("Could not remove "+p.FileName, zap.Error(err))
 	}
-	//remove files
-	/*
-		for pt,_ := range config.PhotoPaths() {
-			fname := config.PhotoFilePath(pt,p.FileName)
-			if err := os.Remove(fname); err != nil {
-				s.l.Errorw("Could not remove "+fname, zap.Error(err))
-			}
-		}*/
-	/*
-		if err := os.Remove(imgPath(s, p.FileName)); err != nil {
-			s.l.Errorw("Could not remove img", zap.Error(err))
-		}
-		if err := os.Remove(thumbPath(s, p.FileName)); err != nil {
-			s.l.Errorw("Could not remove thumbnail", zap.Error(err))
-		}
-		if err := os.Remove(resizePath(s, p.FileName)); err != nil {
-			s.l.Errorw("Could not remove thumbnail", zap.Error(err))
-		}
-		if err := os.Remove(resizePath(s, p.FileName)); err != nil {
-			s.l.Errorw("Could not remove thumbnail", zap.Error(err))
-		}
-	*/
 	s.l.Infow("Photo deleted", "id", p.Id)
 	return p, nil
 }
@@ -109,8 +83,9 @@ func (s *mserver) handleDownloadPhoto(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "file not found", http.StatusNotFound)
 		return
 	}
+	http.ServeFile(w, r, config.PhotoFilePath(config.Original, p.FileName))
 	//file, err := os.Open(imgPath(s, p.FileName))
-	file, err := os.Open(config.PhotoFilePath(config.Original, p.FileName))
+	/*file, err := os.Open(config.PhotoFilePath(config.Original, p.FileName))
 	if err != nil {
 		s.l.Infow("could not download file", zap.Error(err))
 		http.Error(w, "File not found.", http.StatusNotFound)
@@ -138,7 +113,7 @@ func (s *mserver) handleDownloadPhoto(w http.ResponseWriter, r *http.Request) {
 	//We read 512 bytes from the file already, so we reset the offset back to 0
 	file.Seek(0, 0)
 	io.Copy(w, file) //'Copy' the file to the client
-	return
+	return*/
 }
 
 func (s *mserver) handleExif(r *http.Request, loggedIn bool) (interface{}, error) {
@@ -181,9 +156,9 @@ func (s *mserver) handlePhoto(r *http.Request, loggedIn bool) (interface{}, erro
 
 func (s *mserver) handlePhotos(r *http.Request, loggedIn bool) (interface{}, error) {
 	type request struct {
-		Limit        int
-		Offset       int
-		OriginalDate bool
+		Limit  int
+		Offset int
+		Order  string
 	}
 
 	var params request
@@ -192,7 +167,15 @@ func (s *mserver) handlePhotos(r *http.Request, loggedIn bool) (interface{}, err
 	} else {
 		r := dao.Range{Offset: params.Offset, Limit: params.Limit}
 		f := dao.PhotoFilter{Private: loggedIn}
-		if photos, err := s.pg.Photo.Select(r, dao.UploadDate, f); err != nil {
+		var o dao.PhotoOrder
+		switch params.Order {
+		case "original":
+			o = dao.OriginalDate
+		default:
+			o = dao.UploadDate
+
+		}
+		if photos, err := s.pg.Photo.Select(r, o, f); err != nil {
 			return nil, err
 		} else {
 			return &PhotoFiles{Length: len(photos), Photos: photos}, nil
@@ -224,37 +207,6 @@ func (s *mserver) handleSearchPhotos(r *http.Request, loggedIn bool) (interface{
 	} else {
 		return nil, InternalError("Search pattern not yet implemented")
 	}
-}
-
-func (s *mserver) handleImg(pt config.PhotoType, w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	name := vars["name"]
-	//http.ServeFile(w, r, filepath.Join(dir, name))
-	http.ServeFile(w, r, config.PhotoFilePath(pt, name))
-}
-
-func (s *mserver) handleImage(w http.ResponseWriter, r *http.Request) {
-	s.handleImg(config.Original, w, r)
-}
-
-func (s *mserver) handleResize(w http.ResponseWriter, r *http.Request) {
-	s.handleImg(config.Resize, w, r)
-}
-
-func (s *mserver) handlePortrait(w http.ResponseWriter, r *http.Request) {
-	s.handleImg(config.Portrait, w, r)
-}
-
-func (s *mserver) handleLandscape(w http.ResponseWriter, r *http.Request) {
-	s.handleImg(config.Landscape, w, r)
-}
-
-func (s *mserver) handleSquare(w http.ResponseWriter, r *http.Request) {
-	s.handleImg(config.Square, w, r)
-}
-
-func (s *mserver) handleThumb(w http.ResponseWriter, r *http.Request) {
-	s.handleImg(config.Thumb, w, r)
 }
 
 func (s *mserver) handleUpdatePhoto(r *http.Request) (interface{}, error) {
@@ -291,20 +243,3 @@ func (s *mserver) handleUpdatePhotoPrivate(r *http.Request) (interface{}, error)
 		return s.pg.Photo.SetPrivate(!photo.Private, photo.Id)
 	}
 }
-
-/*
-func cameraPath(s *mserver, fileName string) string {
-	return filepath.Join(s.cameraDir, fileName)
-}
-
-func imgPath(s *mserver, fileName string) string {
-	return filepath.Join(s.imgDir, fileName)
-}
-*/
-
-/*
-func thumbPath(s *mserver, fileName string) string {
-	return filepath.Join(s.thumbDir, fileName)
-}
-
-*/

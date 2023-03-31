@@ -54,12 +54,20 @@ func (dao *AlbumPG) Photos(id uuid.UUID, private bool) ([]*Photo, error) {
 }
 
 func (dao *AlbumPG) Delete(id uuid.UUID) error {
-	stmt := `
-DELETE FROM album WHERE id = $1;
-DELETE FROM albumphotos WHERE albumId = $1;
-`
-	_, err := dao.db.Exec(stmt, id)
-	return err
+
+	if _, err := dao.db.Exec("DELETE FROM album WHERE id = $1", id); err == nil {
+		_, err1 := dao.db.Exec("DELETE FROM albumphotos WHERE albumId = $1", id)
+		return err1
+	} else {
+		return err
+	}
+
+	/*stmt := `
+	DELETE FROM album WHERE id = $1;
+	DELETE FROM albumphotos WHERE albumId = $1;
+	`
+		_, err := dao.db.Exec(stmt, id)
+		return err*/
 
 }
 
