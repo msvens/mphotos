@@ -1,7 +1,7 @@
 package server
 
 import (
-    "fmt"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/msvens/mimage/metadata"
 	"github.com/msvens/mphotos/internal/config"
@@ -183,8 +183,8 @@ func listDriveFiles(s *mserver) ([]*drive.File, error) {
 
 func searchDriveFiles(s *mserver, id string, name string) ([]*drive.File, error) {
 	if s.ds == nil {
-        return nil, UnauthorizedError("No Drive Service Connected")
-    }
+		return nil, UnauthorizedError("No Drive Service Connected")
+	}
 	if name != "" {
 		if f, err := s.ds.GetByName(name, true, false, fileFields); err != nil {
 			return nil, err
@@ -218,7 +218,7 @@ func toDriveFiles(files []*drive.File) *DriveFiles {
 	return &ret
 }
 
-//async
+// async
 func (s *mserver) handleScheduleDriveJob(_ *http.Request) (interface{}, error) {
 	fl, err := checkDrivePhotos(s)
 	if err != nil {
@@ -295,7 +295,6 @@ func process(job *Job) {
 		job.NumProcessed = job.NumProcessed + 1
 		percent := float64(job.NumProcessed) / float64(job.NumFiles)
 		job.Percent = int(math.Round(percent * 100))
-		//fmt.Println(job.Percent, job.NumFiles, job.NumProcessed)
 		job.s.l.Debugw("", "jobid", job.Id, "progress", job.Percent)
 	}
 	finishJob(job, nil)

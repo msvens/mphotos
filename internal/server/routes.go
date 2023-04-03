@@ -18,8 +18,8 @@ func (s *mserver) routes() {
 	s.mGET("/cameras").HandlerFunc(s.mResponse(s.handleCameras))
 	s.mGET("/cameras/{id}").HandlerFunc(s.mResponse(s.handleCamera))
 	s.mPUT("/cameras/{id}").HandlerFunc(s.authOnly(s.handleUpdateCamera))
-	s.mGET("/cameras/{id}/image").HandlerFunc(s.handleCameraImage)
 	s.mGET("/cameras/{id}/image/{size}").HandlerFunc(s.handleCameraImage)
+	s.mGET("/cameras/{id}/image").HandlerFunc(s.handleCameraImage)
 	s.mPUT("/cameras/{id}/image/upload").HandlerFunc(s.authOnly(s.uploadCameraImageFromFile))
 	s.mPUT("/cameras/{id}/image").HandlerFunc(s.authOnly(s.uploadCameraImageFromURL))
 

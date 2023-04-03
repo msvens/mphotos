@@ -88,7 +88,7 @@ func (dao *CameraPG) Update(camera *Camera) (*Camera, error) {
 }
 
 func (dao *CameraPG) UpdateImage(img, id string) (*Camera, error) {
-	if _, err := dao.db.Exec("UPDATE cameras SET image = $1 WHERE id = $2", img, id); err != nil {
+	if _, err := dao.db.Exec("UPDATE camera SET image = $1 WHERE id = $2", img, id); err != nil {
 		return nil, err
 	}
 	return dao.Get(id)

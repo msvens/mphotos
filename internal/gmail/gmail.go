@@ -46,7 +46,6 @@ func (gs *GmailService) SendTextMessage(to string, subject string, body string) 
 	subj := "Subject: " + subject + "\n"
 	mime := MIME_TXT
 	msg := []byte(emailFrom + emailTo + subj + mime + "\n" + body)
-	fmt.Println(subj, emailTo, body)
 	var message gmail.Message
 	message.Raw = base64.URLEncoding.EncodeToString(msg)
 	_, err := gs.service.Users.Messages.Send("me", &message).Do()

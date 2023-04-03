@@ -46,7 +46,6 @@ func (dao *AlbumPG) Photos(id uuid.UUID, private bool) ([]*Photo, error) {
 	ret := []*Photo{}
 	stmt := "SELECT * FROM img WHERE private = false AND id IN (SELECT photoId FROM albumphotos WHERE albumId = $1)"
 	if private {
-		fmt.Println("executing private...")
 		stmt = "SELECT * FROM img WHERE id IN (SELECT photoId FROM albumphotos WHERE albumId = $1)"
 	}
 	err := dao.db.Select(&ret, stmt, id)

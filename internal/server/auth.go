@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/msvens/mphotos/internal/config"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -32,7 +31,6 @@ func (s *mserver) handleLogin(w http.ResponseWriter, r *http.Request) (interface
 		if e := session.Save(r, w); e != nil {
 			return nil, InternalError(e.Error())
 		}
-		fmt.Println("password", loginParams.Password)
 		return nil, UnauthorizedError("Incorret user password")
 	}
 	user := &AuthUser{true}

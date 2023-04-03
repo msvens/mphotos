@@ -3,6 +3,7 @@ module github.com/msvens/mphotos
 go 1.19
 
 require (
+	github.com/disintegration/imaging v1.6.2
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/schema v1.2.0
@@ -10,7 +11,7 @@ require (
 	github.com/jackc/pgx/v4 v4.14.0
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/msvens/mimage v0.0.12
+	github.com/msvens/mimage v0.0.15
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.0
 	go.uber.org/zap v1.19.1
@@ -22,7 +23,6 @@ require (
 require (
 	cloud.google.com/go v0.99.0 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
-	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/dsoprea/go-exif/v3 v3.0.0-20210625224831-a6301f85c82b // indirect
 	github.com/dsoprea/go-iptc v0.0.0-20200610044640-bc9ca208b413 // indirect
 	github.com/dsoprea/go-jpeg-image-structure/v2 v2.0.0-20210512043942-b434301c6836 // indirect

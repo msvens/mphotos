@@ -12,7 +12,7 @@ import (
 	"os"
 )
 
-//var cameraSizes []int = []int{48, 192, 512}
+// var cameraSizes []int = []int{48, 192, 512}
 var cameraSizes = []img.Options{
 	img.NewOptions(img.Resize, 48, 0, false),
 	img.NewOptions(img.Resize, 192, 0, false),
@@ -63,11 +63,6 @@ func (s *mserver) handleCameraImage(w http.ResponseWriter, r *http.Request) {
 			fname = fmt.Sprint(id, "-", size, camera.Image)
 		}
 		http.ServeFile(w, r, config.CameraFilePath(fname))
-		/*if size > 0 {
-			imgPath = cameraPath(s, fmt.Sprint(id, "-", size, camera.Image))
-		} else {
-			imgPath = cameraPath(s, fmt.Sprint(id, camera.Image))
-		}*/
 
 		http.ServeFile(w, r, imgPath)
 	}
@@ -84,6 +79,7 @@ func (s *mserver) uploadCameraImageFromFile(r *http.Request) (interface{}, error
 	if err != nil {
 		return nil, err
 	}
+
 	defer file.Close()
 
 	//Detect type
@@ -116,7 +112,7 @@ func (s *mserver) uploadCameraImageFromFile(r *http.Request) (interface{}, error
 	src := config.CameraFilePath(fileName)
 	sizes := make(map[string]img.Options)
 	for _, size := range cameraSizes {
-		sizes[config.CameraFilePath(fmt.Sprint(id, "-", size, ext))] = size
+		sizes[config.CameraFilePath(fmt.Sprint(id, "-", size.Width, ext))] = size
 		//sizes[cameraPath(s, fmt.Sprint(id, "-", size, ext))] = size
 	}
 

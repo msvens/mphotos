@@ -71,7 +71,6 @@ func (s *mserver) handleUploadLocalPhoto(r *http.Request) (interface{}, error) {
 			fmt.Println(err.Error())
 		}
 	}
-	fmt.Println(sourceId, " ", sourceDateStr)
 
 	photo := dao.Photo{}
 	photo.Id = uuid.New()
@@ -102,6 +101,7 @@ func (s *mserver) handleUploadLocalPhoto(r *http.Request) (interface{}, error) {
 	}
 
 	var md *metadata.MetaData
+
 	if md, err = metadata.NewMetaDataFromFile(config.PhotoFilePath(config.Original, photo.FileName)); err == nil {
 		photo.CameraMake = md.Summary().CameraMake
 		photo.CameraModel = md.Summary().CameraModel
