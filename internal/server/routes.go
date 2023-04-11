@@ -11,6 +11,7 @@ func (s *mserver) routes() {
 	s.mGET("/albums/{id}").HandlerFunc(s.loginInfo(s.handleAlbum))
 	s.mDELETE("/albums/{id}").HandlerFunc(s.authOnly(s.handleDeleteAlbum))
 	s.mPUT("/albums/{id}").HandlerFunc(s.authOnly(s.handleUpdateAlbum))
+	s.mPUT("/albums/{id}/order").HandlerFunc(s.authOnly(s.handleUpdateOrder))
 
 	//s.path("/auth/login").HandlerFunc(s.handleGoogleLogin)
 	s.path("/auth/callback").HandlerFunc(s.handleGoogleCallback)

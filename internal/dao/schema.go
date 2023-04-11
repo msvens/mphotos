@@ -1,6 +1,9 @@
 package dao
 
-const schemaV1 = `
+const schemaV1toV2 = `
+	ALTER TABLE albumphotos ADD COLUMN photoOrder INTEGER;
+`
+const schemaV2 = `
 CREATE TABLE IF NOT EXISTS album (
 	Id UUID,
 	name TEXT,
@@ -12,6 +15,7 @@ CREATE TABLE IF NOT EXISTS album (
 CREATE TABLE IF NOT EXISTS albumphotos (
 	albumId UUID,
 	photoId UUID,
+	photoOrder INTEGER,
 	PRIMARY KEY (albumId, photoId)
 );
 
@@ -131,12 +135,12 @@ CREATE TABLE version (
 );
 
 
-INSERT INTO version (versionId,description) VALUES (0,'before versioning') ON CONFLICT (id) DO NOTHING;
+INSERT INTO version (versionId,description) VALUES (0,'no version set') ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO usert (id, name, bio, pic, driveFolderId, driveFolderName, config) VALUES (23657, '', '', '', '','','{}') ON CONFLICT (id) DO NOTHING;
 `
 
-const deleteSchemaV1 = `
+const deleteSchemaV2 = `
 DROP TABLE IF EXISTS album;
 DROP TABLE IF EXISTS albumphotos;
 DROP TABLE IF EXISTS camera;
