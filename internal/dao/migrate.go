@@ -10,7 +10,63 @@ import (
 	"time"
 )
 
+// for now this is just hard coded
+func canUpgradeDb(pgdb *PGDB) bool {
+	if v, err := pgdb.Version.Get(); err != nil {
+		fmt.Println("could not get Version info: ", err)
+		return false
+	} else {
+		return v.VersionId+1 == DbVersion
+	}
+}
+
 func UpgradeDb() error {
+	var err error
+	var pgdb *PGDB
+	if pgdb, err = NewPGDB(); err != nil {
+		return err
+	}
+	hasVersion := pgdb.tableExists("version")
+	hasPhotos := pgdb.tableExists("photos")
+	if hasVersion {
+		if isCurrent, err := pgdb.Version.IsCurrent(); err != nil {
+			return err
+		} else if isCurrent {
+			fmt.Println("Database is up to date")
+			return nil
+		} else if canUpgradeDb(pgdb) {
+			return upgrade(pgdb)
+		} else {
+			return fmt.Errorf("Cannot upgrade database, wrong current version")
+		}
+	} else if hasPhotos {
+		return fmt.Errorf("Cannot upgrade database")
+	} else {
+		fmt.Println("No database exists. Creating a fresh db")
+		if err = pgdb.CreateTables(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func upgrade(pgdb *PGDB) error {
+	fmt.Println("Upgrading Db to Version: ", DbVersion)
+	var err error
+	_, err = pgdb.db.Exec(schemaV1toV2)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Db Updated. Change Version Info")
+	if v, err := pgdb.Version.Update(); err != nil {
+		return err
+	} else {
+		fmt.Println("Updated Db to version: ", v.VersionId)
+	}
+	return nil
+}
+
+func UpgradeDbOld() error {
 	var err error
 	var pgdb *PGDB
 	if pgdb, err = NewPGDB(); err != nil {
@@ -266,9 +322,6 @@ func migrateComments(pgdb *PGDB) error {
 			}
 		}
 	}
-	/*for _, oldcomment := range oldcomments {
-		pgdb.Comment.Add()
-	}*/
 	return nil
 }
 
@@ -336,22 +389,6 @@ func migratePhotos(pgdb *PGDB) error {
 		return path.Join(config.ServicePath("img"), fName)
 	}
 
-	/*renameImg := func(oldName, newName string) error {
-		imgDirs := []string{"img", "thumb", "landscape", "square", "portrait", "resize"}
-		for _, imgD := range imgDirs {
-			oldImg := path.Join(config.ServicePath(imgD), oldName)
-			newImg := path.Join(config.ServicePath(imgD), newName)
-			_, e1 := os.Stat(oldImg)
-			if e1 != nil {
-				return e1
-			}
-			e1 = os.Rename(oldImg, newImg)
-			if e1 != nil {
-				return e1
-			}
-		}
-		return nil
-	}*/
 	renameImg := func(oldName, newName string) error {
 		oldImg := config.PhotoFilePath(config.Original, oldName)
 		newImg := config.PhotoFilePath(config.Original, newName)

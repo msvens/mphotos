@@ -16,6 +16,7 @@ import (
 type AlbumDAO interface {
 	Add(name, description, coverpic string) (*Album, error)
 	Get(id uuid.UUID) (*Album, error)
+	GetOrder(id uuid.UUID) ([]uuid.UUID, error)
 	List() ([]*Album, error)
 	Photos(id uuid.UUID, private bool) ([]*Photo, error)
 	Delete(id uuid.UUID) error
@@ -23,6 +24,7 @@ type AlbumDAO interface {
 	HasByName(name string) bool
 	Albums(photoId uuid.UUID) ([]*Album, error)
 	Update(album *Album) (*Album, error)
+	UpdateOrder(id uuid.UUID, photoIds []uuid.UUID) (*Album, error)
 	UpdatePhoto(albumIds []uuid.UUID, photoId uuid.UUID) error
 }
 
@@ -164,11 +166,18 @@ func (pgd *PGDB) tableExists(table string) bool {
 
 func (pgd *PGDB) CreateTables() error {
 	//pgd.db.MustExec(schemaV1)
-	_, err := pgd.db.Exec(schemaV1)
-	return err
+	if _, err := pgd.db.Exec(schemaV2); err != nil {
+		return err
+	} else { //make sure version is correct
+		_, err = pgd.Version.Update()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (pgd *PGDB) DeleteTables() error {
-	_, err := pgd.db.Exec(deleteSchemaV1)
+	_, err := pgd.db.Exec(deleteSchemaV2)
 	return err
 }

@@ -79,3 +79,25 @@ func (s *mserver) handleUpdateAlbum(r *http.Request) (interface{}, error) {
 		return nil, NotFoundError("Album not found")
 	}
 }
+
+func (s *mserver) handleUpdateOrder(r *http.Request) (interface{}, error) {
+	type request struct {
+		Photos []uuid.UUID
+	}
+	var param request
+	var id uuid.UUID
+	var err error
+	if err = decodeRequest(r, &param); err != nil {
+		return nil, err
+	}
+	id, err = uuid.Parse(Var(r, "id"))
+	if err != nil {
+		return nil, BadRequestError("Could not parse album id")
+	}
+	if s.pg.Album.Has(id) {
+		return s.pg.Album.UpdateOrder(id, param.Photos)
+	} else {
+		return nil, NotFoundError("Album not found")
+	}
+
+}

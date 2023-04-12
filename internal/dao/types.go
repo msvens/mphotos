@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-const DbVersion = 1
-const DbDescription = "Initial Db with version information"
+const DbVersion = 2
+const DbDescription = "Version 2 adds sorting order to album photos"
 
 type Album struct {
 	Id          uuid.UUID `json:"id"`
@@ -62,7 +62,7 @@ type Comment struct {
 }
 
 type Exif struct {
-	Id   uuid.UUID                 `json:"id"`
+	Id   uuid.UUID         `json:"id"`
 	Data *metadata.Summary `json:"data"`
 }
 
