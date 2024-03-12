@@ -45,5 +45,4 @@ func (dao *VersionPG) IsCurrent() (bool, error) {
 	} else {
 		return v.VersionId == DbVersion, nil
 	}
-
 }

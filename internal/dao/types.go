@@ -6,14 +6,16 @@ import (
 	"time"
 )
 
-const DbVersion = 2
-const DbDescription = "Version 2 adds sorting order to album photos"
+const DbVersion = 3
+const DbDescription = "Version 3 adds simple access control to albums and makes public access based on a default photo stream album"
 
 type Album struct {
-	Id          uuid.UUID `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	CoverPic    string    `json:"coverPic"`
+	Id          uuid.UUID  `json:"id"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	CoverPic    string     `json:"coverPic"`
+	Code        string     `json:"code"`
+	OrderBy     PhotoOrder `json:"orderBy"`
 }
 
 type Camera struct {
@@ -107,11 +109,11 @@ type Photo struct {
 	FNumber  float32 `json:"fNumber"`
 	Width    uint    `json:"width"`
 	Height   uint    `json:"height"`
-	Private  bool    `json:"private"`
+	//Private  bool    `json:"private"`
 }
 
 type PhotoFilter struct {
-	Private     bool
+	//Private     bool
 	CameraModel string
 }
 
@@ -121,6 +123,7 @@ const (
 	None PhotoOrder = iota
 	UploadDate
 	OriginalDate
+	ManualOrder
 )
 
 type Range struct {

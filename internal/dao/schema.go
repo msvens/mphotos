@@ -1,14 +1,21 @@
 package dao
 
+const schemaV2toV3 = `
+	ALTER TABLE album ADD COLUMN code TEXT, ADD COLUMN orderBy INTEGER;
+	UPDATE album SET code = '', orderBy = 0;
+	ALTER TABLE album ALTER COLUMN code SET NOT NULL, ALTER COLUMN orderBy SET NOT NULL;
+`
 const schemaV1toV2 = `
 	ALTER TABLE albumphotos ADD COLUMN photoOrder INTEGER;
 `
-const schemaV2 = `
+const schemaV3 = `
 CREATE TABLE IF NOT EXISTS album (
 	Id UUID,
 	name TEXT,
 	description TEXT NOT NULL,
 	coverPic TEXT NOT NULL,
+	code TEXT NOT NULL,
+	orderBy INTEGER NOT NULL,
 	CONSTRAINT album_name UNIQUE (name)
 );
 
@@ -113,8 +120,7 @@ CREATE TABLE IF NOT EXISTS img (
 	fNumber REAL NOT NULL,
 	exposure TEXT NOT NULL,
 	width INTEGER NOT NULL,
-	height INTEGER NOT NULL,
-	private BOOLEAN NOT NULL
+	height INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS usert (
@@ -136,11 +142,10 @@ CREATE TABLE version (
 
 
 INSERT INTO version (versionId,description) VALUES (0,'no version set') ON CONFLICT (id) DO NOTHING;
-
 INSERT INTO usert (id, name, bio, pic, driveFolderId, driveFolderName, config) VALUES (23657, '', '', '', '','','{}') ON CONFLICT (id) DO NOTHING;
 `
 
-const deleteSchemaV2 = `
+const deleteSchemaV3 = `
 DROP TABLE IF EXISTS album;
 DROP TABLE IF EXISTS albumphotos;
 DROP TABLE IF EXISTS camera;

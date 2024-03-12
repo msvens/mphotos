@@ -36,6 +36,81 @@ func (dao *PhotoPG) Add(p *Photo, exif *metadata.Summary) error {
 	return err
 }
 
+func (dao *PhotoPG) Albums(id uuid.UUID) ([]*Album, error) {
+	if !dao.Has(id) {
+		return nil, fmt.Errorf("No Such Photo")
+	}
+	ret := []*Album{}
+	//TODO: change to a join for consistency
+	stmt := "SELECT * FROM album WHERE id IN (select albumId FROM albumphotos WHERE photoId = $1)"
+	err := dao.db.Select(&ret, stmt, id)
+	return ret, err
+}
+
+func (dao *PhotoPG) AddAlbums(id uuid.UUID, albumIds []uuid.UUID) (int, error) {
+	if !dao.Has(id) {
+		return 0, fmt.Errorf("Could not find photo")
+	}
+
+	//check if all albums
+	query, args, err := sqlx.In("SELECT COUNT(*) FROM album WHERE id IN (?)", albumIds)
+	if err != nil {
+		return 0, err
+	}
+	query = dao.db.Rebind(query)
+	var count int
+	err = dao.db.QueryRowx(query, args...).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	if count != len(albumIds) {
+		return 0, fmt.Errorf("Missing photos")
+	}
+
+	//now insert images
+	var added int64
+	insStmt := "INSERT INTO albumphotos (albumId, photoId) VALUES ($1, $2) ON CONFLICT DO NOTHING"
+	//now insert images
+	for _, aid := range albumIds {
+		if res, err := dao.db.Exec(insStmt, aid, id); err == nil {
+			r, _ := res.RowsAffected()
+			added += r
+		} else {
+			return int(added), err
+		}
+	}
+	return int(added), nil
+}
+
+func (dao *PhotoPG) ClearAlbums(id uuid.UUID) (int, error) {
+	if !dao.Has(id) {
+		return 0, fmt.Errorf("Could not find photo")
+	}
+	if res, err := dao.db.Exec("DELETE FROM albumphotos WHERE photoId = $1", id); err != nil {
+		return 0, err
+	} else {
+		rows, _ := res.RowsAffected()
+		return int(rows), nil
+	}
+}
+
+func (dao *PhotoPG) DeleteAlbums(id uuid.UUID, albumIds []uuid.UUID) (int, error) {
+	if !dao.Has(id) {
+		return 0, fmt.Errorf("Could not find photo")
+	}
+	var deleted int64
+	delStmt := "DELETE FROM albumphotos WHERE albumId = $1 AND photoId = $2"
+	for _, aid := range albumIds {
+		if res, err := dao.db.Exec(delStmt, aid, id); err == nil {
+			r, _ := res.RowsAffected()
+			deleted += r
+		} else {
+			return int(deleted), err
+		}
+	}
+	return int(deleted), nil
+}
+
 func (dao *PhotoPG) Delete(id uuid.UUID) (bool, error) {
 
 	deleted := false
@@ -72,11 +147,8 @@ func (dao *PhotoPG) Exif(id uuid.UUID) (*Exif, error) {
 	return &resp, nil
 }
 
-func (dao *PhotoPG) Has(id uuid.UUID, private bool) bool {
-	stmt := "SELECT 1 FROM img WHERE id = $1 AND private = false"
-	if private {
-		stmt = "SELECT 1 FROM img WHERE id = $1"
-	}
+func (dao *PhotoPG) Has(id uuid.UUID) bool {
+	stmt := "SELECT 1 FROM img WHERE id = $1"
 	if rows, err := dao.db.Query(stmt, id); err == nil {
 		defer rows.Close()
 		return rows.Next()
@@ -94,19 +166,16 @@ func (dao *PhotoPG) HasMd5(md5 string) bool {
 	}
 }
 
-func (dao *PhotoPG) Get(id uuid.UUID, private bool) (*Photo, error) {
+func (dao *PhotoPG) Get(id uuid.UUID) (*Photo, error) {
 	ret := &Photo{}
-	stmt := "SELECT * FROM img WHERE id = $1 AND private = false"
-	if private {
-		stmt = "SELECT * FROM img WHERE id = $1"
-	}
+	stmt := "SELECT * FROM img WHERE id = $1"
 	err := dao.db.Get(ret, stmt, id)
 	return ret, err
 }
 
 func (dao *PhotoPG) List() ([]*Photo, error) {
 	ret := []*Photo{}
-	err := dao.db.Select(&ret, "SELECT * FROM img")
+	err := dao.db.Select(&ret, "SELECT * FROM img ORDER BY uploaddate DESC")
 	return ret, err
 }
 
@@ -116,6 +185,7 @@ func (dao *PhotoPG) ListSource(source string) ([]*Photo, error) {
 	return ret, err
 }
 
+/*
 func (dao *PhotoPG) Select(r Range, order PhotoOrder, filter PhotoFilter) ([]*Photo, error) {
 	var stmt strings.Builder
 	stmt.WriteString("SELECT * FROM img")
@@ -147,6 +217,7 @@ func (dao *PhotoPG) Select(r Range, order PhotoOrder, filter PhotoFilter) ([]*Ph
 	}
 	return ret, err
 }
+*/
 
 func (dao *PhotoPG) Set(title string, description string, keywords []string, id uuid.UUID) (*Photo, error) {
 	//join keywords
@@ -161,12 +232,52 @@ func (dao *PhotoPG) Set(title string, description string, keywords []string, id 
 	if _, err := dao.db.Exec(stmt, title, description, b.String(), id); err != nil {
 		return nil, err
 	}
-	return dao.Get(id, true)
+	return dao.Get(id)
 }
 
+func (dao *PhotoPG) SetAlbums(id uuid.UUID, albumIds []uuid.UUID) (int, error) {
+	if _, err := dao.ClearAlbums(id); err != nil {
+		return 0, err
+	} else {
+		return dao.AddAlbums(id, albumIds)
+	}
+
+}
+
+/*
+// Deprecated
+func (dao *AlbumPG) UpdatePhoto(albumIds []uuid.UUID, photoId uuid.UUID) error {
+	//check img
+	if !has(dao.db, "img", "id", photoId) {
+		return fmt.Errorf("photoId does not exist")
+	}
+
+	//check album Ids
+	for _, id := range albumIds {
+		if !dao.Has(id) {
+			return fmt.Errorf("non existent album")
+		}
+	}
+	if _, err := dao.db.Exec("DELETE FROM albumphotos WHERE photoId = $1", photoId); err != nil {
+		return err
+	}
+
+	const addAlbumPhoto = "INSERT INTO albumphotos (albumId, photoId) VALUES ($1, $2)"
+	for _, a := range albumIds {
+		if _, err := dao.db.Exec(addAlbumPhoto, a, photoId); err != nil {
+			return nil
+		}
+	}
+	return nil
+}
+
+*/
+
+/*
 func (dao *PhotoPG) SetPrivate(private bool, id uuid.UUID) (*Photo, error) {
 	if _, err := dao.db.Exec("UPDATE img SET private = $1 WHERE id = $2", private, id); err != nil {
 		return nil, err
 	}
 	return dao.Get(id, true)
 }
+*/

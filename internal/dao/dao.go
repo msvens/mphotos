@@ -15,17 +15,21 @@ import (
 
 type AlbumDAO interface {
 	Add(name, description, coverpic string) (*Album, error)
-	Get(id uuid.UUID) (*Album, error)
-	GetOrder(id uuid.UUID) ([]uuid.UUID, error)
-	List() ([]*Album, error)
-	Photos(id uuid.UUID, private bool) ([]*Photo, error)
+	AddPhotos(id uuid.UUID, photoIds []uuid.UUID) (int, error)
+	ClearPhotos(id uuid.UUID) (int, error)
 	Delete(id uuid.UUID) error
+	DeletePhotos(id uuid.UUID, photoIds []uuid.UUID) (int, error)
+	Get(id uuid.UUID) (*Album, error)
+	GetByName(name string) (*Album, error)
+	GetOrder(id uuid.UUID) ([]uuid.UUID, error)
 	Has(id uuid.UUID) bool
 	HasByName(name string) bool
-	Albums(photoId uuid.UUID) ([]*Album, error)
+	List() ([]*Album, error)
+	Photos(id uuid.UUID) ([]*Photo, error)
+	SelectPhotos(id uuid.UUID, filter PhotoFilter, r Range, order PhotoOrder) ([]*Photo, error)
+	SetPhotos(id uuid.UUID, photoIds []uuid.UUID) (int, error)
 	Update(album *Album) (*Album, error)
 	UpdateOrder(id uuid.UUID, photoIds []uuid.UUID) (*Album, error)
-	UpdatePhoto(albumIds []uuid.UUID, photoId uuid.UUID) error
 }
 
 type CameraDAO interface {
@@ -77,16 +81,21 @@ type ReactionDAO interface {
 
 type PhotoDAO interface {
 	Add(p *Photo, exif *metadata.Summary) error
+	Albums(photoId uuid.UUID) ([]*Album, error)
+	AddAlbums(id uuid.UUID, albumIds []uuid.UUID) (int, error)
+	ClearAlbums(id uuid.UUID) (int, error)
 	Delete(id uuid.UUID) (bool, error)
+	DeleteAlbums(id uuid.UUID, albumIds []uuid.UUID) (int, error)
 	Exif(id uuid.UUID) (*Exif, error)
-	Has(id uuid.UUID, private bool) bool
+	Has(id uuid.UUID) bool
 	HasMd5(md5 string) bool
-	Get(id uuid.UUID, private bool) (*Photo, error)
+	Get(id uuid.UUID) (*Photo, error)
 	List() ([]*Photo, error)
 	ListSource(source string) ([]*Photo, error)
-	Select(r Range, order PhotoOrder, filter PhotoFilter) ([]*Photo, error)
-	SetPrivate(private bool, id uuid.UUID) (*Photo, error)
+	//Select(r Range, order PhotoOrder, filter PhotoFilter) ([]*Photo, error)
+	//SetPrivate(private bool, id uuid.UUID) (*Photo, error)
 	Set(title string, description string, keywords []string, id uuid.UUID) (*Photo, error)
+	SetAlbums(id uuid.UUID, albumIds []uuid.UUID) (int, error)
 }
 
 type UserDAO interface {
@@ -166,7 +175,7 @@ func (pgd *PGDB) tableExists(table string) bool {
 
 func (pgd *PGDB) CreateTables() error {
 	//pgd.db.MustExec(schemaV1)
-	if _, err := pgd.db.Exec(schemaV2); err != nil {
+	if _, err := pgd.db.Exec(schemaV3); err != nil {
 		return err
 	} else { //make sure version is correct
 		_, err = pgd.Version.Update()
@@ -178,6 +187,6 @@ func (pgd *PGDB) CreateTables() error {
 }
 
 func (pgd *PGDB) DeleteTables() error {
-	_, err := pgd.db.Exec(deleteSchemaV2)
+	_, err := pgd.db.Exec(deleteSchemaV3)
 	return err
 }
