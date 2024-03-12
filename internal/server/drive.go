@@ -115,12 +115,12 @@ func addDrivePhoto(s *mserver, f *drive.File) (bool, error) {
 	} else {
 		return false, err
 	}
-	photo.Private = true
 
 	if err = s.pg.Photo.Add(&photo, md.Summary()); err != nil {
 		s.l.Errorw("error adding img: ", zap.Error(err))
 		return false, err
 	}
+
 	if !s.pg.Camera.HasModel(photo.CameraModel) {
 		if err = s.pg.Camera.AddFromPhoto(&photo); err != nil {
 			s.l.Fatalw("error adding camera model: ", zap.Error(err))
@@ -236,7 +236,7 @@ func (s *mserver) handleScheduleDriveJob(_ *http.Request) (interface{}, error) {
 }
 
 func (s *mserver) handleStatusDriveJob(r *http.Request) (interface{}, error) {
-	if job, found := jobMap[Var(r, "id")]; found {
+	if job, found := jobMap[Var(r, "jobid")]; found {
 		return job, nil
 	} else {
 		return nil, NotFoundError("job not found")

@@ -80,7 +80,6 @@ func (s *mserver) handleUploadLocalPhoto(r *http.Request) (interface{}, error) {
 	photo.SourceDate = sourceDate
 	photo.UploadDate = time.Now()
 	photo.FileName = photo.Id.String() + ".jpg"
-	photo.Private = true
 
 	if _, err = file.Seek(0, io.SeekStart); err != nil {
 		return nil, err

@@ -35,11 +35,11 @@ func (s *mserver) handleDeletePhoto(r *http.Request) (interface{}, error) {
 		RemoveFiles bool `json:"removeFiles" schema:"removeFiles"`
 	}
 
-	id, err := uuid.Parse(Var(r, "id"))
+	id, err := uuid.Parse(Var(r, "photoid"))
 	if err != nil {
 		return nil, BadRequestError("Could not parse Id")
 	}
-	if photo, err := s.pg.Photo.Get(id, true); err != nil {
+	if photo, err := s.pg.Photo.Get(id); err != nil {
 		return nil, err
 	} else {
 		var params request
@@ -72,56 +72,118 @@ func (s *mserver) handleDeletePhotos(r *http.Request) (interface{}, error) {
 }
 
 func (s *mserver) handleDownloadPhoto(w http.ResponseWriter, r *http.Request) {
-	id, err := uuid.Parse(Var(r, "id"))
+	/*if loggedIn := ctxLoggedIn(r.Context()); !loggedIn {
+		http.Error(w, "User not logged in", http.StatusUnauthorized)
+		return
+	}*/
+
+	id, err := uuid.Parse(Var(r, "photoid"))
 	if err != nil {
 		http.Error(w, "Could not parse Id", http.StatusBadRequest)
 		return
 	}
-	loggedIn := ctxLoggedIn(r.Context())
-	p, err := s.pg.Photo.Get(id, loggedIn)
+	p, err := s.pg.Photo.Get(id)
 	if err != nil {
 		http.Error(w, "file not found", http.StatusNotFound)
 		return
 	}
 	http.ServeFile(w, r, config.PhotoFilePath(config.Original, p.FileName))
-	//file, err := os.Open(imgPath(s, p.FileName))
-	/*file, err := os.Open(config.PhotoFilePath(config.Original, p.FileName))
-	if err != nil {
-		s.l.Infow("could not download file", zap.Error(err))
-		http.Error(w, "File not found.", http.StatusNotFound)
-		return
-	}
-	defer file.Close() //Close after function return
-	FileHeader := make([]byte, 512)
-
-	//Copy the headers into the FileHeader buffer
-	file.Read(FileHeader)
-
-	//Get content type of file
-	FileContentType := http.DetectContentType(FileHeader)
-
-	//Get the file size
-	FileStat, _ := file.Stat()                         //Get info from file
-	FileSize := strconv.FormatInt(FileStat.Size(), 10) //Get file size as a string
-
-	//Send the headers
-	//w.Header().Set("Content-Disposition", "attachment; filename="+path.Base(p.Path))
-	w.Header().Set("Content-Type", FileContentType)
-	w.Header().Set("Content-Length", FileSize)
-
-	//Send the file
-	//We read 512 bytes from the file already, so we reset the offset back to 0
-	file.Seek(0, 0)
-	io.Copy(w, file) //'Copy' the file to the client
-	return*/
 }
 
-func (s *mserver) handleExif(r *http.Request, loggedIn bool) (interface{}, error) {
-	id, err := uuid.Parse(Var(r, "id"))
+func (s *mserver) handlePhotoAlbums(r *http.Request, loogedIn bool) (interface{}, error) {
+	id, err := uuid.Parse(Var(r, "photoid"))
+	if err != nil {
+		return nil, BadRequestError("could not parse img id")
+	}
+	albums, err := s.pg.Photo.Albums(id)
+	if err != nil {
+		return nil, err
+	}
+	if !loogedIn {
+		for i, _ := range albums {
+			albums[i].Code = ""
+		}
+	}
+	return albums, nil
+}
+
+func (s *mserver) handleAddPhotoAlbums(r *http.Request) (interface{}, error) {
+	type request struct {
+		AlbumIds []uuid.UUID
+	}
+	id, err := uuid.Parse(Var(r, "photoid"))
+	if err != nil {
+		return nil, BadRequestError("Could not parse album id")
+	}
+	var param request
+	if err = decodeRequest(r, &param); err != nil {
+		return nil, err
+	}
+	rows, err := s.pg.Photo.AddAlbums(id, param.AlbumIds)
+	if err != nil {
+		return nil, err
+	}
+
+	return AffectedItems{NumItems: rows}, err
+}
+
+func (s *mserver) handleClearPhotoAlbums(r *http.Request) (interface{}, error) {
+	id, err := uuid.Parse(Var(r, "photoid"))
+	if err != nil {
+		return nil, BadRequestError("Could not parse album id")
+	}
+	rows, err := s.pg.Photo.ClearAlbums(id)
+	if err != nil {
+		return nil, err
+	}
+	return AffectedItems{NumItems: rows}, err
+}
+
+func (s *mserver) handleDeletePhotoAlbums(r *http.Request) (interface{}, error) {
+	type request struct {
+		AlbumIds []uuid.UUID
+	}
+	id, err := uuid.Parse(Var(r, "photoid"))
+	if err != nil {
+		return nil, BadRequestError("Could not parse album id")
+	}
+	var param request
+	if err = decodeRequest(r, &param); err != nil {
+		return nil, err
+	}
+	rows, err := s.pg.Photo.DeleteAlbums(id, param.AlbumIds)
+	if err != nil {
+		return nil, err
+	}
+
+	return AffectedItems{NumItems: rows}, err
+}
+
+func (s *mserver) handleSetPhotoAlbums(r *http.Request) (interface{}, error) {
+	type request struct {
+		AlbumIds []uuid.UUID
+	}
+	id, err := uuid.Parse(Var(r, "photoid"))
+	if err != nil {
+		return nil, BadRequestError("Could not parse album id")
+	}
+	var param request
+	if err = decodeRequest(r, &param); err != nil {
+		return nil, err
+	}
+	rows, err := s.pg.Photo.SetAlbums(id, param.AlbumIds)
+	if err != nil {
+		return nil, err
+	}
+	return AffectedItems{NumItems: rows}, err
+}
+
+func (s *mserver) handleExif(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	id, err := uuid.Parse(Var(r, "photoid"))
 	if err != nil {
 		return nil, BadRequestError("Could not parse Id")
 	}
-	if !loggedIn && !s.pg.Photo.Has(id, false) {
+	if !s.pg.Photo.Has(id) {
 		return nil, NotFoundError("could not find img")
 	}
 	if exif, err := s.pg.Photo.Exif(id); err != nil {
@@ -131,6 +193,7 @@ func (s *mserver) handleExif(r *http.Request, loggedIn bool) (interface{}, error
 	}
 }
 
+/*
 func (s *mserver) handleLatestPhoto(_ *http.Request, loggedIn bool) (interface{}, error) {
 	photos, err := s.pg.Photo.Select(dao.Range{Offset: 0, Limit: 1}, dao.UploadDate, dao.PhotoFilter{Private: loggedIn})
 	if err != nil {
@@ -140,49 +203,41 @@ func (s *mserver) handleLatestPhoto(_ *http.Request, loggedIn bool) (interface{}
 	} else {
 		return photos[0], nil
 	}
-}
+}*/
 
-func (s *mserver) handlePhoto(r *http.Request, loggedIn bool) (interface{}, error) {
-	id, err := uuid.Parse(Var(r, "id"))
+func (s *mserver) handlePhoto(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	id, err := uuid.Parse(Var(r, "photoid"))
 	if err != nil {
 		return nil, BadRequestError("Could not parse Id")
 	}
-	if photo, err := s.pg.Photo.Get(id, loggedIn); err != nil {
+	if photo, err := s.pg.Photo.Get(id); err != nil {
 		return nil, err
 	} else {
 		return photo, nil
 	}
 }
 
-func (s *mserver) handlePhotos(r *http.Request, loggedIn bool) (interface{}, error) {
+func (s *mserver) handlePhotos(r *http.Request) (interface{}, error) {
 	type request struct {
 		Limit  int
 		Offset int
-		Order  string
 	}
-
 	var params request
 	if err := decodeRequest(r, &params); err != nil {
 		return nil, err
 	} else {
-		r := dao.Range{Offset: params.Offset, Limit: params.Limit}
-		f := dao.PhotoFilter{Private: loggedIn}
-		var o dao.PhotoOrder
-		switch params.Order {
-		case "original":
-			o = dao.OriginalDate
-		default:
-			o = dao.UploadDate
-
-		}
-		if photos, err := s.pg.Photo.Select(r, o, f); err != nil {
-			return nil, err
+		//dao.Range{Offset: params.Offset, Limit: params.Limit}
+		if photos, e1 := s.pg.Photo.List(); err != nil {
+			return nil, e1
 		} else {
 			return &PhotoFiles{Length: len(photos), Photos: photos}, nil
 		}
+
 	}
+
 }
 
+/*
 func (s *mserver) handleSearchPhotos(r *http.Request, loggedIn bool) (interface{}, error) {
 	type request struct {
 		CameraModel string
@@ -208,29 +263,25 @@ func (s *mserver) handleSearchPhotos(r *http.Request, loggedIn bool) (interface{
 		return nil, InternalError("Search pattern not yet implemented")
 	}
 }
+*/
 
+// add check that url path id is the same as the update id
 func (s *mserver) handleUpdatePhoto(r *http.Request) (interface{}, error) {
 	type request struct {
-		Id          uuid.UUID   `json:"id"`
-		Title       string      `json:"title"`
-		Description string      `json:"description"`
-		Keywords    []string    `json:"keywords"`
-		Albums      []uuid.UUID `json:"albums"`
+		Id          uuid.UUID `json:"id"`
+		Title       string    `json:"title"`
+		Description string    `json:"description"`
+		Keywords    []string  `json:"keywords"`
 	}
 	var par request
 	if err := decodeRequest(r, &par); err != nil {
 		return nil, err
-	}
-	if photo, err := s.pg.Photo.Set(par.Title, par.Description, par.Keywords, par.Id); err != nil {
-		return nil, err
 	} else {
-		if err := s.pg.Album.UpdatePhoto(par.Albums, par.Id); err != nil {
-			return nil, err
-		}
-		return photo, err
+		return s.pg.Photo.Set(par.Title, par.Description, par.Keywords, par.Id)
 	}
 }
 
+/*
 func (s *mserver) handleUpdatePhotoPrivate(r *http.Request) (interface{}, error) {
 	id, err := uuid.Parse(Var(r, "id"))
 	if err != nil {
@@ -243,3 +294,4 @@ func (s *mserver) handleUpdatePhotoPrivate(r *http.Request) (interface{}, error)
 		return s.pg.Photo.SetPrivate(!photo.Private, photo.Id)
 	}
 }
+*/

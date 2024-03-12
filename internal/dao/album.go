@@ -30,9 +30,89 @@ func (dao *AlbumPG) Add(name, description, coverpic string) (*Album, error) {
 	return &album, err
 }
 
+func (dao *AlbumPG) AddPhotos(id uuid.UUID, photoIds []uuid.UUID) (int, error) {
+	//first get album
+	if !dao.Has(id) {
+		return 0, fmt.Errorf("Could not find album")
+	}
+
+	//check if all images exist
+	query, args, err := sqlx.In("SELECT COUNT(*) FROM img WHERE id IN (?)", photoIds)
+	if err != nil {
+		return 0, err
+	}
+	query = dao.db.Rebind(query)
+	var count int
+	err = dao.db.QueryRowx(query, args...).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	if count != len(photoIds) {
+		return 0, fmt.Errorf("Missing photos")
+	}
+
+	//now insert images one after the other (its just too messy to do it in a single
+	//insert statement using sqlx and very little performance improvements...
+	insStmt := "INSERT INTO albumphotos (albumId, photoId) VALUES ($1, $2) ON CONFLICT DO NOTHING"
+	var numRows int64
+	for _, pid := range photoIds {
+		if res, err := dao.db.Exec(insStmt, id, pid); err == nil {
+			r, _ := res.RowsAffected()
+			numRows += r
+		} else {
+			return int(numRows), err
+		}
+	}
+	return int(numRows), nil
+}
+
+func (dao *AlbumPG) ClearPhotos(id uuid.UUID) (int, error) {
+	if !dao.Has(id) {
+		return 0, fmt.Errorf("Could not find album")
+	}
+	if res, err := dao.db.Exec("DELETE FROM albumphotos WHERE albumId = $1", id); err != nil {
+		return 0, err
+	} else {
+		rows, _ := res.RowsAffected()
+		return int(rows), nil
+	}
+
+}
+
+func (dao *AlbumPG) DeletePhotos(id uuid.UUID, photoIds []uuid.UUID) (int, error) {
+	if !dao.Has(id) {
+		return 0, fmt.Errorf("Could not find album")
+	}
+	var affectedRows int64
+	insStmt := "DELETE FROM albumphotos WHERE albumId = $1 AND photoId = $2"
+	for _, pid := range photoIds {
+		if r, err := dao.db.Exec(insStmt, id, pid); err == nil {
+			affected, _ := r.RowsAffected()
+			affectedRows += affected
+		} else {
+			return int(affectedRows), err
+		}
+	}
+	return int(affectedRows), nil
+}
+
+func (dao *AlbumPG) SetPhotos(id uuid.UUID, photoIds []uuid.UUID) (int, error) {
+	if _, err := dao.ClearPhotos(id); err != nil {
+		return 0, err
+	} else {
+		return dao.AddPhotos(id, photoIds)
+	}
+}
+
 func (dao *AlbumPG) Get(id uuid.UUID) (*Album, error) {
 	ret := Album{}
 	err := dao.db.Get(&ret, "SELECT * FROM album WHERE id = $1", id)
+	return &ret, err
+}
+
+func (dao *AlbumPG) GetByName(name string) (*Album, error) {
+	ret := Album{}
+	err := dao.db.Get(&ret, "SELECT * FROM album WHERE name = $1", name)
 	return &ret, err
 }
 
@@ -42,6 +122,51 @@ func (dao *AlbumPG) List() ([]*Album, error) {
 	return ret, err
 }
 
+func (dao *AlbumPG) Photos(id uuid.UUID) ([]*Photo, error) {
+	if !dao.Has(id) {
+		return nil, fmt.Errorf("No such album")
+	}
+	stmt := "SELECT img.* FROM img JOIN albumphotos ap ON img.id = ap.photoid WHERE ap.albumid = $1"
+	ret := []*Photo{}
+	err := dao.db.Select(&ret, stmt, id)
+	return ret, err
+}
+
+func (dao *AlbumPG) SelectPhotos(id uuid.UUID, filter PhotoFilter, r Range, order PhotoOrder) ([]*Photo, error) {
+	var stmt strings.Builder
+	stmt.WriteString("SELECT img.* FROM img JOIN albumphotos ap ON img.id = ap.photoid")
+
+	//where clause
+	if filter.CameraModel == "" {
+		stmt.WriteString(" WHERE ap.albumid = $1")
+	} else {
+		stmt.WriteString(" WHERE ap.albumid = $1 AND img.cameramodel = $2")
+	}
+	//order by
+	switch order {
+	case UploadDate:
+		stmt.WriteString(" ORDER BY img.uploaddate DESC")
+	case OriginalDate:
+		stmt.WriteString(" ORDER BY img.originaldate DESC")
+	case ManualOrder:
+		stmt.WriteString(" ORDER BY ap.photoorder NULLS LAST")
+	}
+	//limit
+	if r.Limit > 0 {
+		fmt.Fprintf(&stmt, " LIMIT %d OFFSET %d", r.Limit, r.Offset)
+	}
+
+	ret := []*Photo{}
+	var err error
+	if filter.CameraModel == "" {
+		err = dao.db.Select(&ret, stmt.String(), id)
+	} else {
+		err = dao.db.Select(&ret, stmt.String(), id, filter.CameraModel)
+	}
+	return ret, err
+}
+
+/*
 func (dao *AlbumPG) Photos(id uuid.UUID, private bool) ([]*Photo, error) {
 	ret := []*Photo{}
 	//select img.id FROM img JOIN albumphotos ap ON img.id = ap.photoid WHERE ap.albumid = '1035a8c9-72e9-4f77-ae79-afbe80fc458c' AND img.private = false order by ap.photoorder NULLS LAST
@@ -53,16 +178,6 @@ func (dao *AlbumPG) Photos(id uuid.UUID, private bool) ([]*Photo, error) {
 	return ret, err
 }
 
-/*
-func (dao *AlbumPG) PhotosOld(id uuid.UUID, private bool) ([]*Photo, error) {
-	ret := []*Photo{}
-	stmt := "SELECT * FROM img WHERE private = false AND id IN (SELECT photoId FROM albumphotos WHERE albumId = $1)"
-	if private {
-		stmt = "SELECT * FROM img WHERE id IN (SELECT photoId FROM albumphotos WHERE albumId = $1)"
-	}
-	err := dao.db.Select(&ret, stmt, id)
-	return ret, err
-}
 */
 
 func (dao *AlbumPG) Delete(id uuid.UUID) error {
@@ -74,13 +189,6 @@ func (dao *AlbumPG) Delete(id uuid.UUID) error {
 		return err
 	}
 
-	/*stmt := `
-	DELETE FROM album WHERE id = $1;
-	DELETE FROM albumphotos WHERE albumId = $1;
-	`
-		_, err := dao.db.Exec(stmt, id)
-		return err*/
-
 }
 
 func (dao *AlbumPG) Has(id uuid.UUID) bool {
@@ -89,13 +197,6 @@ func (dao *AlbumPG) Has(id uuid.UUID) bool {
 
 func (dao *AlbumPG) HasByName(name string) bool {
 	return has(dao.db, "album", "name", name)
-}
-
-func (dao *AlbumPG) Albums(photoId uuid.UUID) ([]*Album, error) {
-	ret := []*Album{}
-	stmt := "SELECT * FROM album WHERE id IN (select albumId FROM albumphotos WHERE photoId = $1)"
-	err := dao.db.Select(&ret, stmt, photoId)
-	return ret, err
 }
 
 func (dao *AlbumPG) GetOrder(albumId uuid.UUID) ([]uuid.UUID, error) {
@@ -132,30 +233,4 @@ func (dao *AlbumPG) UpdateOrder(id uuid.UUID, photoIds []uuid.UUID) (*Album, err
 	} else {
 		return dao.Get(id)
 	}
-}
-
-func (dao *AlbumPG) UpdatePhoto(albumIds []uuid.UUID, photoId uuid.UUID) error {
-	//check img
-	if !has(dao.db, "img", "id", photoId) {
-		return fmt.Errorf("photoId does not exist")
-	}
-
-	//check album Ids
-	for _, id := range albumIds {
-		if !dao.Has(id) {
-			return fmt.Errorf("non existent album")
-		}
-	}
-	if _, err := dao.db.Exec("DELETE FROM albumphotos WHERE photoId = $1", photoId); err != nil {
-		return err
-	}
-
-	const addAlbumPhoto = "INSERT INTO albumphotos (albumId, photoId) VALUES ($1, $2)"
-	for _, a := range albumIds {
-		if _, err := dao.db.Exec(addAlbumPhoto, a, photoId); err != nil {
-			return nil
-		}
-	}
-	return nil
-
 }

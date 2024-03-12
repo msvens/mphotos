@@ -14,6 +14,15 @@ func lowerFirst(s string) string {
 	return string(copyStr)
 }
 
+func buildValuesString(n int) string {
+	b := strings.Builder{}
+	for i := 0; i < n-1; i++ {
+		b.WriteString("(?), ")
+	}
+	b.WriteString("(?)")
+	return b.String()
+}
+
 func buildInsertNamed(table string, fields []string, ignore ...string) string {
 	//builds a query of the form
 	//"INSERT INTO table (f1, f2, f3) VALUES (:f1, :f2, :f3)

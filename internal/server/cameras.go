@@ -38,7 +38,7 @@ func (s *mserver) handleUpdateCamera(r *http.Request) (interface{}, error) {
 
 func (s *mserver) handleCameraImage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
+	id := vars["cameraid"]
 	var size int
 	var imgPath string
 	if s, ok := vars["size"]; ok {
@@ -69,7 +69,7 @@ func (s *mserver) handleCameraImage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *mserver) uploadCameraImageFromFile(r *http.Request) (interface{}, error) {
-	id := Var(r, "id")
+	id := Var(r, "cameraid")
 
 	if !s.pg.Camera.Has(id) {
 		return nil, NotFoundError("Camera not found: " + id)
@@ -123,7 +123,7 @@ func (s *mserver) uploadCameraImageFromFile(r *http.Request) (interface{}, error
 }
 
 func (s *mserver) uploadCameraImageFromURL(r *http.Request) (interface{}, error) {
-	id := Var(r, "id")
+	id := Var(r, "cameraid")
 	if !s.pg.Camera.Has(id) {
 		return nil, NotFoundError("Camera not found: " + id)
 	}

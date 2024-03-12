@@ -9,7 +9,7 @@ func openAndCreateTestDb(t *testing.T) *PGDB {
 	config.NewConfig("config_test")
 	pg, err := NewPGDB()
 	if err != nil {
-		t.Errorf("Could no open DataStore got error: %s", err)
+		t.Errorf("Could not open DataStore got error: %s", err)
 	}
 	err = pg.DeleteTables()
 	if err != nil {

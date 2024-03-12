@@ -29,7 +29,7 @@ func (s *mserver) handleEditImage(r *http.Request) (interface{}, error) {
 		Width    int `json:"width"`
 		Height   int `json:"height"`
 	}
-	id, err := uuid.Parse(Var(r, "id"))
+	id, err := uuid.Parse(Var(r, "photoid"))
 	if err != nil {
 		return nil, BadRequestError("no photo id")
 	}
@@ -37,7 +37,7 @@ func (s *mserver) handleEditImage(r *http.Request) (interface{}, error) {
 	if err := decodeRequest(r, &par); err != nil {
 		return nil, err
 	}
-	p, err := s.pg.Photo.Get(id, true)
+	p, err := s.pg.Photo.Get(id)
 	if err != nil {
 		return nil, BadRequestError("could not find photo")
 	}
@@ -79,7 +79,8 @@ func (s *mserver) handleEditPreviewImage(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "user not logged in", http.StatusMethodNotAllowed)
 		return
 	}
-	id, err := uuid.Parse(Var(r, "id"))
+
+	id, err := uuid.Parse(Var(r, "photoid"))
 	if err != nil {
 		http.Error(w, "Could not parse Id", http.StatusBadRequest)
 		return
@@ -90,7 +91,7 @@ func (s *mserver) handleEditPreviewImage(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	//now create a preview image:
-	p, err := s.pg.Photo.Get(id, true)
+	p, err := s.pg.Photo.Get(id)
 	if err != nil {
 		http.Error(w, "file not found", http.StatusNotFound)
 		return

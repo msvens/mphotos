@@ -19,8 +19,7 @@
     "exposure": "1/250",
     "fNumber": 5.6,
     "width": 2048,
-    "height": 1367,
-    "private": true
+    "height": 1367
   },
   {
     "id": "1798ee64-31de-4796-9dd1-5fad7167aeb8",
@@ -43,8 +42,7 @@
     "exposure": "1/125",
     "fNumber": 2,
     "width": 2048,
-    "height": 1365,
-    "private": true
+    "height": 1365
   },
   {
     "id": "bc4173af-273b-4dbf-a8cb-94213bf3288d",
@@ -66,8 +64,7 @@
     "exposure": "1/125",
     "fNumber": 3.5,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "f6333f97-3415-42e9-861d-19818b609253",
@@ -89,8 +86,7 @@
     "exposure": "1/250",
     "fNumber": 3.5,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "e5dc9db8-6710-4ddd-bad0-cfe216af2069",
@@ -112,8 +108,7 @@
     "exposure": "1/250",
     "fNumber": 2.5,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "43de1fa9-ee13-4c60-8b04-b52a411865d6",
@@ -135,8 +130,7 @@
     "exposure": "1/125",
     "fNumber": 6.3,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "7065f289-1ac6-4a4c-befe-b55c670edd16",
@@ -158,8 +152,7 @@
     "exposure": "1/500",
     "fNumber": 2,
     "width": 2048,
-    "height": 2048,
-    "private": false
+    "height": 2048
   },
   {
     "id": "bdb898e5-37f3-4f64-bf76-d4a68f7cc412",
@@ -181,8 +174,7 @@
     "exposure": "1/125",
     "fNumber": 1.7,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "ec6603a8-c35f-475a-be6e-c0dcacdc4628",
@@ -205,8 +197,7 @@
     "exposure": "1/140",
     "fNumber": 2.5,
     "width": 4000,
-    "height": 6000,
-    "private": false
+    "height": 6000
   },
   {
     "id": "2b1744c9-f851-49be-b78b-731a24c58d78",
@@ -227,8 +218,7 @@
     "exposure": "1/750",
     "fNumber": 2,
     "width": 2799,
-    "height": 3446,
-    "private": false
+    "height": 3446
   },
   {
     "id": "509331d6-8498-4a64-a26e-0c79b260f2a4",
@@ -249,8 +239,7 @@
     "exposure": "1/16",
     "fNumber": 2,
     "width": 2474,
-    "height": 3617,
-    "private": false
+    "height": 3617
   },
   {
     "id": "0b3ece71-a39d-40a6-a0ca-e203d5d873e2",
@@ -273,8 +262,7 @@
     "exposure": "1/125",
     "fNumber": 1.4,
     "width": 6000,
-    "height": 4000,
-    "private": false
+    "height": 4000
   },
   {
     "id": "84190e89-08f2-4c63-9d20-9ad406b609b3",
@@ -295,8 +283,7 @@
     "exposure": "1/200",
     "fNumber": 7.1,
     "width": 2048,
-    "height": 1365,
-    "private": false
+    "height": 1365
   },
   {
     "id": "a72b20ff-d8b1-42c2-ab43-e36d8154cd98",
@@ -317,8 +304,7 @@
     "exposure": "1/320",
     "fNumber": 18,
     "width": 2048,
-    "height": 1360,
-    "private": false
+    "height": 1360
   },
   {
     "id": "b141f6f8-aa93-4631-bfa3-2c689f946f4e",
@@ -341,8 +327,7 @@
     "exposure": "1/3200",
     "fNumber": 2,
     "width": 6000,
-    "height": 4000,
-    "private": false
+    "height": 4000
   },
   {
     "id": "3ba10f36-84ac-4df8-8b35-5675c3836353",
@@ -365,8 +350,7 @@
     "exposure": "1/60",
     "fNumber": 1.8,
     "width": 3024,
-    "height": 3497,
-    "private": false
+    "height": 3497
   },
   {
     "id": "1bdbe851-17ed-4df4-a3a4-549ebeb72fe5",
@@ -389,8 +373,7 @@
     "exposure": "1/2400",
     "fNumber": 2,
     "width": 2048,
-    "height": 1307,
-    "private": false
+    "height": 1307
   },
   {
     "id": "81757545-2cbb-4b9d-8459-c39801e143c9",
@@ -412,8 +395,7 @@
     "exposure": "1/10",
     "fNumber": 2.8,
     "width": 1080,
-    "height": 1080,
-    "private": false
+    "height": 1080
   },
   {
     "id": "281aa07a-d1f3-4070-8926-152407598042",
@@ -434,8 +416,7 @@
     "exposure": "1/2000",
     "fNumber": 4.8,
     "width": 1080,
-    "height": 1080,
-    "private": false
+    "height": 1080
   },
   {
     "id": "bd5a04da-155d-4f7b-a7f1-5c9a307a4e1e",
@@ -458,8 +439,7 @@
     "exposure": "1/1000",
     "fNumber": 8,
     "width": 2048,
-    "height": 1365,
-    "private": false
+    "height": 1365
   },
   {
     "id": "4782d5f9-d255-4dde-9a4a-c29f20a3c6bc",
@@ -481,8 +461,7 @@
     "exposure": "1/125",
     "fNumber": 2.8,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "864f17a9-ad9f-4239-b135-fbd10c0ad632",
@@ -503,8 +482,7 @@
     "exposure": "1/640",
     "fNumber": 13,
     "width": 1360,
-    "height": 2048,
-    "private": false
+    "height": 2048
   },
   {
     "id": "906c6944-09bc-4158-b7b1-1376b4f7cc5d",
@@ -526,8 +504,7 @@
     "exposure": "1/1000",
     "fNumber": 1.8,
     "width": 2048,
-    "height": 1360,
-    "private": false
+    "height": 1360
   },
   {
     "id": "012d6d12-080b-456a-a858-1e438a07b8ef",
@@ -549,8 +526,7 @@
     "exposure": "1/500",
     "fNumber": 5.3,
     "width": 2047,
-    "height": 2048,
-    "private": false
+    "height": 2048
   },
   {
     "id": "03fcb648-2f62-42d4-8669-0793072f433a",
@@ -572,8 +548,7 @@
     "exposure": "1/3200",
     "fNumber": 3.5,
     "width": 2048,
-    "height": 885,
-    "private": false
+    "height": 885
   },
   {
     "id": "d8a4ec5b-c223-4ec1-9468-7778964b5f7a",
@@ -595,8 +570,7 @@
     "exposure": "1/1250",
     "fNumber": 4.2,
     "width": 2048,
-    "height": 1360,
-    "private": false
+    "height": 1360
   },
   {
     "id": "63779ba0-e607-4c04-9452-b0da349550bc",
@@ -618,8 +592,7 @@
     "exposure": "1/2000",
     "fNumber": 4.2,
     "width": 2048,
-    "height": 1365,
-    "private": false
+    "height": 1365
   },
   {
     "id": "61f29435-39d4-4c35-a024-5ac736afcf35",
@@ -642,8 +615,7 @@
     "exposure": "1/125",
     "fNumber": 1.4,
     "width": 2048,
-    "height": 1365,
-    "private": false
+    "height": 1365
   },
   {
     "id": "3c82c6e5-5009-403c-8504-a9105f3038ff",
@@ -665,8 +637,7 @@
     "exposure": "1/250",
     "fNumber": 2,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "e0ed266d-e166-4e84-89c4-b3ffb9e8de88",
@@ -688,8 +659,7 @@
     "exposure": "1/250",
     "fNumber": 1.7,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "e55ea8b9-5547-4ccd-b68c-58a4dba7e6a7",
@@ -712,8 +682,7 @@
     "exposure": "1/3200",
     "fNumber": 2,
     "width": 2048,
-    "height": 1365,
-    "private": false
+    "height": 1365
   },
   {
     "id": "cdf51e45-2cbb-45dd-9fb1-884b539deada",
@@ -735,8 +704,7 @@
     "exposure": "1/250",
     "fNumber": 2.2,
     "width": 2048,
-    "height": 2048,
-    "private": false
+    "height": 2048
   },
   {
     "id": "263a6dc7-4d3e-4297-83a6-8c68adf5abe5",
@@ -759,8 +727,7 @@
     "exposure": "1/180",
     "fNumber": 1.4,
     "width": 2048,
-    "height": 1365,
-    "private": false
+    "height": 1365
   },
   {
     "id": "615b23c8-c9f0-44bd-aa9a-8da0f5dc99c8",
@@ -782,8 +749,7 @@
     "exposure": "1/250",
     "fNumber": 2.8,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "1f6a4f96-3cef-4a61-864f-2b0bac29a3c3",
@@ -805,8 +771,7 @@
     "exposure": "1/125",
     "fNumber": 4,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "6dc497a8-502c-4dd3-90ba-30538cbdcf6d",
@@ -828,8 +793,7 @@
     "exposure": "1/500",
     "fNumber": 6.3,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "ca8ad336-29e8-4816-94fc-a24bbaaf3580",
@@ -851,8 +815,7 @@
     "exposure": "1/250",
     "fNumber": 8,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "ac88bdef-d9ce-4016-bcc2-ae478e135f5e",
@@ -874,8 +837,7 @@
     "exposure": "1/250",
     "fNumber": 4.5,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "fc9ce547-1732-46d4-a4b3-485328ca1aa1",
@@ -897,8 +859,7 @@
     "exposure": "1/500",
     "fNumber": 6.3,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "1e768723-75e9-43bc-843b-5b88639dcbac",
@@ -920,8 +881,7 @@
     "exposure": "1/250",
     "fNumber": 2.8,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "3c4ba58e-3c8d-4236-bdef-8ea976f44edf",
@@ -943,8 +903,7 @@
     "exposure": "1/500",
     "fNumber": 4,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "4a7b9fd9-b042-49a8-83e6-2d05fad920b0",
@@ -966,8 +925,7 @@
     "exposure": "1/125",
     "fNumber": 1.8,
     "width": 2048,
-    "height": 1367,
-    "private": true
+    "height": 1367
   },
   {
     "id": "67cbbced-9450-44ff-b099-2371614e9158",
@@ -989,8 +947,7 @@
     "exposure": "1/250",
     "fNumber": 2.5,
     "width": 1367,
-    "height": 2048,
-    "private": false
+    "height": 2048
   },
   {
     "id": "fe472337-3b12-4759-ad04-40adc3ac8f1e",
@@ -1012,8 +969,7 @@
     "exposure": "1/250",
     "fNumber": 2.5,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "0929b160-2753-4e0c-ba93-26a508fbd496",
@@ -1035,8 +991,7 @@
     "exposure": "1/125",
     "fNumber": 1.7,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "b8bae232-9d7a-4942-babe-28c0e8c77a30",
@@ -1058,8 +1013,7 @@
     "exposure": "1/60",
     "fNumber": 1.7,
     "width": 2048,
-    "height": 1367,
-    "private": true
+    "height": 1367
   },
   {
     "id": "e337da91-2ba2-4ad7-a44a-04270cb85106",
@@ -1081,8 +1035,7 @@
     "exposure": "1/30",
     "fNumber": 2,
     "width": 2048,
-    "height": 1367,
-    "private": true
+    "height": 1367
   },
   {
     "id": "2fa186de-d3da-41f1-baa6-4c5e4c64d9ea",
@@ -1104,8 +1057,7 @@
     "exposure": "1/500",
     "fNumber": 5,
     "width": 2048,
-    "height": 1367,
-    "private": false
+    "height": 1367
   },
   {
     "id": "aefa67bc-d788-4b14-b12f-afffd04ab2ab",
@@ -1128,8 +1080,7 @@
     "exposure": "1/50",
     "fNumber": 2,
     "width": 2048,
-    "height": 1310,
-    "private": false
+    "height": 1310
   },
   {
     "id": "31e0be06-b7c7-4a8e-9aba-996f4aa67221",
@@ -1152,8 +1103,7 @@
     "exposure": "1/4",
     "fNumber": 4.5,
     "width": 2048,
-    "height": 1365,
-    "private": false
+    "height": 1365
   },
   {
     "id": "8e5eafeb-5ec5-489b-9c64-87b28f3fcf61",
@@ -1176,8 +1126,7 @@
     "exposure": "1/150",
     "fNumber": 1.6,
     "width": 2048,
-    "height": 1365,
-    "private": false
+    "height": 1365
   },
   {
     "id": "8d8e2587-7fa6-4b8a-90b2-345aee8305d2",
@@ -1199,8 +1148,7 @@
     "exposure": "1/320",
     "fNumber": 9,
     "width": 1638,
-    "height": 2048,
-    "private": false
+    "height": 2048
   },
   {
     "id": "d6eee7ce-a23b-4589-8872-9fb3f04305df",
@@ -1221,8 +1169,7 @@
     "exposure": "1/2000",
     "fNumber": 3.5,
     "width": 1601,
-    "height": 2048,
-    "private": false
+    "height": 2048
   },
   {
     "id": "76ff575c-16f3-465f-9ac6-19df864714f4",
@@ -1244,8 +1191,7 @@
     "exposure": "1/200",
     "fNumber": 14,
     "width": 2048,
-    "height": 1072,
-    "private": false
+    "height": 1072
   },
   {
     "id": "78f507c4-00f8-41e3-944e-84f22a728e39",
@@ -1266,7 +1212,6 @@
     "exposure": "1/125",
     "fNumber": 13,
     "width": 2048,
-    "height": 1365,
-    "private": false
+    "height": 1365
   }
 ]

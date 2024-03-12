@@ -124,10 +124,10 @@ func (s *mserver) handleGuest(r *http.Request, uuid uuid.UUID) (interface{}, err
 }
 
 func (s *mserver) handleLikePhoto(r *http.Request, guestId uuid.UUID) (interface{}, error) {
-	if photoId, err := uuid.Parse(Var(r, "img")); err != nil {
+	if photoId, err := uuid.Parse(Var(r, "photoid")); err != nil {
 		return nil, BadRequestError("Could not parse img id")
 	} else {
-		if s.pg.Photo.Has(photoId, false) {
+		if s.pg.Photo.Has(photoId) {
 			return photoId, s.pg.Reaction.Add(&dao.Reaction{GuestId: guestId, PhotoId: photoId, Kind: "like"})
 		} else {
 			return nil, NotFoundError("img not found")
@@ -137,10 +137,10 @@ func (s *mserver) handleLikePhoto(r *http.Request, guestId uuid.UUID) (interface
 
 func (s *mserver) handleUnlikePhoto(r *http.Request, guestId uuid.UUID) (interface{}, error) {
 	var photoId uuid.UUID
-	if err := uid(r, "img", &photoId); err != nil {
+	if err := uid(r, "photoid", &photoId); err != nil {
 		return nil, err
 	}
-	if s.pg.Photo.Has(photoId, false) {
+	if s.pg.Photo.Has(photoId) {
 		return photoId, s.pg.Reaction.Delete(&dao.Reaction{GuestId: guestId, PhotoId: photoId, Kind: "like"})
 	} else {
 		return nil, NotFoundError("img not found")
@@ -148,7 +148,7 @@ func (s *mserver) handleUnlikePhoto(r *http.Request, guestId uuid.UUID) (interfa
 }
 
 func (s *mserver) handlePhotoLikes(r *http.Request, loggedIn bool) (interface{}, error) {
-	if photoId, err := uuid.Parse(Var(r, "img")); err != nil {
+	if photoId, err := uuid.Parse(Var(r, "photoid")); err != nil {
 		return nil, BadRequestError("Could not parse img id")
 	} else {
 		return s.pg.Reaction.ListByPhoto(photoId)
@@ -200,7 +200,7 @@ func (s *mserver) handleLogoutGuest(w http.ResponseWriter, r *http.Request) (int
 }
 
 func (s *mserver) handleGuestLikePhoto(r *http.Request, guestId uuid.UUID) (interface{}, error) {
-	if photoId, err := uuid.Parse(Var(r, "img")); err != nil {
+	if photoId, err := uuid.Parse(Var(r, "photoid")); err != nil {
 		return nil, BadRequestError("Could not parse img id")
 	} else {
 		type ret struct {
