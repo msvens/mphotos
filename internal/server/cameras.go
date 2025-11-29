@@ -162,7 +162,7 @@ func (s *mserver) uploadCameraImageFromURL(r *http.Request) (interface{}, error)
 	src := config.CameraFilePath(fileName)
 	sizes := make(map[string]img.Options)
 	for _, size := range cameraSizes {
-		sizes[config.CameraFilePath(fmt.Sprint(id, "-", size, ext))] = size
+		sizes[config.CameraFilePath(fmt.Sprint(id, "-", size.Width, ext))] = size
 		//sizes[cameraPath(s, fmt.Sprint(id, "-", size, ext))] = size
 	}
 	if err = img.TransformFile(src, sizes); err != nil {
