@@ -33,6 +33,7 @@ func (s *mserver) routes() {
 	s.mGET("/drive/search").HandlerFunc(s.authOnly(s.handleSearchDrive))
 	s.mGET("/drive").HandlerFunc(s.authOnly(s.handleDrive))
 	s.mGET("/drive/authenticated").HandlerFunc(s.authOnly(s.handleAuthenticatedDrive))
+	s.mGET("/drive/disconnect").HandlerFunc(s.authOnly(s.handleDisconnectDrive))
 	s.mGET("/drive/auth").HandlerFunc(s.handleGoogleLogin)
 	s.mGET("/drive/check").HandlerFunc(s.authOnly(s.handleCheckDrive))
 	s.mPUT("/drive/upload").HandlerFunc(s.authOnly(s.handleAddDrivePhotos))

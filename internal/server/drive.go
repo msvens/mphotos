@@ -11,6 +11,7 @@ import (
 	"google.golang.org/api/drive/v3"
 	"math"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -57,6 +58,23 @@ func (s *mserver) handleDrive(_ *http.Request) (interface{}, error) {
 
 func (s *mserver) handleAuthenticatedDrive(_ *http.Request) (interface{}, error) {
 	return AuthUser{s.isGoogleConnected()}, nil
+}
+
+func (s *mserver) handleDisconnectDrive(_ *http.Request) (interface{}, error) {
+	// Remove token file
+	if err := os.Remove(s.tokenFile); err != nil && !os.IsNotExist(err) {
+		s.l.Errorw("error removing token file", zap.Error(err))
+		return nil, InternalError(err.Error())
+	}
+
+	// Clear Google services
+	s.ds = nil
+	s.ms = nil
+
+	s.l.Info("Disconnected from Google services")
+
+	// Return authentication status (false = disconnected)
+	return AuthUser{false}, nil
 }
 
 func (s *mserver) handleCheckDrive(_ *http.Request) (interface{}, error) {
