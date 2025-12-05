@@ -130,6 +130,9 @@ func (dao *PhotoPG) Delete(id uuid.UUID) (bool, error) {
 		if _, err := dao.db.Exec("DELETE from comment WHERE photoId = $1", id); err != nil {
 			return deleted, err
 		}
+		if _, err := dao.db.Exec("DELETE from albumphotos WHERE photoId = $1", id); err != nil {
+			return deleted, err
+		}
 
 	}
 	return deleted, nil

@@ -186,7 +186,7 @@ func (s *mserver) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	token, err := s.tokenFromFile(s.tokenFile)
 	if err != nil {
 		s.l.Info("could not read token from file, redirect to google")
-		u := s.gconfig.AuthCodeURL(redirUrl, oauth2.AccessTypeOffline)
+		u := s.gconfig.AuthCodeURL(redirUrl, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
 		http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 	} else {
 		s.l.Info("read token from file")
@@ -194,7 +194,7 @@ func (s *mserver) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, unesc, http.StatusTemporaryRedirect)
 		} else {
 			s.l.Info("Token not valid...trying to get a new one from google")
-			u := s.gconfig.AuthCodeURL(redirUrl, oauth2.AccessTypeOffline)
+			u := s.gconfig.AuthCodeURL(redirUrl, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
 			http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 		}
 	}
