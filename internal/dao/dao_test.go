@@ -6,7 +6,9 @@ import (
 )
 
 func openAndCreateTestDb(t *testing.T) *PGDB {
-	config.NewConfig("config_test")
+	if err := config.NewConfig("config_test"); err != nil {
+		t.Fatal(err)
+	}
 	pg, err := NewPGDB()
 	if err != nil {
 		t.Errorf("Could not open DataStore got error: %s", err)

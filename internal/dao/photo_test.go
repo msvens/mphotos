@@ -31,6 +31,9 @@ func loadPhotoTestData() error {
 
 	fmt.Println("Now read exif data")
 	exifData, err := os.ReadFile("../../assets/exif.json")
+	if err != nil {
+		return err
+	}
 	err = json.Unmarshal(exifData, &testExifs)
 	if err != nil {
 		return err

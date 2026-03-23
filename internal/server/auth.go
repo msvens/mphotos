@@ -85,7 +85,7 @@ func (s *mserver) tokenFromFile(file string) (*oauth2.Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	tok := &oauth2.Token{}
 	err = json.NewDecoder(f).Decode(tok)
 	return tok, err
@@ -137,8 +137,10 @@ func (s *mserver) saveToken(path string, token *oauth2.Token) {
 		s.l.Errorw("unable to open tokenfile", zap.Error(err))
 		return
 	}
-	defer f.Close()
-	json.NewEncoder(f).Encode(token)
+	defer func() { _ = f.Close() }()
+	if err := json.NewEncoder(f).Encode(token); err != nil {
+		s.l.Errorw("unable to encode token", zap.Error(err))
+	}
 }
 
 func (s *mserver) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {

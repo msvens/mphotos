@@ -31,7 +31,10 @@ var dumpPhotosCmd = &cobra.Command{
 	Short: "Dump database table",
 	Long:  `Dumps a table in json format`,
 	Run: func(cmd *cobra.Command, args []string) {
-		config.InitConfig()
+		if err := config.InitConfig(); err != nil {
+			fmt.Println(err)
+			return
+		}
 		db, err := dao.NewPGDB()
 		if err != nil {
 			fmt.Println(err)
@@ -58,7 +61,7 @@ var dumpPhotosCmd = &cobra.Command{
 			}
 			out = exifs
 		default:
-			err = fmt.Errorf("Unregcongised table: %v", table)
+			err = fmt.Errorf("unrecognised table: %v", table)
 		}
 		if err != nil {
 			fmt.Println(err)

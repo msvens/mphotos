@@ -5,23 +5,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"reflect"
 	"strings"
-	"unicode"
 )
-
-func lowerFirst(s string) string {
-	copyStr := []rune(s)
-	copyStr[0] = unicode.ToLower(copyStr[0])
-	return string(copyStr)
-}
-
-func buildValuesString(n int) string {
-	b := strings.Builder{}
-	for i := 0; i < n-1; i++ {
-		b.WriteString("(?), ")
-	}
-	b.WriteString("(?)")
-	return b.String()
-}
 
 func buildInsertNamed(table string, fields []string, ignore ...string) string {
 	//builds a query of the form
@@ -60,7 +44,7 @@ func buildUpdateNamed2(table string, fields []string, whereField string, ignore 
 func has(db *sqlx.DB, table string, whereCol string, check interface{}) bool {
 	stmt := "SELECT 1 FROM " + table + " WHERE " + whereCol + " = $1"
 	if rows, err := db.Query(stmt, check); err == nil {
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		return rows.Next()
 	} else {
 		return false

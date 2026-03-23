@@ -5,9 +5,6 @@ const schemaV2toV3 = `
 	UPDATE album SET code = '', orderBy = 0;
 	ALTER TABLE album ALTER COLUMN code SET NOT NULL, ALTER COLUMN orderBy SET NOT NULL;
 `
-const schemaV1toV2 = `
-	ALTER TABLE albumphotos ADD COLUMN photoOrder INTEGER;
-`
 const schemaV3 = `
 CREATE TABLE IF NOT EXISTS album (
 	Id UUID,
@@ -156,16 +153,4 @@ DROP TABLE IF EXISTS reaction;
 DROP TABLE IF EXISTS img;
 DROP TABLE IF EXISTS usert;
 DROP TABLE IF EXISTS version;
-`
-
-const deleteSchemaV0 = `
-DROP TABLE IF EXISTS albums;
-DROP TABLE IF EXISTS albumphoto;
-DROP TABLE IF EXISTS cameras;
-DROP TABLE IF EXISTS comments;
-DROP TABLE IF EXISTS exif;
-DROP TABLE IF EXISTS guests;
-DROP TABLE IF EXISTS likes;
-DROP TABLE IF EXISTS photos;
-DROP TABLE IF EXISTS users;
 `

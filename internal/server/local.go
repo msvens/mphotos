@@ -27,7 +27,9 @@ func calcMD5(src io.Reader) (string, error) {
 
 func (s *mserver) handleUploadLocalPhoto(r *http.Request) (interface{}, error) {
 
-	r.ParseMultipartForm(10 << 20) //10M
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		return nil, err
+	}
 	file, head, err := r.FormFile("image")
 	if err != nil {
 		return nil, err
@@ -86,10 +88,13 @@ func (s *mserver) handleUploadLocalPhoto(r *http.Request) (interface{}, error) {
 	}
 
 	dst, err := os.Create(config.PhotoFilePath(config.Original, photo.FileName))
+	if err != nil {
+		return nil, err
+	}
 	if _, err = io.Copy(dst, file); err != nil {
 		return nil, err
 	}
-	dst.Close()
+	_ = dst.Close()
 
 	/*
 		if err := GenerateImages(config.PhotoFilePath(config.Original, photo.FileName), config.ServiceRoot()); err != nil {

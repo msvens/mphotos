@@ -66,7 +66,7 @@ func (dao *GuestPG) GetByEmail(email string) (*Guest, error) {
 }
 func (dao *GuestPG) Has(id uuid.UUID) bool {
 	if rows, err := dao.db.Query("SELECT 1 FROM guest WHERE id = $1", id); err == nil {
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		return rows.Next()
 	} else {
 		return false
@@ -74,7 +74,7 @@ func (dao *GuestPG) Has(id uuid.UUID) bool {
 }
 func (dao *GuestPG) HasByEmail(email string) bool {
 	if rows, err := dao.db.Query("SELECT 1 FROM guest WHERE email = $1", email); err == nil {
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		return rows.Next()
 	} else {
 		return false
@@ -82,7 +82,7 @@ func (dao *GuestPG) HasByEmail(email string) bool {
 }
 func (dao *GuestPG) HasByName(name string) bool {
 	if rows, err := dao.db.Query("SELECT 1 FROM guest WHERE name = $1", name); err == nil {
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		return rows.Next()
 	} else {
 		return false

@@ -107,11 +107,15 @@ func (s *mserver) handleEditPreviewImage(w http.ResponseWriter, r *http.Request)
 		srcImage = img.CropImage(srcImage, rect)
 	}
 	buffer := new(bytes.Buffer)
-	imaging.Encode(buffer, srcImage, imaging.JPEG, imaging.JPEGQuality(90))
+	if err := imaging.Encode(buffer, srcImage, imaging.JPEG, imaging.JPEGQuality(90)); err != nil {
+		http.Error(w, "could not encode image", http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "image/jpeg")
 	w.Header().Set("Content-Length", strconv.Itoa(buffer.Len()))
-	io.Copy(w, buffer)
-	return
+	if _, err := io.Copy(w, buffer); err != nil {
+		http.Error(w, "could not write image", http.StatusInternalServerError)
+	}
 }
 
 func (s *mserver) handleImage(w http.ResponseWriter, r *http.Request) {

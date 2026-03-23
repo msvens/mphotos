@@ -24,7 +24,7 @@ func NewUserPG(db *sqlx.DB) *UserPG {
 
 func (dao *UserPG) Update(u *User) (*User, error) {
 	if !json.Valid([]byte(u.Config)) {
-		return nil, fmt.Errorf("Non valid json config: %s", u.Config)
+		return nil, fmt.Errorf("non valid json config: %s", u.Config)
 	}
 	if _, err := dao.db.NamedExec(dao.updateUserStmt, u); err != nil {
 		return nil, err
