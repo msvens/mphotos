@@ -1,8 +1,8 @@
 package gdrive
 
 import (
-    "fmt"
-    "context"
+	"context"
+	"fmt"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/googleapi"
@@ -67,10 +67,10 @@ func (ds *DriveService) About(fields ...googleapi.Field) (*drive.About, error) {
 	return about, nil
 }
 
-//Checks if the Root folder can be retrieved
+// Checks if the Root folder can be retrieved
 func (ds *DriveService) Check() error {
-    _, err := ds.Get(ds.Root.Id)
-    return err
+	_, err := ds.Get(ds.Root.Id)
+	return err
 }
 
 func (ds *DriveService) Download(id string, path string) (int64, error) {

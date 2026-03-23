@@ -1,10 +1,10 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/msvens/mphotos/internal/config"
 	"go.uber.org/zap"
-	"context"
 	"golang.org/x/oauth2"
 	"net/http"
 	"net/url"

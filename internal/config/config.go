@@ -134,7 +134,7 @@ func ServerHost() string {
 }
 
 func ServerAddr() string {
-    return fmt.Sprintf("%s:%d",ServerHost(),ServerPort())
+	return fmt.Sprintf("%s:%d", ServerHost(), ServerPort())
 }
 
 func VerifyUrl() string {

@@ -1,0 +1,23 @@
+version: "2"
+linters:
+  default: none
+  enable:
+    - govet
+    # TODO: enable these after cleanup
+    # - errcheck
+    # - ineffassign
+    # - staticcheck
+    # - unused
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+formatters:
+  enable:
+    - gofmt
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$

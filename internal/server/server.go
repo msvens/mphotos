@@ -1,15 +1,15 @@
 package server
 
 import (
-    "fmt"
+	"context"
 	"encoding/gob"
+	"fmt"
 	"github.com/gorilla/sessions"
 	"github.com/msvens/mphotos/internal/config"
 	"github.com/msvens/mphotos/internal/dao"
 	"github.com/msvens/mphotos/internal/gdrive"
 	"github.com/msvens/mphotos/internal/gmail"
 	"go.uber.org/zap"
-	"context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"net/http"
@@ -44,7 +44,7 @@ type mserver struct {
 func newServer(prefixPath string, logger *zap.SugaredLogger) *mserver {
 
 	s := mserver{}
-    s.l = logger
+	s.l = logger
 	s.prefixPath = prefixPath
 
 	//Initialize session
@@ -63,7 +63,6 @@ func newServer(prefixPath string, logger *zap.SugaredLogger) *mserver {
 	}
 	gob.Register(AuthUser{})
 	gob.Register(SessionGuest{})
-
 
 	s.r = http.NewServeMux()
 
@@ -100,21 +99,21 @@ func newServer(prefixPath string, logger *zap.SugaredLogger) *mserver {
 }
 
 func StartMServer() {
-    //setup logging
-    l, err := zap.NewDevelopment()
-    if err != nil {
-        fmt.Println("Could not create logger exiting: ", err)
-        os.Exit(1)
-    }
-    defer func() {
-        _ = l.Sync()
-    }()
+	//setup logging
+	l, err := zap.NewDevelopment()
+	if err != nil {
+		fmt.Println("Could not create logger exiting: ", err)
+		os.Exit(1)
+	}
+	defer func() {
+		_ = l.Sync()
+	}()
 
-    //init config
-    err = config.InitConfig()
-    if err != nil {
-        l.Sugar().Panicw("Could not init config", zap.Error(err))
-    }
+	//init config
+	err = config.InitConfig()
+	if err != nil {
+		l.Sugar().Panicw("Could not init config", zap.Error(err))
+	}
 
 	s := newServer("/api", l.Sugar())
 	s.routes()
@@ -122,7 +121,7 @@ func StartMServer() {
 	//auth
 	err = s.authFromFile()
 	if err != nil {
-        s.l.Infow("auth from file", zap.Error(err))
+		s.l.Infow("auth from file", zap.Error(err))
 	}
 
 	srv := &http.Server{

@@ -100,7 +100,7 @@ func (s *mserver) handlePhotoAlbums(r *http.Request, loogedIn bool) (interface{}
 		return nil, err
 	}
 	if !loogedIn {
-		for i, _ := range albums {
+		for i := range albums {
 			albums[i].Code = ""
 		}
 	}

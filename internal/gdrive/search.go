@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-//Common mime types
+// Common mime types
 const (
 	False = "false"
 	True  = "true"
@@ -46,7 +46,7 @@ func (q *Query) Reset() {
 }
 
 func escape(q string) string {
-	return strings.Replace(q, "'", "\\'", -1)
+	return strings.ReplaceAll(q, "'", "\\'")
 }
 
 func contains(s []string, e string) bool {
@@ -70,7 +70,7 @@ func (q *Query) Err() *googleapi.Error {
 	return q.err
 }
 
-//Terms
+// Terms
 func (q *Query) setTextTerm(t string, nextOp []string) *Query {
 	if q.state != InitState && q.state != NotState {
 		q.err = &googleapi.Error{Code: ErrorBadRequest, Message: "Wrong query state"}
@@ -105,7 +105,7 @@ func (q *Query) Parents() *Query {
 	return q.setTextTerm("parents", []string{"in"})
 }
 
-//Operands
+// Operands
 func (q *Query) writeOp(op string, value string) *Query {
 	if q.state != TermState {
 		q.err = &googleapi.Error{Code: ErrorBadRequest, Message: "Wrong query state"}

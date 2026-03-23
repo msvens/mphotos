@@ -40,13 +40,14 @@ func (s *mserver) handleCameraImage(w http.ResponseWriter, r *http.Request) {
 	var size int
 	var imgPath string
 	if s := r.PathValue("size"); s != "" {
-		if s == "48" {
+		switch s {
+		case "48":
 			size = 48
-		} else if s == "192" {
+		case "192":
 			size = 192
-		} else if s == "512" {
+		case "512":
 			size = 512
-		} else {
+		default:
 			http.Error(w, "No Such Image Size", http.StatusNotFound)
 			return
 		}

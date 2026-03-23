@@ -35,7 +35,7 @@ func CreateImageDirs() error {
 //Removes any images that are not in the db
 
 func DeleteImg(fname string) error {
-	for pt, _ := range config.PhotoPaths() {
+	for pt := range config.PhotoPaths() {
 		fpath := config.PhotoFilePath(pt, fname)
 		err := os.Remove(fpath)
 		if err != nil && !os.IsNotExist(err) {
@@ -75,7 +75,7 @@ func CleanImageDirs(db *PGDB) error {
 	for _, p := range photos {
 		fNames[p.FileName] = true
 	}
-	for k, _ := range config.PhotoPaths() {
+	for k := range config.PhotoPaths() {
 		err := cleanImgDir(fNames, k)
 		if err != nil {
 			fmt.Println("Error cleaning imgDir: ", err)
