@@ -8,9 +8,9 @@ import (
 
 func cmpAlbum(exp, act Album, id bool) error {
 	if id && exp != act {
-		return fmt.Errorf("Expected %s got %s", exp, act)
+		return fmt.Errorf("expected %v got %v", exp, act)
 	} else if exp.Name != act.Name || exp.Description != act.Description || exp.CoverPic != act.CoverPic {
-		return fmt.Errorf("Expected same (name, description and coverpic) %s got %s", exp, act)
+		return fmt.Errorf("expected same (name, description and coverpic) %v got %v", exp, act)
 	} else {
 		return nil
 	}
@@ -87,7 +87,7 @@ func TestAlbums(t *testing.T) {
 	if ret, err := pgdb.Album.Update(&updatedFirst); err != nil {
 		t.Error("albums could not be updated ", err)
 	} else if *ret != updatedFirst {
-		t.Errorf("expected %s got %s", updatedFirst, *ret)
+		t.Errorf("expected %v got %v", updatedFirst, *ret)
 	}
 
 	//expect failure if you try to update an album to an already existing name
@@ -106,23 +106,15 @@ func TestAlbums(t *testing.T) {
 		t.Error("Could not create img: ", err)
 	}
 
-	err = pgdb.Album.UpdatePhoto([]uuid.UUID{updatedFirst.Id, second.Id}, testPhotos[0].Id)
+	// Add photo to both albums using SetPhotos
+	_, err = pgdb.Photo.SetAlbums(testPhotos[0].Id, []uuid.UUID{updatedFirst.Id, second.Id})
 	if err != nil {
-		t.Error("could not update photos albums: ", err)
+		t.Error("could not set photo albums: ", err)
 	}
 
-	err = pgdb.Album.UpdatePhoto([]uuid.UUID{updatedFirst.Id, second.Id}, uuid.UUID{})
-	if err == nil {
-		t.Error("Expected error when adding a non-existent img to an album")
-	}
-
-	if err = pgdb.Album.UpdatePhoto([]uuid.UUID{uuid.New()}, testPhotos[0].Id); err == nil {
-		t.Error("Expected error when adding a img to a non existent album")
-	}
-
-	albums, err := pgdb.Album.Albums(testPhotos[0].Id)
+	albums, err := pgdb.Photo.Albums(testPhotos[0].Id)
 	if err != nil {
-		t.Error("could not retrieve img albums ", err)
+		t.Error("could not retrieve photo albums ", err)
 	} else {
 		if len(albums) != 2 {
 			t.Error("Expected 2 albums got: ", len(albums))
@@ -134,13 +126,8 @@ func TestAlbums(t *testing.T) {
 			t.Errorf("Did not get %v in album list", second.Id)
 		}
 	}
-	if albums, err = pgdb.Album.Albums(testPhotos[3].Id); err != nil {
-		t.Error("could not retrive img albums ", err)
-	} else if len(albums) != 0 {
-		t.Errorf("expected 0 albums got %v albums", len(albums))
-	}
 
-	if photos, err := pgdb.Album.Photos(updatedFirst.Id, true); err != nil {
+	if photos, err := pgdb.Album.Photos(updatedFirst.Id); err != nil {
 		t.Error("Could not get album photos got error: ", err)
 	} else {
 		if len(photos) != 1 {

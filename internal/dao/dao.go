@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/google/uuid"
-	_ "github.com/jackc/pgx/v4/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/msvens/mimage/metadata"
 
@@ -131,8 +131,14 @@ func init() {
 }
 
 func NewPGDB() (*PGDB, error) {
-	dataSource := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		config.DbHost(), config.DbPort(), config.DbUser(), config.DbPassword(), config.DbName())
+	// pgx/v5 treats "password=" (empty value) as consuming the next key/value pair,
+	// so we omit it from the DSN when no password is configured.
+	dataSource := fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=disable",
+		config.DbHost(), config.DbPort(), config.DbUser(), config.DbName())
+	if pw := config.DbPassword(); pw != "" {
+		dataSource = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+			config.DbHost(), config.DbPort(), config.DbUser(), pw, config.DbName())
+	}
 	if db, err := sqlx.Open("pgx", dataSource); err != nil {
 		logger.Errorw("could not connect to database", zap.Error(err))
 		return nil, err

@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
 	"github.com/msvens/mimage/img"
 	"github.com/msvens/mphotos/internal/config"
 	"github.com/msvens/mphotos/internal/dao"
@@ -37,11 +36,10 @@ func (s *mserver) handleUpdateCamera(r *http.Request) (interface{}, error) {
 }
 
 func (s *mserver) handleCameraImage(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["cameraid"]
+	id := r.PathValue("cameraid")
 	var size int
 	var imgPath string
-	if s, ok := vars["size"]; ok {
+	if s := r.PathValue("size"); s != "" {
 		if s == "48" {
 			size = 48
 		} else if s == "192" {

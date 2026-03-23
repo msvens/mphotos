@@ -2,7 +2,7 @@ package gdrive
 
 import (
     "fmt"
-    "golang.org/x/net/context"
+    "context"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/googleapi"
