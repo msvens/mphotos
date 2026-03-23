@@ -27,7 +27,10 @@ var upgradedbCmd = &cobra.Command{
 	Short: "Upgrade mphotos database",
 	Long:  `Upgrades the mphotos database to the latest version if possible`,
 	Run: func(cmd *cobra.Command, args []string) {
-		config.InitConfig()
+		if err := config.InitConfig(); err != nil {
+			println(err.Error())
+			return
+		}
 		if err := dao.UpgradeDb(); err != nil {
 			println(err.Error())
 		}

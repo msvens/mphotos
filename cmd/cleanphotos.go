@@ -28,7 +28,10 @@ var cleanPhotosCmd = &cobra.Command{
 	Short: "Clean photos from server",
 	Long:  `This command goes through all image files and removes those that are no longer in the photo database`,
 	Run: func(cmd *cobra.Command, args []string) {
-		config.InitConfig()
+		if err := config.InitConfig(); err != nil {
+			fmt.Println(err)
+			return
+		}
 		//imgDir := config.ServicePath("img")
 		//baseDir := config.ServiceRoot()
 		db, err := dao.NewPGDB()

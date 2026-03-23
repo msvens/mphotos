@@ -29,7 +29,10 @@ var photosCmd = &cobra.Command{
 	Long:  `This commands goes through all photos and generates new cropped versions of them`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("generate photos crops")
-		config.InitConfig()
+		if err := config.InitConfig(); err != nil {
+			fmt.Println(err)
+			return
+		}
 		db, err := dao.NewPGDB()
 		if err != nil {
 			fmt.Println(err)

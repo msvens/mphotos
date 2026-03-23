@@ -57,7 +57,7 @@ func (dao *ReactionPG) ListByPhoto(photoId uuid.UUID) ([]*GuestReaction, error) 
 
 func (dao *ReactionPG) Has(guestId uuid.UUID, photoId uuid.UUID) bool {
 	if rows, err := dao.db.Query("SELECT 1 FROM reaction WHERE guestId = $1 AND photoId = $2", guestId, photoId); err == nil {
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		return rows.Next()
 	} else {
 		return false

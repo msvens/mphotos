@@ -38,7 +38,7 @@ var photoTypePaths map[PhotoType]string
 
 func setPhotoTypePaths() error {
 	if ServiceRoot() == "" {
-		return fmt.Errorf("No Serviceroot defined")
+		return fmt.Errorf("no serviceroot defined")
 	}
 	photoTypePaths = make(map[PhotoType]string)
 	for k, v := range photoTypeDirNames {

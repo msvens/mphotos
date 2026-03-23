@@ -2,12 +2,11 @@ version: "2"
 linters:
   default: none
   enable:
+    - errcheck
     - govet
-    # TODO: enable these after cleanup
-    # - errcheck
-    # - ineffassign
-    # - staticcheck
-    # - unused
+    - ineffassign
+    - staticcheck
+    - unused
   exclusions:
     generated: lax
     paths:

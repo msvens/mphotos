@@ -33,7 +33,7 @@ func (dao *AlbumPG) Add(name, description, coverpic string) (*Album, error) {
 func (dao *AlbumPG) AddPhotos(id uuid.UUID, photoIds []uuid.UUID) (int, error) {
 	//first get album
 	if !dao.Has(id) {
-		return 0, fmt.Errorf("Could not find album")
+		return 0, fmt.Errorf("could not find album")
 	}
 
 	//check if all images exist
@@ -48,7 +48,7 @@ func (dao *AlbumPG) AddPhotos(id uuid.UUID, photoIds []uuid.UUID) (int, error) {
 		return 0, err
 	}
 	if count != len(photoIds) {
-		return 0, fmt.Errorf("Missing photos")
+		return 0, fmt.Errorf("missing photos")
 	}
 
 	//now insert images one after the other (its just too messy to do it in a single
@@ -68,7 +68,7 @@ func (dao *AlbumPG) AddPhotos(id uuid.UUID, photoIds []uuid.UUID) (int, error) {
 
 func (dao *AlbumPG) ClearPhotos(id uuid.UUID) (int, error) {
 	if !dao.Has(id) {
-		return 0, fmt.Errorf("Could not find album")
+		return 0, fmt.Errorf("could not find album")
 	}
 	if res, err := dao.db.Exec("DELETE FROM albumphotos WHERE albumId = $1", id); err != nil {
 		return 0, err
@@ -81,7 +81,7 @@ func (dao *AlbumPG) ClearPhotos(id uuid.UUID) (int, error) {
 
 func (dao *AlbumPG) DeletePhotos(id uuid.UUID, photoIds []uuid.UUID) (int, error) {
 	if !dao.Has(id) {
-		return 0, fmt.Errorf("Could not find album")
+		return 0, fmt.Errorf("could not find album")
 	}
 	var affectedRows int64
 	insStmt := "DELETE FROM albumphotos WHERE albumId = $1 AND photoId = $2"
@@ -124,7 +124,7 @@ func (dao *AlbumPG) List() ([]*Album, error) {
 
 func (dao *AlbumPG) Photos(id uuid.UUID) ([]*Photo, error) {
 	if !dao.Has(id) {
-		return nil, fmt.Errorf("No such album")
+		return nil, fmt.Errorf("no such album")
 	}
 	stmt := "SELECT img.* FROM img JOIN albumphotos ap ON img.id = ap.photoid WHERE ap.albumid = $1"
 	ret := []*Photo{}
@@ -223,7 +223,7 @@ func (dao *AlbumPG) UpdateOrder(id uuid.UUID, photoIds []uuid.UUID) (*Album, err
         FROM unnest($2::uuid[], $3::int[]) AS updates(id, new_order)
         WHERE albumPhotos.albumId = $1 AND albumPhotos.photoId = updates.id
     `
-	orders := make([]int, len(photoIds), len(photoIds))
+	orders := make([]int, len(photoIds))
 
 	for i := range orders {
 		orders[i] = i + 1

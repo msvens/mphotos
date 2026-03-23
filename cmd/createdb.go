@@ -28,7 +28,10 @@ var createdbCmd = &cobra.Command{
 	Short: "Create img database",
 	Long:  `Create the underlying postgres img database tables if not existing`,
 	Run: func(cmd *cobra.Command, args []string) {
-		config.InitConfig()
+		if err := config.InitConfig(); err != nil {
+			fmt.Println(err)
+			return
+		}
 		db, err := dao.NewPGDB()
 		if err != nil {
 			fmt.Println("could not open db service: ", err)

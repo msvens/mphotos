@@ -38,7 +38,7 @@ func (dao *PhotoPG) Add(p *Photo, exif *metadata.Summary) error {
 
 func (dao *PhotoPG) Albums(id uuid.UUID) ([]*Album, error) {
 	if !dao.Has(id) {
-		return nil, fmt.Errorf("No Such Photo")
+		return nil, fmt.Errorf("no such photo")
 	}
 	ret := []*Album{}
 	//TODO: change to a join for consistency
@@ -49,7 +49,7 @@ func (dao *PhotoPG) Albums(id uuid.UUID) ([]*Album, error) {
 
 func (dao *PhotoPG) AddAlbums(id uuid.UUID, albumIds []uuid.UUID) (int, error) {
 	if !dao.Has(id) {
-		return 0, fmt.Errorf("Could not find photo")
+		return 0, fmt.Errorf("could not find photo")
 	}
 
 	//check if all albums
@@ -64,7 +64,7 @@ func (dao *PhotoPG) AddAlbums(id uuid.UUID, albumIds []uuid.UUID) (int, error) {
 		return 0, err
 	}
 	if count != len(albumIds) {
-		return 0, fmt.Errorf("Missing photos")
+		return 0, fmt.Errorf("missing photos")
 	}
 
 	//now insert images
@@ -84,7 +84,7 @@ func (dao *PhotoPG) AddAlbums(id uuid.UUID, albumIds []uuid.UUID) (int, error) {
 
 func (dao *PhotoPG) ClearAlbums(id uuid.UUID) (int, error) {
 	if !dao.Has(id) {
-		return 0, fmt.Errorf("Could not find photo")
+		return 0, fmt.Errorf("could not find photo")
 	}
 	if res, err := dao.db.Exec("DELETE FROM albumphotos WHERE photoId = $1", id); err != nil {
 		return 0, err
@@ -96,7 +96,7 @@ func (dao *PhotoPG) ClearAlbums(id uuid.UUID) (int, error) {
 
 func (dao *PhotoPG) DeleteAlbums(id uuid.UUID, albumIds []uuid.UUID) (int, error) {
 	if !dao.Has(id) {
-		return 0, fmt.Errorf("Could not find photo")
+		return 0, fmt.Errorf("could not find photo")
 	}
 	var deleted int64
 	delStmt := "DELETE FROM albumphotos WHERE albumId = $1 AND photoId = $2"
@@ -153,7 +153,7 @@ func (dao *PhotoPG) Exif(id uuid.UUID) (*Exif, error) {
 func (dao *PhotoPG) Has(id uuid.UUID) bool {
 	stmt := "SELECT 1 FROM img WHERE id = $1"
 	if rows, err := dao.db.Query(stmt, id); err == nil {
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		return rows.Next()
 	} else {
 		return false
@@ -162,7 +162,7 @@ func (dao *PhotoPG) Has(id uuid.UUID) bool {
 
 func (dao *PhotoPG) HasMd5(md5 string) bool {
 	if rows, err := dao.db.Query("SELECT 1 FROM img WHERE md5 = $1", md5); err == nil {
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		return rows.Next()
 	} else {
 		return false

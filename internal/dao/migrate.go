@@ -31,10 +31,10 @@ func UpgradeDb() error {
 		} else if canUpgradeDb(pgdb) {
 			return upgradeToV3(pgdb)
 		} else {
-			return fmt.Errorf("Cannot upgrade database, wrong current version")
+			return fmt.Errorf("cannot upgrade database, wrong current version")
 		}
 	} else if hasPhotos {
-		return fmt.Errorf("Cannot upgrade database")
+		return fmt.Errorf("cannot upgrade database")
 	} else {
 		fmt.Println("No database exists. Creating a fresh db")
 		if err = pgdb.CreateTables(); err != nil {
@@ -84,20 +84,4 @@ func upgradeToV3(pgdb *PGDB) error {
 	fmt.Println("Drop the private column from image")
 	_, err = pgdb.db.Exec("ALTER TABLE img DROP COLUMN private")
 	return err
-}
-
-func upgradeToV2(pgdb *PGDB) error {
-	fmt.Println("Upgrading Db to Version: ", DbVersion)
-	var err error
-	_, err = pgdb.db.Exec(schemaV1toV2)
-	if err != nil {
-		return err
-	}
-	fmt.Println("Db Updated. Change Version Info")
-	if v, err := pgdb.Version.Update(); err != nil {
-		return err
-	} else {
-		fmt.Println("Updated Db to version: ", v.VersionId)
-	}
-	return nil
 }

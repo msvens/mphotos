@@ -28,7 +28,10 @@ var deletedbCmd = &cobra.Command{
 	Short: "Delete img database",
 	Long:  `Permanently deletes all img database tables`,
 	Run: func(cmd *cobra.Command, args []string) {
-		config.InitConfig()
+		if err := config.InitConfig(); err != nil {
+			fmt.Println(err)
+			return
+		}
 		dbs, err := dao.NewPGDB()
 		if err != nil {
 			fmt.Println("could not open db service: ", err)

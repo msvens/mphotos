@@ -28,7 +28,10 @@ var versionCmd = &cobra.Command{
 	Short: "Upgrade Db Version",
 	Long:  `Upgrade Db Version to current. Use with care as it does not do any checking`,
 	Run: func(cmd *cobra.Command, args []string) {
-		config.InitConfig()
+		if err := config.InitConfig(); err != nil {
+			fmt.Println(err)
+			return
+		}
 		db, err := dao.NewPGDB()
 		if err != nil {
 			fmt.Println(err)

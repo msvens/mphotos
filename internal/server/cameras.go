@@ -73,13 +73,15 @@ func (s *mserver) uploadCameraImageFromFile(r *http.Request) (interface{}, error
 	if !s.pg.Camera.Has(id) {
 		return nil, NotFoundError("Camera not found: " + id)
 	}
-	r.ParseMultipartForm(10 << 20) //10M
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		return nil, err
+	}
 	file, _, err := r.FormFile("cameraImage")
 	if err != nil {
 		return nil, err
 	}
 
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	//Detect type
 	buff := make([]byte, 512)
@@ -102,7 +104,10 @@ func (s *mserver) uploadCameraImageFromFile(r *http.Request) (interface{}, error
 	fileName := id + ext
 	//dst, err := os.Create(cameraPath(s, fileName))
 	dst, err := os.Create(config.CameraFilePath(fileName))
-	defer dst.Close()
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = dst.Close() }()
 	_, err = io.Copy(dst, file)
 	if err != nil {
 		return nil, err
@@ -137,7 +142,7 @@ func (s *mserver) uploadCameraImageFromURL(r *http.Request) (interface{}, error)
 	if err != nil {
 		return nil, err
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 	mt := response.Header.Get("Content-Type")
 	if mt != gdrive.Jpeg && mt != gdrive.Png {
 		return nil, BadRequestError("Image is not of the correct mimetype: " + mt)
@@ -149,10 +154,10 @@ func (s *mserver) uploadCameraImageFromURL(r *http.Request) (interface{}, error)
 	fileName := id + ext
 	//file, err := os.Create(cameraPath(s, fileName))
 	file, err := os.Create(config.CameraFilePath(fileName))
-	defer file.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer func() { _ = file.Close() }()
 	_, err = io.Copy(file, response.Body)
 	if err != nil {
 		return nil, err
