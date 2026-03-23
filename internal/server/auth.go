@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/msvens/mphotos/internal/config"
 	"go.uber.org/zap"
-	"golang.org/x/net/context"
+	"context"
 	"golang.org/x/oauth2"
 	"net/http"
 	"net/url"

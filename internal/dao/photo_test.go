@@ -3,7 +3,7 @@ package dao
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 )
 
@@ -16,7 +16,7 @@ func loadPhotoTestData() error {
 	if loadedTestData {
 		return nil
 	}
-	photoData, err := ioutil.ReadFile("../../assets/photos.json")
+	photoData, err := os.ReadFile("../../assets/photos.json")
 	if err != nil {
 		return err
 	}
@@ -30,7 +30,7 @@ func loadPhotoTestData() error {
 	}
 
 	fmt.Println("Now read exif data")
-	exifData, err := ioutil.ReadFile("../../assets/exif.json")
+	exifData, err := os.ReadFile("../../assets/exif.json")
 	err = json.Unmarshal(exifData, &testExifs)
 	if err != nil {
 		return err
