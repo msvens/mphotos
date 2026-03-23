@@ -3,14 +3,13 @@ package server
 import (
     "fmt"
 	"encoding/gob"
-    "github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/msvens/mphotos/internal/config"
 	"github.com/msvens/mphotos/internal/dao"
 	"github.com/msvens/mphotos/internal/gdrive"
 	"github.com/msvens/mphotos/internal/gmail"
 	"go.uber.org/zap"
-	"golang.org/x/net/context"
+	"context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"net/http"
@@ -25,7 +24,7 @@ type mserver struct {
 	pg          *dao.PGDB
 	ds          *gdrive.DriveService
 	ms          *gmail.GmailService
-	r           *mux.Router
+	r           *http.ServeMux
 	l           *zap.SugaredLogger
 	prefixPath  string
 	store       *sessions.CookieStore
@@ -66,7 +65,7 @@ func newServer(prefixPath string, logger *zap.SugaredLogger) *mserver {
 	gob.Register(SessionGuest{})
 
 
-	s.r = mux.NewRouter()
+	s.r = http.NewServeMux()
 
 	var err error
 
@@ -128,7 +127,7 @@ func StartMServer() {
 
 	srv := &http.Server{
 		Addr:    config.ServerAddr(),
-		Handler: s.r,
+		Handler: s.userGuestInfoMW(s.r),
 	}
 
 	done := make(chan os.Signal, 1)

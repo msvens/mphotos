@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"io"
 	"net/http"
@@ -139,7 +138,7 @@ func setJson(w http.ResponseWriter) {
 }
 
 func Var(r *http.Request, name string) string {
-	return mux.Vars(r)[name]
+	return r.PathValue(name)
 }
 
 func decodeRequest(r *http.Request, dst interface{}) error {

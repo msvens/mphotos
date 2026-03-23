@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"github.com/msvens/mimage/img"
 	"github.com/msvens/mphotos/internal/config"
 	"github.com/msvens/mphotos/internal/dao"
@@ -15,8 +14,7 @@ import (
 )
 
 func (s *mserver) handleImg(pt config.PhotoType, w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	name := vars["name"]
+	name := r.PathValue("name")
 	//http.ServeFile(w, r, filepath.Join(dir, name))
 	http.ServeFile(w, r, config.PhotoFilePath(pt, name))
 }
