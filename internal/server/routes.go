@@ -6,7 +6,9 @@ func (s *mserver) routes() {
 
 	s.mGET("/albums", s.loginInfo(s.handleAlbums))
 	s.mPUT("/albums", s.authOnly(s.handleAddAlbum))
-	s.mGET("/albums/names/{name}", s.loginInfo(s.handleAlbumByName))
+	// Removed: conflicts with /albums/{albumid}/... in stdlib ServeMux.
+	// Not used by mphotos-ui. Can be deleted if confirmed unused.
+	// s.mGET("/albums/names/{name}", s.loginInfo(s.handleAlbumByName))
 	s.mGET("/albums/{albumid}", s.loginInfo(s.handleAlbum))
 	s.mDELETE("/albums/{albumid}", s.authOnly(s.handleDeleteAlbum))
 	s.mPUT("/albums/{albumid}", s.authOnly(s.handleUpdateAlbum))
