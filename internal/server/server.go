@@ -20,7 +20,6 @@ import (
 )
 
 type mserver struct {
-	//dbold           model.DataStore
 	pg          *dao.PGDB
 	ds          *gdrive.DriveService
 	ms          *gmail.GmailService
@@ -32,13 +31,6 @@ type mserver struct {
 	guestCookie string
 	tokenFile   string
 	gconfig     *oauth2.Config
-	/*imgDir       string
-	cameraDir    string
-	thumbDir     string
-	portraitDir  string
-	landscapeDir string
-	squareDir    string
-	resizeDir    string*/
 }
 
 func newServer(prefixPath string, logger *zap.SugaredLogger) *mserver {
@@ -152,17 +144,10 @@ func StartMServer() {
 
 	close(jobChan)
 	wg.Wait()
-	//if s.ps != nil {
-	//	s.ps.Shutdown()
-	//}
 
 	if err := srv.Shutdown(ctx); err != nil {
 		s.l.Fatalw("server shutdown failed", zap.Error(err))
 	}
-
-	/*if err := s.dbold.CloseDb(); err != nil {
-		s.l.Fatalw("db close failed", zap.Error(err))
-	}*/
 
 	if err := s.pg.Close(); err != nil {
 		s.l.Fatalw("PGDB close failed", zap.Error(err))
