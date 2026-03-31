@@ -36,21 +36,6 @@ func (s *mserver) handleAlbums(_ *http.Request, loggedIn bool) (interface{}, err
 	return albums, nil
 }
 
-func (s *mserver) handleAlbumByName(r *http.Request, loggedIn bool) (interface{}, error) {
-	name := Var(r, "name")
-	if name == "" {
-		return nil, BadRequestError("empty album name")
-	}
-	if a, err := s.pg.Album.GetByName(name); err != nil {
-		return nil, err
-	} else if loggedIn {
-		return a, nil
-	} else {
-		a.Code = ""
-		return a, nil
-	}
-}
-
 func (s *mserver) handleAlbum(r *http.Request, loggedIn bool) (interface{}, error) {
 	id, err := uuid.Parse(Var(r, "albumid"))
 	if err != nil {
