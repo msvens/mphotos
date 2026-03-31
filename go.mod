@@ -9,7 +9,6 @@ require (
 	github.com/gorilla/sessions v1.4.0
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/msvens/mimage v0.0.17
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
