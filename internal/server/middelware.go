@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/schema"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -129,7 +130,7 @@ func psResponse(data interface{}, err error, w http.ResponseWriter) {
 	}
 	e := enc.Encode(resp)
 	if e != nil {
-		fmt.Println("could not encode response", e)
+		log.Printf("could not encode response: %v", e)
 	}
 }
 

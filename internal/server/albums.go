@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/msvens/mphotos/internal/dao"
 	"net/http"
@@ -212,8 +211,7 @@ func (s *mserver) handleUpdateOrder(r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, BadRequestError("Could not parse album id")
 	}
-	fmt.Println("This is number of photos in order: ", len(param.Photos))
-	fmt.Println("This is photos: ", param.Photos)
+	s.l.Debugw("handleUpdateOrder", "numPhotos", len(param.Photos), "photos", param.Photos)
 	if s.pg.Album.Has(id) {
 		return s.pg.Album.UpdateOrder(id, param.Photos)
 	} else {
