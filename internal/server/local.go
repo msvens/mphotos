@@ -70,7 +70,7 @@ func (s *mserver) handleUploadLocalPhoto(r *http.Request) (interface{}, error) {
 		if d, err := time.Parse(time.RFC3339, sourceDateStr); err == nil {
 			sourceDate = d
 		} else {
-			fmt.Println(err.Error())
+			s.l.Warnw("could not parse sourceDate", zap.Error(err))
 		}
 	}
 
