@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"google.golang.org/api/googleapi"
 	"net/http"
@@ -47,7 +48,7 @@ func ResolveError(err error) *ApiError {
 	if ok {
 		return &ApiError{e1.Code, e1.Message}
 	}
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return NotFoundError("No such data in db")
 	}
 	//check for db error
