@@ -2,8 +2,10 @@ package config
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"path/filepath"
+	"strings"
+
+	"github.com/spf13/viper"
 )
 
 var configed bool = false
@@ -72,6 +74,9 @@ func NewConfig(name string) error {
 	viper.AddConfigPath("/etc/mphotos")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("../..")
+	viper.SetEnvPrefix("MPHOTOS")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
 	err := viper.ReadInConfig()
 	if err == nil {
 		err = setPhotoTypePaths()

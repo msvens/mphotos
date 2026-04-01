@@ -2,28 +2,27 @@ server:
   prefix: /api
   port: 8050
   host: localhost
-  verifyUrl: http://localhost:8050/api/guest/verify #link to verify in verification email
+  verifyUrl: http://localhost:8050/api/guest/verify
 
 service:
-  root: .server #default
-  imgDir: img #img path
-  thumbDir: thumb #thumbnail path
+  root: .server
+  imgDir: img
+  thumbDir: thumb
   password: password
 
 session:
-  authKey: authKey #64 bytes recommended
-  encKey: encKey #32bytes recommended
+  authKey: authKey
+  encKey: encKey
   authKeyOld: authKeyOld
   encKeyOld: encKeyOld
   cookieName: server-session
 
-
 db:
   host: localhost
   port: 5432
-  user: user
-  password: password
-  name: name
+  user: mphotos_test
+  password: mphotos_test
+  name: mphotos-test
 
 google:
   redirectUrl: http://some/redirect/url
