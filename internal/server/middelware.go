@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/schema"
+	"go.uber.org/zap"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -83,9 +83,9 @@ func (s *mserver) authOnly(rh reqHandler) http.HandlerFunc {
 		//s.l.Debugw("AuthReq", "uri", r.RequestURI, "method", r.Method)
 		if ctxLoggedIn(r.Context()) {
 			data, err := rh(r)
-			psResponse(data, err, w)
+			s.psResponse(data, err, w)
 		} else {
-			psResponse(nil, UnauthorizedError("user not logged in"), w)
+			s.psResponse(nil, UnauthorizedError("user not logged in"), w)
 		}
 	}
 }
@@ -93,14 +93,14 @@ func (s *mserver) authOnly(rh reqHandler) http.HandlerFunc {
 func (s *mserver) mResponse(handler mHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := handler(w, r)
-		psResponse(data, err, w)
+		s.psResponse(data, err, w)
 	}
 }
 
 func (s *mserver) loginInfo(lh loginHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := lh(r, ctxLoggedIn(r.Context()))
-		psResponse(data, err, w)
+		s.psResponse(data, err, w)
 	}
 }
 
@@ -108,15 +108,15 @@ func (s *mserver) guestOnly(gh guestHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var guest = ctxGuest(r.Context())
 		if guest == emptyuuid {
-			psResponse(nil, UnauthorizedError("guest not found"), w)
+			s.psResponse(nil, UnauthorizedError("guest not found"), w)
 		} else {
 			data, err := gh(r, guest)
-			psResponse(data, err, w)
+			s.psResponse(data, err, w)
 		}
 	}
 }
 
-func psResponse(data interface{}, err error, w http.ResponseWriter) {
+func (s *mserver) psResponse(data interface{}, err error, w http.ResponseWriter) {
 	setJson(w)
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
@@ -130,7 +130,7 @@ func psResponse(data interface{}, err error, w http.ResponseWriter) {
 	}
 	e := enc.Encode(resp)
 	if e != nil {
-		log.Printf("could not encode response: %v", e)
+		s.l.Errorw("could not encode response", zap.Error(e))
 	}
 }
 

@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"fmt"
 	"github.com/msvens/mimage/img"
 	"github.com/msvens/mphotos/internal/config"
 	"os"
@@ -50,7 +49,7 @@ func cleanImgDir(keep map[string]bool, pt config.PhotoType) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Cleaning: %s\n", config.PhotoPath(pt))
+	logger.Infow("Cleaning", "path", config.PhotoPath(pt))
 	numDeleted := 0
 	for _, f := range files {
 		if !keep[f.Name()] {
@@ -62,7 +61,7 @@ func cleanImgDir(keep map[string]bool, pt config.PhotoType) error {
 			numDeleted++
 		}
 	}
-	fmt.Printf("Deleted %v files from %v\n", numDeleted, config.PhotoPath(pt))
+	logger.Infow("Deleted files", "count", numDeleted, "path", config.PhotoPath(pt))
 	return nil
 }
 
@@ -78,7 +77,7 @@ func CleanImageDirs(db *PGDB) error {
 	for k := range config.PhotoPaths() {
 		err := cleanImgDir(fNames, k)
 		if err != nil {
-			fmt.Println("Error cleaning imgDir: ", err)
+			logger.Errorw("Error cleaning imgDir", "error", err)
 		}
 	}
 	return nil

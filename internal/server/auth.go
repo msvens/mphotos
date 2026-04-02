@@ -181,7 +181,7 @@ func (s *mserver) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	//make sure only logged in users can execute this
 	if !ctxLoggedIn(r.Context()) {
-		psResponse(nil, UnauthorizedError("user not logged in"), w)
+		s.psResponse(nil, UnauthorizedError("user not logged in"), w)
 		return
 	}
 	redirUrl, unesc := parseDir()
