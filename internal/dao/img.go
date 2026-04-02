@@ -82,41 +82,7 @@ func CleanImageDirs(db *PGDB) error {
 		}
 	}
 	return nil
-
-	//list image dir:
-	/*files, err := ioutil.ReadDir(config.PhotoPath(config.Original))
-	if err != nil {
-		return nil
-	}
-	toDelete := []string{}
-	for _, f := range files {
-		if !fNames[f.Name()] {
-			toDelete = append(toDelete, f.Name())
-		}
-	}
-	for _, td := range toDelete {
-		fmt.Println("Deleteing: ", td)
-		DeleteImg(td)
-	}
-	return nil
-	*/
 }
-
-/*
-func CreateImageDir(dir string) error {
-	var err error
-	if err = os.MkdirAll(dir, 0744); err != nil {
-		return err
-	}
-	for name, _ := range photoTypes {
-		if err = os.MkdirAll(filepath.Join(dir, name), 0744); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-*/
 
 func GenerateImages(fName string) error {
 	srcFile := config.PhotoFilePath(config.Original, fName)

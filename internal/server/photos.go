@@ -193,18 +193,6 @@ func (s *mserver) handleExif(w http.ResponseWriter, r *http.Request) (interface{
 	}
 }
 
-/*
-func (s *mserver) handleLatestPhoto(_ *http.Request, loggedIn bool) (interface{}, error) {
-	photos, err := s.pg.Photo.Select(dao.Range{Offset: 0, Limit: 1}, dao.UploadDate, dao.PhotoFilter{Private: loggedIn})
-	if err != nil {
-		return nil, err
-	} else if len(photos) < 1 {
-		return nil, NotFoundError("no photos in collection")
-	} else {
-		return photos[0], nil
-	}
-}*/
-
 func (s *mserver) handlePhoto(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	id, err := uuid.Parse(Var(r, "photoid"))
 	if err != nil {
@@ -237,34 +225,6 @@ func (s *mserver) handlePhotos(r *http.Request) (interface{}, error) {
 
 }
 
-/*
-func (s *mserver) handleSearchPhotos(r *http.Request, loggedIn bool) (interface{}, error) {
-	type request struct {
-		CameraModel string
-		FocalLength string
-		Title       string
-		Keywords    string
-		Description string
-		Generic     string
-	}
-
-	var params request
-	if err := decodeRequest(r, &params); err != nil {
-		return nil, err
-	}
-	if params.CameraModel != "" {
-		f := dao.PhotoFilter{loggedIn, params.CameraModel}
-		if photos, err := s.pg.Photo.Select(dao.Range{}, dao.UploadDate, f); err != nil {
-			return nil, err
-		} else {
-			return &PhotoFiles{Length: len(photos), Photos: photos}, nil
-		}
-	} else {
-		return nil, InternalError("Search pattern not yet implemented")
-	}
-}
-*/
-
 // add check that url path id is the same as the update id
 func (s *mserver) handleUpdatePhoto(r *http.Request) (interface{}, error) {
 	type request struct {
@@ -280,18 +240,3 @@ func (s *mserver) handleUpdatePhoto(r *http.Request) (interface{}, error) {
 		return s.pg.Photo.Set(par.Title, par.Description, par.Keywords, par.Id)
 	}
 }
-
-/*
-func (s *mserver) handleUpdatePhotoPrivate(r *http.Request) (interface{}, error) {
-	id, err := uuid.Parse(Var(r, "id"))
-	if err != nil {
-		return nil, BadRequestError("Could not parse Id")
-	}
-
-	if photo, err := s.pg.Photo.Get(id, true); err != nil {
-		return nil, err
-	} else {
-		return s.pg.Photo.SetPrivate(!photo.Private, photo.Id)
-	}
-}
-*/
