@@ -188,40 +188,6 @@ func (dao *PhotoPG) ListSource(source string) ([]*Photo, error) {
 	return ret, err
 }
 
-/*
-func (dao *PhotoPG) Select(r Range, order PhotoOrder, filter PhotoFilter) ([]*Photo, error) {
-	var stmt strings.Builder
-	stmt.WriteString("SELECT * FROM img")
-
-	if !filter.Private && filter.CameraModel != "" {
-		stmt.WriteString(" WHERE private = false AND cameramodel = $1")
-	} else if !filter.Private {
-		stmt.WriteString(" WHERE private = false")
-	} else if filter.CameraModel != "" {
-		stmt.WriteString(" WHERE cameramodel = $1")
-	}
-
-	switch order {
-	case UploadDate:
-		stmt.WriteString(" ORDER BY uploaddate DESC")
-	case OriginalDate:
-		stmt.WriteString(" ORDER BY originaldate DESC")
-	}
-
-	if r.Limit > 0 {
-		fmt.Fprintf(&stmt, " LIMIT %d OFFSET %d", r.Limit, r.Offset)
-	}
-	ret := []*Photo{}
-	var err error
-	if filter.CameraModel != "" {
-		err = dao.db.Select(&ret, stmt.String(), filter.CameraModel)
-	} else {
-		err = dao.db.Select(&ret, stmt.String())
-	}
-	return ret, err
-}
-*/
-
 func (dao *PhotoPG) Set(title string, description string, keywords []string, id uuid.UUID) (*Photo, error) {
 	//join keywords
 	var b strings.Builder
@@ -244,43 +210,4 @@ func (dao *PhotoPG) SetAlbums(id uuid.UUID, albumIds []uuid.UUID) (int, error) {
 	} else {
 		return dao.AddAlbums(id, albumIds)
 	}
-
 }
-
-/*
-// Deprecated
-func (dao *AlbumPG) UpdatePhoto(albumIds []uuid.UUID, photoId uuid.UUID) error {
-	//check img
-	if !has(dao.db, "img", "id", photoId) {
-		return fmt.Errorf("photoId does not exist")
-	}
-
-	//check album Ids
-	for _, id := range albumIds {
-		if !dao.Has(id) {
-			return fmt.Errorf("non existent album")
-		}
-	}
-	if _, err := dao.db.Exec("DELETE FROM albumphotos WHERE photoId = $1", photoId); err != nil {
-		return err
-	}
-
-	const addAlbumPhoto = "INSERT INTO albumphotos (albumId, photoId) VALUES ($1, $2)"
-	for _, a := range albumIds {
-		if _, err := dao.db.Exec(addAlbumPhoto, a, photoId); err != nil {
-			return nil
-		}
-	}
-	return nil
-}
-
-*/
-
-/*
-func (dao *PhotoPG) SetPrivate(private bool, id uuid.UUID) (*Photo, error) {
-	if _, err := dao.db.Exec("UPDATE img SET private = $1 WHERE id = $2", private, id); err != nil {
-		return nil, err
-	}
-	return dao.Get(id, true)
-}
-*/

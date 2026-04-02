@@ -166,20 +166,6 @@ func (dao *AlbumPG) SelectPhotos(id uuid.UUID, filter PhotoFilter, r Range, orde
 	return ret, err
 }
 
-/*
-func (dao *AlbumPG) Photos(id uuid.UUID, private bool) ([]*Photo, error) {
-	ret := []*Photo{}
-	//select img.id FROM img JOIN albumphotos ap ON img.id = ap.photoid WHERE ap.albumid = '1035a8c9-72e9-4f77-ae79-afbe80fc458c' AND img.private = false order by ap.photoorder NULLS LAST
-	stmt := "SELECT img.* FROM img JOIN albumphotos ap ON img.id = ap.photoid WHERE ap.albumid = $1 AND img.private = false ORDER BY ap.photoorder NULLS LAST"
-	if private {
-		stmt = "SELECT img.* FROM img JOIN albumphotos ap ON img.id = ap.photoid WHERE ap.albumid = $1 ORDER BY ap.photoorder NULLS LAST"
-	}
-	err := dao.db.Select(&ret, stmt, id)
-	return ret, err
-}
-
-*/
-
 func (dao *AlbumPG) Delete(id uuid.UUID) error {
 
 	if _, err := dao.db.Exec("DELETE FROM album WHERE id = $1", id); err == nil {
