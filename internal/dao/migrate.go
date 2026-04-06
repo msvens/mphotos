@@ -7,7 +7,7 @@ import (
 // for now this is just hard coded
 func canUpgradeDb(pgdb *PGDB) bool {
 	if v, err := pgdb.Version.Get(); err != nil {
-		fmt.Println("could not get Version info: ", err)
+		logger.Errorw("could not get Version info", "error", err)
 		return false
 	} else {
 		return v.VersionId+1 == DbVersion
@@ -26,7 +26,7 @@ func UpgradeDb() error {
 		if isCurrent, err := pgdb.Version.IsCurrent(); err != nil {
 			return err
 		} else if isCurrent {
-			fmt.Println("Database is up to date")
+			logger.Info("Database is up to date")
 			return nil
 		} else if canUpgradeDb(pgdb) {
 			return upgradeToV3(pgdb)
@@ -36,7 +36,7 @@ func UpgradeDb() error {
 	} else if hasPhotos {
 		return fmt.Errorf("cannot upgrade database")
 	} else {
-		fmt.Println("No database exists. Creating a fresh db")
+		logger.Info("No database exists. Creating a fresh db")
 		if err = pgdb.CreateTables(); err != nil {
 			return err
 		}
@@ -45,7 +45,7 @@ func UpgradeDb() error {
 }
 
 func upgradeToV3(pgdb *PGDB) error {
-	fmt.Println("Upgrading Db to Version: ", DbVersion)
+	logger.Infow("Upgrading Db to Version", "version", DbVersion)
 
 	var err error
 	var v *Version
@@ -56,18 +56,18 @@ func upgradeToV3(pgdb *PGDB) error {
 		return err
 	}
 
-	fmt.Println("Db Updated. Change Version Info")
+	logger.Info("Db Updated. Change Version Info")
 	if v, err = pgdb.Version.Update(); err != nil {
 		return err
 	} else {
-		fmt.Println("Updated Db to version: ", v.VersionId)
+		logger.Infow("Updated Db to version", "version", v.VersionId)
 	}
-	fmt.Println("create photo stream album")
+	logger.Info("create photo stream album")
 	if a, err = pgdb.Album.Add("photostream", "Default public photostream", ""); err != nil {
 		return err
 	}
 
-	fmt.Println("Add all public photos to it")
+	logger.Info("Add all public photos to it")
 
 	if err = pgdb.db.Select(&photos, "SELECT * FROM img WHERE private = false"); err != nil {
 		return err
@@ -81,7 +81,7 @@ func upgradeToV3(pgdb *PGDB) error {
 	}
 
 	//finally delete the private column
-	fmt.Println("Drop the private column from image")
+	logger.Info("Drop the private column from image")
 	_, err = pgdb.db.Exec("ALTER TABLE img DROP COLUMN private")
 	return err
 }

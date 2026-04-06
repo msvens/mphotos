@@ -3,7 +3,8 @@ package gmail
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
+
+	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/gmail/v1"
 	"google.golang.org/api/option"
@@ -13,6 +14,13 @@ const (
 	MIME_TXT  = "MIME-version: 1.0;\nContent-Type: text/plain; charset=\"UTF-8\";\n\n"
 	MIME_HTML = "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
 )
+
+var logger *zap.SugaredLogger
+
+func init() {
+	l, _ := zap.NewDevelopment()
+	logger = l.Sugar()
+}
 
 type GmailService struct {
 	service *gmail.Service
@@ -50,7 +58,7 @@ func (gs *GmailService) SendTextMessage(to string, subject string, body string) 
 	message.Raw = base64.URLEncoding.EncodeToString(msg)
 	_, err := gs.service.Users.Messages.Send("me", &message).Do()
 	if err != nil {
-		fmt.Println("error sending email")
+		logger.Errorw("error sending email", "error", err)
 		return false, err
 	}
 	return true, nil
@@ -67,7 +75,7 @@ func (gs *GmailService) SendHtmlMessage(to string, subject string, body string) 
 	message.Raw = base64.URLEncoding.EncodeToString(msg)
 	_, err := gs.service.Users.Messages.Send("me", &message).Do()
 	if err != nil {
-		fmt.Println("error sending email")
+		logger.Errorw("error sending email", "error", err)
 		return false, err
 	}
 	return true, nil
