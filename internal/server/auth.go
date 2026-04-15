@@ -19,11 +19,7 @@ func (s *mserver) handleLogin(w http.ResponseWriter, r *http.Request) (interface
 	type request struct {
 		Password string `json:"password" schema:"password"`
 	}
-	//session, err := s.store.Get(r, config.SessionCookieName())
 	session, _ := s.store.Get(r, s.cookieName)
-	/*if err != nil {
-		return nil, InternalError(err.Error())
-	}*/
 	var loginParams request
 	if err := decodeRequest(r, &loginParams); err != nil {
 		return nil, err
@@ -93,19 +89,11 @@ func (s *mserver) tokenFromFile(file string) (*oauth2.Token, error) {
 
 func (s *mserver) authFromFile() error {
 	if token, err := s.tokenFromFile(s.tokenFile); err != nil {
-		//s.setDriveService(nil)
 		s.ds = nil
 		s.ms = nil
 		return err
 	} else {
 		return s.setGoogleServices(token)
-		/*if drv, err := gdrive.NewDriveService(token, s.gconfig); err != nil {
-			s.setDriveService(nil)
-			return err
-		} else {
-			s.setDriveService(drv)
-			return nil
-		}*/
 	}
 }
 

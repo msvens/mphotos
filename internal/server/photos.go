@@ -72,11 +72,6 @@ func (s *mserver) handleDeletePhotos(r *http.Request) (interface{}, error) {
 }
 
 func (s *mserver) handleDownloadPhoto(w http.ResponseWriter, r *http.Request) {
-	/*if loggedIn := ctxLoggedIn(r.Context()); !loggedIn {
-		http.Error(w, "User not logged in", http.StatusUnauthorized)
-		return
-	}*/
-
 	id, err := uuid.Parse(Var(r, "photoid"))
 	if err != nil {
 		http.Error(w, "Could not parse Id", http.StatusBadRequest)
