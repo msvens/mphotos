@@ -90,7 +90,7 @@ func (s *mserver) handleDownloadPhoto(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, config.PhotoFilePath(config.Original, p.FileName))
 }
 
-func (s *mserver) handlePhotoAlbums(r *http.Request, loogedIn bool) (interface{}, error) {
+func (s *mserver) handlePhotoAlbums(r *http.Request, loggedIn bool) (interface{}, error) {
 	id, err := uuid.Parse(Var(r, "photoid"))
 	if err != nil {
 		return nil, BadRequestError("could not parse img id")
@@ -99,7 +99,7 @@ func (s *mserver) handlePhotoAlbums(r *http.Request, loogedIn bool) (interface{}
 	if err != nil {
 		return nil, err
 	}
-	if !loogedIn {
+	if !loggedIn {
 		for i := range albums {
 			albums[i].Code = ""
 		}
