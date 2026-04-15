@@ -7,8 +7,6 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/msvens/mimage/metadata"
-
-	//"github.com/msvens/mexif"
 	"github.com/msvens/mphotos/internal/config"
 	"go.uber.org/zap"
 )
@@ -123,8 +121,6 @@ type PGDB struct {
 
 var logger *zap.SugaredLogger
 
-//var pg *PGDB = nil
-
 func init() {
 	l, _ := zap.NewDevelopment()
 	logger = l.Sugar()
@@ -180,7 +176,6 @@ func (pgd *PGDB) tableExists(table string) bool {
 }
 
 func (pgd *PGDB) CreateTables() error {
-	//pgd.db.MustExec(schemaV1)
 	if _, err := pgd.db.Exec(schemaV3); err != nil {
 		return err
 	} else { //make sure version is correct
