@@ -18,8 +18,8 @@ func (s *mserver) routes() {
 
 	s.r.HandleFunc(s.prefixPath+"/auth/callback", s.handleGoogleCallback)
 
-	s.mGET("/cameras", s.authOnly(s.handleCameras))
-	s.mGET("/cameras/{cameraid}", s.authOnly(s.handleCamera))
+	s.mGET("/cameras", s.loginInfo(s.handleCameras))
+	s.mGET("/cameras/{cameraid}", s.loginInfo(s.handleCamera))
 	s.mPUT("/cameras/{cameraid}", s.authOnly(s.handleUpdateCamera))
 	s.mGET("/cameras/{cameraid}/image/{size}", s.handleCameraImage)
 	s.mGET("/cameras/{cameraid}/image", s.handleCameraImage)

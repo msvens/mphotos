@@ -18,12 +18,12 @@ var cameraSizes = []img.Options{
 	img.NewOptions(img.Resize, 512, 0, false),
 }
 
-func (s *mserver) handleCamera(r *http.Request) (interface{}, error) {
+func (s *mserver) handleCamera(r *http.Request, loggedIn bool) (interface{}, error) {
 	id := Var(r, "id")
 	return s.pg.Camera.Get(id)
 }
 
-func (s *mserver) handleCameras(r *http.Request) (interface{}, error) {
+func (s *mserver) handleCameras(r *http.Request, loggedIn bool) (interface{}, error) {
 	return s.pg.Camera.List()
 }
 
