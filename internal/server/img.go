@@ -98,6 +98,7 @@ func (s *mserver) handleEditPreviewImage(w http.ResponseWriter, r *http.Request)
 	srcImage, err := img.Open(fname)
 	if err != nil {
 		http.Error(w, "could not open image file", http.StatusInternalServerError)
+		return
 	}
 	if par.Rotation != 0 {
 		srcImage = img.RotateImage(srcImage, par.Rotation)
