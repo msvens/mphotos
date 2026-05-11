@@ -8,7 +8,15 @@ service:
   root: .server #default
   imgDir: img #img path
   thumbDir: thumb #thumbnail path
-  password: password
+
+auth:
+  method: password           # "password" or "google"
+  password: password         # used when method=password
+  google:
+    allowedEmails:
+      - msvens@gmail.com
+    loginRedirectUrl: http://localhost:8050/api/auth/login/callback
+    uiRedirectPath: /        # where to send the browser after login (success or failure with ?error=)
 
 session:
   authKey: authKey #64 bytes recommended

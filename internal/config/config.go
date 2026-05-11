@@ -178,8 +178,32 @@ func CameraFilePath(fname string) string {
 	return filepath.Join(CameraPath(), fname)
 }
 
-func ServicePassword() string {
-	return viper.GetString("service.password")
+func AuthMethod() string {
+	m := viper.GetString("auth.method")
+	if m == "" {
+		return "password"
+	}
+	return m
+}
+
+func AuthPassword() string {
+	return viper.GetString("auth.password")
+}
+
+func AuthAllowedEmails() []string {
+	return viper.GetStringSlice("auth.google.allowedEmails")
+}
+
+func AuthGoogleLoginRedirectUrl() string {
+	return viper.GetString("auth.google.loginRedirectUrl")
+}
+
+func AuthGoogleUIRedirectPath() string {
+	p := viper.GetString("auth.google.uiRedirectPath")
+	if p == "" {
+		return "/"
+	}
+	return p
 }
 
 func SessionAuthcKey() string {

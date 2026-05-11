@@ -17,6 +17,8 @@ func (s *mserver) routes() {
 	s.mPUT("/albums/{albumid}/photos/set", s.authOnly(s.handleSetAlbumPhotos))
 
 	s.r.HandleFunc(s.prefixPath+"/auth/callback", s.handleGoogleCallback)
+	s.r.HandleFunc(s.prefixPath+"/auth/login/callback", s.handleGoogleLoginCallback)
+	s.mGET("/auth/method", s.mResponse(s.handleAuthMethod))
 
 	s.mGET("/cameras", s.loginInfo(s.handleCameras))
 	s.mGET("/cameras/{cameraid}", s.loginInfo(s.handleCamera))
@@ -47,6 +49,7 @@ func (s *mserver) routes() {
 	s.mGET("/resizes/{name}", s.handleResize)
 
 	s.mPUT("/login", s.mResponse(s.handleLogin))
+	s.mGET("/login/google", s.handleGoogleLoginRedirect)
 	s.mGET("/logout", s.mResponse(s.handleLogout))
 	s.mGET("/loggedin", s.loginInfo(s.handleLoggedIn))
 
