@@ -20,6 +20,8 @@ func (s *mserver) routes() {
 	s.mPUT("/albums/{albumid}/photos/set", s.authOnly(s.handleSetAlbumPhotos))
 
 	s.r.HandleFunc(s.prefixPath+"/auth/callback", s.handleGoogleCallback)
+	s.r.HandleFunc(s.prefixPath+"/auth/login/callback", s.handleGoogleLoginCallback)
+	s.mGET("/auth/method", s.mResponse(s.handleAuthMethod))
 
 	s.mGET("/cameras", s.mResponse(s.handleCameras))
 	s.mGET("/cameras/{cameraid}", s.mResponse(s.handleCamera))
@@ -33,7 +35,7 @@ func (s *mserver) routes() {
 	s.mGET("/drive", s.authOnly(s.handleDrive))
 	s.mGET("/drive/authenticated", s.authOnly(s.handleAuthenticatedDrive))
 	s.mGET("/drive/disconnect", s.authOnly(s.handleDisconnectDrive))
-	s.mGET("/drive/auth", s.handleGoogleLogin)
+
 	s.mGET("/drive/check", s.authOnly(s.handleCheckDrive))
 	s.mPUT("/drive/upload", s.authOnly(s.handleAddDrivePhotos))
 	s.mPUT("/drive/job/schedule", s.authOnly(s.handleScheduleDriveJob))
@@ -50,6 +52,7 @@ func (s *mserver) routes() {
 	s.mGET("/resizes/{name}", s.handleResize)
 
 	s.mPUT("/login", s.mResponse(s.handleLogin))
+	s.mGET("/login/google", s.handleGoogleLoginRedirect)
 	s.mGET("/logout", s.mResponse(s.handleLogout))
 	s.mGET("/loggedin", s.loginInfo(s.handleLoggedIn))
 

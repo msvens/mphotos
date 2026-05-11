@@ -66,8 +66,19 @@ func TestConfigFile(t *testing.T) {
 	if ServiceRoot() != ".server" {
 		t.Errorf("expected .server got %v", ServiceRoot())
 	}
-	if ServicePassword() != "password" {
-		t.Errorf("expected password got %v", ServicePassword())
+	//auth config:
+	if AuthMethod() != "password" {
+		t.Errorf("expected password got %v", AuthMethod())
+	}
+	if AuthPassword() != "password" {
+		t.Errorf("expected password got %v", AuthPassword())
+	}
+	allowed := AuthAllowedEmails()
+	if len(allowed) != 1 || allowed[0] != "msvens@gmail.com" {
+		t.Errorf("expected [msvens@gmail.com] got %v", allowed)
+	}
+	if AuthGoogleLoginRedirectUrl() != "http://localhost:8050/api/auth/login/callback" {
+		t.Errorf("unexpected login redirect url: %v", AuthGoogleLoginRedirectUrl())
 	}
 	//google config:
 	if GoogleClientId() != "clientId" {
