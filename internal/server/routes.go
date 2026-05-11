@@ -6,9 +6,6 @@ func (s *mserver) routes() {
 
 	s.mGET("/albums", s.loginInfo(s.handleAlbums))
 	s.mPUT("/albums", s.authOnly(s.handleAddAlbum))
-	// Removed: conflicts with /albums/{albumid}/... in stdlib ServeMux.
-	// Not used by mphotos-ui. Can be deleted if confirmed unused.
-	// s.mGET("/albums/names/{name}", s.loginInfo(s.handleAlbumByName))
 	s.mGET("/albums/{albumid}", s.loginInfo(s.handleAlbum))
 	s.mDELETE("/albums/{albumid}", s.authOnly(s.handleDeleteAlbum))
 	s.mPUT("/albums/{albumid}", s.authOnly(s.handleUpdateAlbum))
@@ -23,8 +20,8 @@ func (s *mserver) routes() {
 	s.r.HandleFunc(s.prefixPath+"/auth/login/callback", s.handleGoogleLoginCallback)
 	s.mGET("/auth/method", s.mResponse(s.handleAuthMethod))
 
-	s.mGET("/cameras", s.mResponse(s.handleCameras))
-	s.mGET("/cameras/{cameraid}", s.mResponse(s.handleCamera))
+	s.mGET("/cameras", s.loginInfo(s.handleCameras))
+	s.mGET("/cameras/{cameraid}", s.loginInfo(s.handleCamera))
 	s.mPUT("/cameras/{cameraid}", s.authOnly(s.handleUpdateCamera))
 	s.mGET("/cameras/{cameraid}/image/{size}", s.handleCameraImage)
 	s.mGET("/cameras/{cameraid}/image", s.handleCameraImage)

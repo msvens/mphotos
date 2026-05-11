@@ -36,7 +36,7 @@ func (s *mserver) handleLogin(w http.ResponseWriter, r *http.Request) (interface
 		if e := session.Save(r, w); e != nil {
 			return nil, InternalError(e.Error())
 		}
-		return nil, UnauthorizedError("Incorret user password")
+		return nil, UnauthorizedError("Incorrect user password")
 	}
 	user := &AuthUser{true}
 	session.Values["user"] = user
@@ -102,19 +102,11 @@ func (s *mserver) tokenFromFile(file string) (*oauth2.Token, error) {
 
 func (s *mserver) authFromFile() error {
 	if token, err := s.tokenFromFile(s.tokenFile); err != nil {
-		//s.setDriveService(nil)
 		s.ds = nil
 		s.ms = nil
 		return err
 	} else {
 		return s.setGoogleServices(token)
-		/*if drv, err := gdrive.NewDriveService(token, s.gconfig); err != nil {
-			s.setDriveService(nil)
-			return err
-		} else {
-			s.setDriveService(drv)
-			return nil
-		}*/
 	}
 }
 
@@ -126,12 +118,12 @@ func (s *mserver) getToken(r *http.Request) (*oauth2.Token, string, error) {
 	}
 
 	if token, err := s.gconfig.Exchange(context.TODO(), code); err != nil {
-		s.l.Errorw("code exchage error", zap.Error(err))
+		s.l.Errorw("code exchange error", zap.Error(err))
 		return nil, state, UnauthorizedError(err.Error())
 	} else {
 		if u, e := url.QueryUnescape(state); e != nil {
 			s.l.Errorw("could not unescape state", zap.Error(e))
-			return nil, state, BadRequestError("invalid ouath state")
+			return nil, state, BadRequestError("invalid oauth state")
 		} else {
 			return token, u, nil
 		}
@@ -182,7 +174,7 @@ func (s *mserver) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 			s.l.Info("could not parse redirection url:  ", err)
 			return root, "/"
 		} else if parsed.IsAbs() {
-			s.l.Info("Absolut url not allowed: ", unesc)
+			s.l.Info("Absolute url not allowed: ", unesc)
 			return root, "/"
 		} else {
 			return redir, unesc

@@ -41,7 +41,6 @@ func (dao *PhotoPG) Albums(id uuid.UUID) ([]*Album, error) {
 		return nil, fmt.Errorf("no such photo")
 	}
 	ret := []*Album{}
-	//TODO: change to a join for consistency
 	stmt := "SELECT * FROM album WHERE id IN (select albumId FROM albumphotos WHERE photoId = $1)"
 	err := dao.db.Select(&ret, stmt, id)
 	return ret, err

@@ -293,16 +293,6 @@ func worker(jobChan <-chan *Job) {
 
 func process(job *Job) {
 
-	/*
-		tool, err := mexif.NewMExifTool()
-		defer tool.Close()
-
-		if err != nil {
-			finishJob(job, err)
-			return
-		}
-	*/
-
 	job.State = StateStarted
 
 	for _, f := range job.files {
