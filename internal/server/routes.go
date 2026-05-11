@@ -32,7 +32,7 @@ func (s *mserver) routes() {
 	s.mGET("/drive", s.authOnly(s.handleDrive))
 	s.mGET("/drive/authenticated", s.authOnly(s.handleAuthenticatedDrive))
 	s.mGET("/drive/disconnect", s.authOnly(s.handleDisconnectDrive))
-
+	s.mGET("/drive/auth", s.handleGoogleLogin)
 	s.mGET("/drive/check", s.authOnly(s.handleCheckDrive))
 	s.mPUT("/drive/upload", s.authOnly(s.handleAddDrivePhotos))
 	s.mPUT("/drive/job/schedule", s.authOnly(s.handleScheduleDriveJob))

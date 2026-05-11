@@ -20,15 +20,15 @@ import (
 )
 
 type mserver struct {
-	pg          *dao.PGDB
-	ds          *gdrive.DriveService
-	ms          *gmail.GmailService
-	r           *http.ServeMux
-	l           *zap.SugaredLogger
-	prefixPath  string
-	store       *sessions.CookieStore
-	cookieName  string
-	guestCookie string
+	pg           *dao.PGDB
+	ds           *gdrive.DriveService
+	ms           *gmail.GmailService
+	r            *http.ServeMux
+	l            *zap.SugaredLogger
+	prefixPath   string
+	store        *sessions.CookieStore
+	cookieName   string
+	guestCookie  string
 	tokenFile    string
 	gconfig      *oauth2.Config
 	gconfigLogin *oauth2.Config
