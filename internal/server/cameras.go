@@ -1,6 +1,8 @@
 package server
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"github.com/msvens/mimage/img"
 	"github.com/msvens/mphotos/internal/config"
@@ -143,7 +145,16 @@ func (s *mserver) uploadCameraImageFromURL(r *http.Request) (interface{}, error)
 		return nil, err
 	}
 	defer func() { _ = response.Body.Close() }()
-	mt := response.Header.Get("Content-Type")
+
+	//Detect type from the response body itself. The remote Content-Type header is
+	//attacker controlled and must not decide which decoder later runs on these bytes.
+	buff := make([]byte, 512)
+	n, err := io.ReadFull(response.Body, buff)
+	if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) && !errors.Is(err, io.EOF) {
+		return nil, err
+	}
+	buff = buff[:n]
+	mt := http.DetectContentType(buff)
 	if mt != gdrive.Jpeg && mt != gdrive.Png {
 		return nil, BadRequestError("Image is not of the correct mimetype: " + mt)
 	}
@@ -158,7 +169,7 @@ func (s *mserver) uploadCameraImageFromURL(r *http.Request) (interface{}, error)
 		return nil, err
 	}
 	defer func() { _ = file.Close() }()
-	_, err = io.Copy(file, response.Body)
+	_, err = io.Copy(file, io.MultiReader(bytes.NewReader(buff), response.Body))
 	if err != nil {
 		return nil, err
 	}
