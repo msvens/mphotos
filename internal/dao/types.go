@@ -76,10 +76,11 @@ type Guest struct {
 	VerifyTime time.Time `json:"verifyTime"`
 }
 
+// GuestReaction is the public view of a reaction. It deliberately carries no
+// email: it is serialized by the unauthenticated GET /likes/{photoid} route.
 type GuestReaction struct {
-	Email string `json:"email"`
-	Name  string `json:"name"`
-	Kind  string `json:"kind"`
+	Name string `json:"name"`
+	Kind string `json:"kind"`
 }
 
 type Photo struct {
