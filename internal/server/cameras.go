@@ -21,7 +21,7 @@ var cameraSizes = []img.Options{
 }
 
 func (s *mserver) handleCamera(r *http.Request, loggedIn bool) (interface{}, error) {
-	id := Var(r, "id")
+	id := Var(r, "cameraid")
 	return s.pg.Camera.Get(id)
 }
 
@@ -40,7 +40,6 @@ func (s *mserver) handleUpdateCamera(r *http.Request) (interface{}, error) {
 func (s *mserver) handleCameraImage(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("cameraid")
 	var size int
-	var imgPath string
 	if s := r.PathValue("size"); s != "" {
 		switch s {
 		case "48":
@@ -64,8 +63,6 @@ func (s *mserver) handleCameraImage(w http.ResponseWriter, r *http.Request) {
 			fname = fmt.Sprint(id, "-", size, camera.Image)
 		}
 		http.ServeFile(w, r, config.CameraFilePath(fname))
-
-		http.ServeFile(w, r, imgPath)
 	}
 }
 

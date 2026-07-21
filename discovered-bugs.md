@@ -8,21 +8,20 @@ fix. Newest issues can be appended at the end.
 
 | # | Issue | Status |
 | --- | --- | --- |
-| 1 | `handleCamera` reads the wrong path variable | open |
+| 1 | `handleCamera` reads the wrong path variable | **fixed** |
 | 2 | `GET /api/photos` ignores filter and paging | deferred — a feature, not a bugfix |
-| 3 | `handlePhotos` swallows DAO errors | open |
+| 3 | `handlePhotos` swallows DAO errors | **fixed** |
 | 4 | `GET /api/likes/{photoid}` leaks guest emails | **fixed** |
-| 5 | `handleCameraImage` writes the response twice | open |
+| 5 | `handleCameraImage` writes the response twice | **fixed** |
 | 6 | Missing `return` after an error response in the image editor | **fixed** (PR #25) |
 | 7 | Update handlers ignore the id in the URL | deferred — behavior change, needs frontend check |
 | 8 | Photos in code-protected albums reachable by direct id | **closed — by design** |
 
-Working order for the open items: #3 first (it is observability — until it is fixed, a silent
-`/api/photos` cannot be trusted to mean health), then #1 and #5.
+Only #2 and #7 remain, both deliberately deferred — see their entries for why.
 
 ---
 
-## 1. `handleCamera` reads the wrong path variable
+## 1. `handleCamera` reads the wrong path variable — FIXED
 
 - **Where:** `internal/server/cameras.go:20` (`handleCamera`), route registered at
   `internal/server/routes.go:24` as `/cameras/{cameraid}`.
@@ -30,7 +29,7 @@ Working order for the open items: #3 first (it is observability — until it is 
   is just `r.PathValue(name)` (`internal/server/middelware.go:141`), so it returns `""` and the
   handler runs `Camera.Get("")`. `GET /api/cameras/{id}` therefore never returns a single camera.
   (The image handlers correctly use `PathValue("cameraid")`.)
-- **Fix:** `id := Var(r, "cameraid")`.
+- **Fixed:** `id := Var(r, "cameraid")`.
 - **Frontend impact:** the camera detail page works around this by finding the camera in the
   `GET /api/cameras` list instead of calling the single-camera endpoint.
 
@@ -57,7 +56,7 @@ The following were found by a sweep of all handlers in `internal/server/`, promp
 issues above. Every route pattern in `routes.go` was cross-referenced against the param names its
 handler actually reads; #1 is the only path-variable mismatch in the package.
 
-## 3. `handlePhotos` swallows DAO errors (shadowed error variable)
+## 3. `handlePhotos` swallows DAO errors (shadowed error variable) — FIXED
 
 - **Where:** `internal/server/photos.go:213`.
 - **Symptom:** `if photos, e1 := s.pg.Photo.List(); err != nil` tests the *outer* `err`, not `e1`.
@@ -65,7 +64,7 @@ handler actually reads; #1 is the only path-variable mismatch in the package.
   `err` is provably nil here and the error branch is dead. A failing `Photo.List()` therefore
   falls through to the `else` and returns `&PhotoFiles{Length: 0, Photos: nil}` — a 200 with an
   empty collection instead of an error.
-- **Fix:** test `e1`.
+- **Fixed:** the condition now tests `e1`.
 
 ## 4. `GET /api/likes/{photoid}` leaks guest email addresses — FIXED
 
@@ -88,14 +87,14 @@ handler actually reads; #1 is the only path-variable mismatch in the package.
   `email TEXT NOT NULL UNIQUE` column, so `GetByEmail`/`HasByEmail` still resolve a returning guest
   to their original UUID and their comments and likes reattach as before.
 
-## 5. `handleCameraImage` writes the response twice
+## 5. `handleCameraImage` writes the response twice — FIXED
 
 - **Where:** `internal/server/cameras.go:64-66`.
 - **Symptom:** two `http.ServeFile` calls on the same `ResponseWriter`. The second uses
   `imgPath`, declared at `cameras.go:41` and never assigned — so it is `http.ServeFile(w, r, "")`
   after the real image has already been written. Produces superfluous-WriteHeader and duplicate
   header churn in the net/http logs.
-- **Fix:** delete line 66 and the unused `imgPath` declaration.
+- **Fixed:** removed the second `ServeFile` call and the unused `imgPath` declaration.
 
 ## 6. Missing `return` after an error response in the image editor — FIXED
 

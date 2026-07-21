@@ -210,7 +210,7 @@ func (s *mserver) handlePhotos(r *http.Request) (interface{}, error) {
 		return nil, err
 	} else {
 		//dao.Range{Offset: params.Offset, Limit: params.Limit}
-		if photos, e1 := s.pg.Photo.List(); err != nil {
+		if photos, e1 := s.pg.Photo.List(); e1 != nil {
 			return nil, e1
 		} else {
 			return &PhotoFiles{Length: len(photos), Photos: photos}, nil
