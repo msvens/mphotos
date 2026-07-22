@@ -14,10 +14,10 @@ fix. Newest issues can be appended at the end.
 | 4 | `GET /api/likes/{photoid}` leaks guest emails | **fixed** |
 | 5 | `handleCameraImage` writes the response twice | **fixed** |
 | 6 | Missing `return` after an error response in the image editor | **fixed** (PR #25) |
-| 7 | Update handlers ignore the id in the URL | deferred — behavior change, needs frontend check |
+| 7 | Update handlers ignore the id in the URL | **fixed** |
 | 8 | Photos in code-protected albums reachable by direct id | **closed — by design** |
 
-Only #2 and #7 remain, both deliberately deferred — see their entries for why.
+Only #2 remains, deliberately deferred — see its entry for why.
 
 ---
 
@@ -106,18 +106,41 @@ handler actually reads; #1 is the only path-variable mismatch in the package.
 - **Fixed** in PR #25 (`Add missing return after http.Error in handleEditPreviewImage`), which was
   already open when this sweep independently rediscovered the bug.
 
-## 7. Update handlers ignore the id in the URL
+## 7. Update handlers ignore the id in the URL — FIXED
 
 - **Where:** `handleUpdateCamera` (`internal/server/cameras.go:30`, route `routes.go:25`),
   `handleUpdateAlbum` (`internal/server/albums.go:188`, route `routes.go:11`),
   `handleUpdatePhoto` (`internal/server/photos.go:224`, route `routes.go:68`).
-- **Symptom:** all three take the target id solely from the decoded request body and never read
+- **Symptom:** all three took the target id solely from the decoded request body and never read
   the `{cameraid}` / `{albumid}` / `{photoid}` path variable. `PUT /api/cameras/A` with a body
-  whose id is `B` updates `B`. The photos handler already carries an acknowledging comment at
-  `photos.go:223`: *"add check that url path id is the same as the update id"*.
+  whose id is `B` updated `B` — the URL was decorative. The photos handler already carried an
+  acknowledging comment at `photos.go:223`: *"add check that url path id is the same as the
+  update id"*.
 - **Impact:** these are all `authOnly`, so this is a correctness/API-contract issue rather than a
   privilege-escalation one.
-- **Fix:** compare the path id to the body id and return `BadRequestError` on mismatch.
+- **Fixed** by making the path id authoritative rather than by comparing the two and erroring.
+  Sending the id in both the path and the body is a normal thing for a client to do — it just
+  serializes the object it already holds — so there is nothing to reject. The path names the
+  resource, the body carries the new field values:
+  - `handleUpdateCamera` overwrites `params.Id` with `Var(r, "cameraid")` after decoding.
+  - `handleUpdateAlbum` fills `a.Id` via `uid(r, "albumid", &a.Id)`, so the existing `Has()`
+    check and the update both run against the path id.
+  - `handleUpdatePhoto` drops `Id` from its local `request` struct entirely and reads
+    `uid(r, "photoid", &id)` — the body id is not merely ignored, it is never decoded.
+- **API contract:** for all three, **the id in the request body is ignored**. Callers may keep
+  sending it; it has no effect.
+- **Frontend impact: none.** Both frontends were swept before the change. In `mphotos-ui` and
+  `mphotos-svelte` alike, the album and photo update calls derive the path id and the body id
+  from a single binding, so they could never disagree. Only `updateCamera(name, camera)`
+  (`services/cameras.ts` in both) takes the two as independent arguments, and its only caller
+  passes `camera.id` with `id` excluded from the editable fields. Every live caller therefore
+  already sent a matching id, making this a no-op for them.
+- **One narrowing worth knowing:** `decodeRequest` uses gorilla/schema for form-encoded bodies and
+  the decoder does not set `IgnoreUnknownKeys`, so a **form-encoded** `PUT /api/photos/{id}`
+  carrying an `id=` field is now rejected as an unknown key. Both frontends send
+  `Content-Type: application/json`, where unknown fields are silently discarded, so nothing in
+  practice hits this. Camera and album are unaffected — they decode into `dao.Camera` / `dao.Album`,
+  which still have an `Id` field for the form decoder to bind.
 
 ## 8. Photos in code-protected albums are reachable by direct id — CLOSED, BY DESIGN
 
