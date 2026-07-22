@@ -220,18 +220,21 @@ func (s *mserver) handlePhotos(r *http.Request) (interface{}, error) {
 
 }
 
-// add check that url path id is the same as the update id
+// handleUpdatePhoto updates the photo named by {photoid}. The path identifies the photo;
+// any id in the request body is ignored.
 func (s *mserver) handleUpdatePhoto(r *http.Request) (interface{}, error) {
 	type request struct {
-		Id          uuid.UUID `json:"id"`
-		Title       string    `json:"title"`
-		Description string    `json:"description"`
-		Keywords    []string  `json:"keywords"`
+		Title       string   `json:"title"`
+		Description string   `json:"description"`
+		Keywords    []string `json:"keywords"`
 	}
 	var par request
+	var id uuid.UUID
 	if err := decodeRequest(r, &par); err != nil {
 		return nil, err
-	} else {
-		return s.pg.Photo.Set(par.Title, par.Description, par.Keywords, par.Id)
 	}
+	if err := uid(r, "photoid", &id); err != nil {
+		return nil, err
+	}
+	return s.pg.Photo.Set(par.Title, par.Description, par.Keywords, id)
 }

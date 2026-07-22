@@ -29,11 +29,14 @@ func (s *mserver) handleCameras(r *http.Request, loggedIn bool) (interface{}, er
 	return s.pg.Camera.List()
 }
 
+// handleUpdateCamera updates the camera named by {cameraid}. The path identifies the
+// camera; any id in the request body is ignored.
 func (s *mserver) handleUpdateCamera(r *http.Request) (interface{}, error) {
 	var params dao.Camera
 	if err := decodeRequest(r, &params); err != nil {
 		return nil, err
 	}
+	params.Id = Var(r, "cameraid")
 	return s.pg.Camera.Update(&params)
 }
 

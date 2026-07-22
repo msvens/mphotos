@@ -185,9 +185,14 @@ func (s *mserver) handleSetAlbumPhotos(r *http.Request) (interface{}, error) {
 	return AffectedItems{NumItems: rows}, err
 }
 
+// handleUpdateAlbum updates the album named by {albumid}. The path identifies the album;
+// any id in the request body is ignored.
 func (s *mserver) handleUpdateAlbum(r *http.Request) (interface{}, error) {
 	var a dao.Album
 	if err := decodeRequest(r, &a); err != nil {
+		return nil, err
+	}
+	if err := uid(r, "albumid", &a.Id); err != nil {
 		return nil, err
 	}
 	if s.pg.Album.Has(a.Id) {
