@@ -187,6 +187,55 @@ func (dao *PhotoPG) ListSource(source string) ([]*Photo, error) {
 	return ret, err
 }
 
+// Select returns photos honoring an optional album scope, an order and a page.
+// filter.AlbumId (set server-side, never by a client) limits the result to that
+// album's members — this is how the public photo list is confined to the
+// photostream. A zero Range.Limit means "no limit" (return everything), which
+// preserves the historic behavior of List.
+func (dao *PhotoPG) Select(filter PhotoFilter, r Range, order PhotoOrder) ([]*Photo, error) {
+	var stmt strings.Builder
+	stmt.WriteString("SELECT * FROM img")
+
+	var where []string
+	var args []interface{}
+	if filter.AlbumId != nil {
+		args = append(args, *filter.AlbumId)
+		where = append(where, fmt.Sprintf("id IN (SELECT photoid FROM albumphotos WHERE albumid = $%d)", len(args)))
+	}
+	if len(where) > 0 {
+		stmt.WriteString(" WHERE ")
+		stmt.WriteString(strings.Join(where, " AND "))
+	}
+
+	stmt.WriteString(orderByClause(order))
+
+	if r.Limit > 0 {
+		offset := r.Offset
+		if offset < 0 {
+			offset = 0
+		}
+		args = append(args, r.Limit, offset)
+		fmt.Fprintf(&stmt, " LIMIT $%d OFFSET $%d", len(args)-1, len(args))
+	}
+
+	ret := []*Photo{}
+	err := dao.db.Select(&ret, stmt.String(), args...)
+	return ret, err
+}
+
+// orderByClause maps a PhotoOrder to a stable ORDER BY with a deterministic
+// tie-breaker on id, so LIMIT/OFFSET paging cannot drop or repeat rows across
+// pages. The flat photo list has no album row-order, so None and ManualOrder
+// fall back to upload date (the historic default of List).
+func orderByClause(order PhotoOrder) string {
+	switch order {
+	case OriginalDate:
+		return " ORDER BY originaldate DESC, id"
+	default: // None, UploadDate, ManualOrder
+		return " ORDER BY uploaddate DESC, id"
+	}
+}
+
 func (dao *PhotoPG) Set(title string, description string, keywords []string, id uuid.UUID) (*Photo, error) {
 	//join keywords
 	var b strings.Builder

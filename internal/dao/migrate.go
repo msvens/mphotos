@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
@@ -29,7 +30,7 @@ func UpgradeDb() error {
 			logger.Info("Database is up to date")
 			return nil
 		} else if canUpgradeDb(pgdb) {
-			return upgradeToV3(pgdb)
+			return upgradeToV4(pgdb)
 		} else {
 			return fmt.Errorf("cannot upgrade database, wrong current version")
 		}
@@ -44,44 +45,38 @@ func UpgradeDb() error {
 	return nil
 }
 
-func upgradeToV3(pgdb *PGDB) error {
+func upgradeToV4(pgdb *PGDB) error {
 	logger.Infow("Upgrading Db to Version", "version", DbVersion)
 
-	var err error
-	var v *Version
-	var a *Album
-	var photos []*Photo
-
-	if _, err = pgdb.db.Exec(schemaV2toV3); err != nil {
+	if _, err := pgdb.db.Exec(schemaV3toV4); err != nil {
 		return err
 	}
 
 	logger.Info("Db Updated. Change Version Info")
-	if v, err = pgdb.Version.Update(); err != nil {
+	if v, err := pgdb.Version.Update(); err != nil {
 		return err
 	} else {
 		logger.Infow("Updated Db to version", "version", v.VersionId)
 	}
-	logger.Info("create photo stream album")
-	if a, err = pgdb.Album.Add("photostream", "Default public photostream", ""); err != nil {
-		return err
+
+	// Seed the new typed column once from the client config blob — the only place
+	// the photostream album id lived before this version. This is the single
+	// appropriate spot to read that blob; the running server never does.
+	var config string
+	if err := pgdb.db.Get(&config, "SELECT config FROM usert LIMIT 1"); err != nil {
+		logger.Warnw("could not read user config while seeding photostream id; leaving it unset", "error", err)
+		return nil
 	}
-
-	logger.Info("Add all public photos to it")
-
-	if err = pgdb.db.Select(&photos, "SELECT * FROM img WHERE private = false"); err != nil {
-		return err
+	var conf map[string]interface{}
+	if err := json.Unmarshal([]byte(config), &conf); err != nil {
+		logger.Warnw("could not parse user config while seeding photostream id; leaving it unset", "error", err)
+		return nil
 	}
-
-	const addAlbumPhoto = "INSERT INTO albumphotos (albumId, photoId) VALUES ($1, $2)"
-	for _, p := range photos {
-		if _, err := pgdb.db.Exec(addAlbumPhoto, a.Id, p.Id); err != nil {
-			return nil
+	if id, ok := conf["photoStreamAlbumId"].(string); ok && id != "" {
+		if _, err := pgdb.db.Exec("UPDATE usert SET photostreamalbumid = $1", id); err != nil {
+			return err
 		}
+		logger.Infow("seeded photostream album id from config", "id", id)
 	}
-
-	//finally delete the private column
-	logger.Info("Drop the private column from image")
-	_, err = pgdb.db.Exec("ALTER TABLE img DROP COLUMN private")
-	return err
+	return nil
 }
