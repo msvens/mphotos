@@ -114,7 +114,11 @@ type Photo struct {
 }
 
 type PhotoFilter struct {
+	// Equipment filters — each is an exact match applied only when non-empty.
 	CameraModel string
+	CameraMake  string
+	LensModel   string
+	LensMake    string
 	// AlbumId scopes the result to members of one album. It is set server-side
 	// (never decoded from a client) and is how the public photo list is limited
 	// to the photostream. nil means no album scope (all photos).

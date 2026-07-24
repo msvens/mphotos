@@ -9,7 +9,7 @@ fix. Newest issues can be appended at the end.
 | # | Issue | Status |
 | --- | --- | --- |
 | 1 | `handleCamera` reads the wrong path variable | **fixed** |
-| 2 | `GET /api/photos` ignores filter and paging | deferred — a feature, not a bugfix |
+| 2 | `GET /api/photos` ignores filter and paging | **fixed** |
 | 3 | `handlePhotos` swallows DAO errors | **fixed** |
 | 4 | `GET /api/likes/{photoid}` leaks guest emails | **fixed** |
 | 5 | `handleCameraImage` writes the response twice | **fixed** |
@@ -17,7 +17,7 @@ fix. Newest issues can be appended at the end.
 | 7 | Update handlers ignore the id in the URL | **fixed** |
 | 8 | Photos in code-protected albums reachable by direct id | **closed — by design** |
 
-Only #2 remains, deliberately deferred — see its entry for why.
+All eight are resolved.
 
 ---
 
@@ -33,22 +33,26 @@ Only #2 remains, deliberately deferred — see its entry for why.
 - **Frontend impact:** the camera detail page works around this by finding the camera in the
   `GET /api/cameras` list instead of calling the single-camera endpoint.
 
-## 2. `GET /api/photos` ignores its filter and paging
+## 2. `GET /api/photos` ignores its filter and paging — FIXED
 
 - **Where:** `internal/server/photos.go:203` (`handlePhotos`).
-- **Symptom:** it decodes a `{Limit, Offset}` request body, but the `dao.Range` line is commented
-  out and it calls `s.pg.Photo.List()`, returning **all** photos regardless of `Limit`/`Offset`. It
-  also never reads a `cameraModel` (or any other) filter. The route is `authOnly`
-  (`routes.go:56`), so guests can't call it at all.
-- **Consequence:** there is no working "photos filtered by camera model" endpoint. Camera-model
-  filtering must go through the album-photos endpoint (`/api/albums/{albumid}/photos`, which does
-  honor a `CameraModel` filter) or be done client-side. The frontend's `getPhotosByCameraModel`
-  (which hits `/api/photos?cameraModel=`) is effectively dead and unused.
-- **Fix (if paging/filtering is wanted):** decode and apply `Limit`/`Offset` (and optionally a
-  `CameraModel` filter) via `Photo.List` with a range/filter instead of the argument-less call.
-  Note `Photo.List()` (`internal/dao/photo.go:178`) takes no arguments, so this needs a new DAO
-  method — `AlbumPG.SelectPhotos` (`internal/dao/album.go:135`) is the template to copy.
-- **Also in the same statement:** see #3 below — the error from `List()` is silently swallowed.
+- **Symptom:** it decoded a `{Limit, Offset}` request, but the `dao.Range` line was commented out
+  and it called `s.pg.Photo.List()`, returning **all** photos regardless of `Limit`/`Offset`. It
+  also never read a `cameraModel` (or any other) filter. The route was `authOnly`, so guests
+  couldn't call it at all.
+- **Fixed** across two PRs, which also reshaped the endpoint:
+  - The route is now `loginInfo` (public): the owner gets all photos, a guest gets only the
+    photostream album's members. This required promoting the photostream album id out of the client
+    config blob into a typed `usert` column (`DbVersion` 4). See `MIGRATION.md`.
+  - A new `PhotoPG.Select(filter, range, order)` (`internal/dao/photo.go`) honors `Limit`/`Offset`
+    (with a stable `id` tie-breaker so paging can't drop/repeat rows), an `orderBy`, and equipment
+    filters `cameraModel`/`cameraMake`/`lensModel`/`lensMake` (exact match, AND-combined). Built as
+    a small dynamic-predicate helper rather than copying `AlbumPG.SelectPhotos`' two-places-in-sync
+    pattern.
+- **Frontend `getPhotosByCameraModel`** (which hits `/api/photos?cameraModel=`) is no longer dead —
+  it now works for both owner and guest, so the client-side `.filter` on the camera page can go.
+- **Also in the same statement:** #3 (swallowed `List()` error) — obsolete now, `List()` is no
+  longer called here.
 
 ---
 

@@ -200,15 +200,20 @@ func (s *mserver) handlePhoto(w http.ResponseWriter, r *http.Request) (interface
 	}
 }
 
-// handlePhotos lists photos with optional paging and ordering. It is public
-// (loginInfo): a logged-in owner gets every photo, while a guest gets only the
-// members of the photostream album. That album is a typed user setting; if it is
+// handlePhotos lists photos with optional equipment filters, paging and
+// ordering. It is public (loginInfo): a logged-in owner gets every photo, while
+// a guest gets only the members of the photostream album (an equipment filter is
+// then applied within that stream). That album is a typed user setting; if it is
 // unset, guests get an empty list.
 func (s *mserver) handlePhotos(r *http.Request, loggedIn bool) (interface{}, error) {
 	type request struct {
-		Limit   int
-		Offset  int
-		OrderBy dao.PhotoOrder
+		Limit       int
+		Offset      int
+		OrderBy     dao.PhotoOrder
+		CameraModel string
+		CameraMake  string
+		LensModel   string
+		LensMake    string
 	}
 	var params request
 	if err := decodeRequest(r, &params); err != nil {
@@ -220,7 +225,12 @@ func (s *mserver) handlePhotos(r *http.Request, loggedIn bool) (interface{}, err
 		order = dao.UploadDate
 	}
 
-	var filter dao.PhotoFilter
+	filter := dao.PhotoFilter{
+		CameraModel: params.CameraModel,
+		CameraMake:  params.CameraMake,
+		LensModel:   params.LensModel,
+		LensMake:    params.LensMake,
+	}
 	if !loggedIn {
 		user, err := s.pg.User.Get()
 		if err != nil {

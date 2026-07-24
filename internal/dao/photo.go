@@ -202,6 +202,18 @@ func (dao *PhotoPG) Select(filter PhotoFilter, r Range, order PhotoOrder) ([]*Ph
 		args = append(args, *filter.AlbumId)
 		where = append(where, fmt.Sprintf("id IN (SELECT photoid FROM albumphotos WHERE albumid = $%d)", len(args)))
 	}
+	// eq appends an "img.<col> = $n" predicate for each non-empty equipment
+	// filter, keeping the placeholder index in step with the args slice.
+	eq := func(col, val string) {
+		if val != "" {
+			args = append(args, val)
+			where = append(where, fmt.Sprintf("img.%s = $%d", col, len(args)))
+		}
+	}
+	eq("cameramodel", filter.CameraModel)
+	eq("cameramake", filter.CameraMake)
+	eq("lensmodel", filter.LensModel)
+	eq("lensmake", filter.LensMake)
 	if len(where) > 0 {
 		stmt.WriteString(" WHERE ")
 		stmt.WriteString(strings.Join(where, " AND "))

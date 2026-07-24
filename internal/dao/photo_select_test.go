@@ -153,3 +153,88 @@ func equalIDs(a, b []uuid.UUID) bool {
 	}
 	return true
 }
+
+// sameIDSet compares two id lists ignoring order — filter results have no
+// meaningful order under these tests, only membership.
+func sameIDSet(got []uuid.UUID, want ...uuid.UUID) bool {
+	if len(got) != len(want) {
+		return false
+	}
+	seen := map[uuid.UUID]bool{}
+	for _, id := range got {
+		seen[id] = true
+	}
+	for _, id := range want {
+		if !seen[id] {
+			return false
+		}
+	}
+	return true
+}
+
+func mkEquipPhoto(model, make, lensModel, lensMake string) Photo {
+	p := mkSelectPhoto(model, testEquipTime, testEquipTime)
+	p.CameraMake = make
+	p.LensModel = lensModel
+	p.LensMake = lensMake
+	return p
+}
+
+var testEquipTime = time.Date(2026, 2, 1, 9, 0, 0, 0, time.UTC)
+
+func TestPhotoSelectEquipmentFilters(t *testing.T) {
+	pgdb := openAndCreateTestDb(t)
+	defer deleteAndCloseTestDb(pgdb, t)
+
+	p1 := mkEquipPhoto("Alpha", "Nikon", "50mm", "Nikon")
+	p2 := mkEquipPhoto("Beta", "Nikon", "85mm", "Sigma")
+	p3 := mkEquipPhoto("Alpha", "Canon", "50mm", "Canon")
+	p4 := mkEquipPhoto("Gamma", "Canon", "24mm", "Canon")
+
+	for _, p := range []Photo{p1, p2, p3, p4} {
+		pc := p
+		if err := pgdb.Photo.Add(&pc, nil); err != nil {
+			t.Fatalf("could not add photo %s: %v", p.Title, err)
+		}
+	}
+
+	cases := []struct {
+		name   string
+		filter PhotoFilter
+		want   []uuid.UUID
+	}{
+		{"camera model", PhotoFilter{CameraModel: "Alpha"}, []uuid.UUID{p1.Id, p3.Id}},
+		{"camera make", PhotoFilter{CameraMake: "Nikon"}, []uuid.UUID{p1.Id, p2.Id}},
+		{"lens model", PhotoFilter{LensModel: "50mm"}, []uuid.UUID{p1.Id, p3.Id}},
+		{"lens make", PhotoFilter{LensMake: "Canon"}, []uuid.UUID{p3.Id, p4.Id}},
+		{"model AND make", PhotoFilter{CameraModel: "Alpha", CameraMake: "Nikon"}, []uuid.UUID{p1.Id}},
+		{"model AND lens make", PhotoFilter{CameraModel: "Alpha", LensMake: "Canon"}, []uuid.UUID{p3.Id}},
+		{"no match", PhotoFilter{CameraModel: "Nope"}, nil},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			photos, err := pgdb.Photo.Select(c.filter, Range{}, UploadDate)
+			if err != nil {
+				t.Fatalf("Select failed: %v", err)
+			}
+			if !sameIDSet(idsOf(photos), c.want...) {
+				t.Errorf("expected %v got %v", c.want, idsOf(photos))
+			}
+		})
+	}
+
+	// A filter combined with an album scope — the guest case: filtering within
+	// the photostream. Album holds p1 and p2; only p1 is model Alpha.
+	album, err := pgdb.Album.Add("stream", "desc", "")
+	if err != nil {
+		t.Fatalf("could not add album: %v", err)
+	}
+	if _, err := pgdb.Album.AddPhotos(album.Id, []uuid.UUID{p1.Id, p2.Id}); err != nil {
+		t.Fatalf("could not add photos to album: %v", err)
+	}
+	if photos, err := pgdb.Photo.Select(PhotoFilter{AlbumId: &album.Id, CameraModel: "Alpha"}, Range{}, UploadDate); err != nil {
+		t.Fatalf("Select album+filter failed: %v", err)
+	} else if !sameIDSet(idsOf(photos), p1.Id) {
+		t.Errorf("album+filter expected [p1] got %v", idsOf(photos))
+	}
+}
