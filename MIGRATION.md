@@ -3,7 +3,7 @@
 This release promotes the **photo stream album id** from the client-owned config
 blob to a typed server column, and makes `GET /api/photos` a public endpoint that
 serves the photostream to guests and the full library to the owner. It also adds
-paging and ordering to that endpoint.
+equipment filtering, paging and ordering to that endpoint.
 
 It has two audiences:
 
@@ -118,6 +118,14 @@ Decoded from the query string; keys are case-insensitive.
 | `limit` | int | `0` | Page size. **`0` means no limit** (return everything) — this preserves the old behavior. |
 | `offset` | int | `0` | Rows to skip. Negative is treated as `0`. |
 | `orderBy` | int enum | `0` | Sort order (see below). |
+| `cameraModel` | string | — | Exact-match equipment filter, applied only when non-empty. |
+| `cameraMake` | string | — | Exact-match equipment filter. |
+| `lensModel` | string | — | Exact-match equipment filter. |
+| `lensMake` | string | — | Exact-match equipment filter. |
+
+Multiple filters combine with AND. On the guest view they apply within the
+photostream (e.g. `?cameraModel=Leica%20M11` returns only photostream photos shot
+with that model).
 
 `orderBy` values (the `PhotoOrder` enum):
 
@@ -132,8 +140,7 @@ Ordering always applies a stable `id` tie-breaker, so `limit`/`offset` paging ne
 drops or repeats a row across pages.
 
 > **Only send parameters this backend version declares.** Unknown query keys are
-> rejected with a 400. In particular, do **not** send `cameraModel` etc. yet — see
-> the next section.
+> rejected with a 400, so send only the parameters listed above.
 
 ### Response
 
@@ -149,17 +156,13 @@ count yet, so compute "has more" from whether a full page came back.
 
 ---
 
-## Server-side filtering — next backend release
+## Server-side filtering
 
-Equipment filters are **not in v4**. The next backend release adds these query
-parameters to `GET /api/photos`, all exact-match:
+Equipment filters (`cameraModel`, `cameraMake`, `lensModel`, `lensMake`) are live —
+see the query-parameter table above. They are exact-match, combine with AND, and
+apply on both the owner and guest views (a guest filter is scoped to the
+photostream).
 
-- `cameraModel`
-- `cameraMake`
-- `lensModel`
-- `lensMake`
-
-They work on both the owner and guest views (a guest filter is applied within the
-photostream). Until that release ships, sending any of them returns a 400, so keep
-doing camera-model filtering client-side for now. This section will be updated to
-"available" when the filtering release lands.
+For the UI, this means the camera page can call
+`GET /api/photos?cameraModel=<model>` for both audiences and drop the client-side
+`.filter(p => p.cameraModel === model)` along with the `isUser` fetch branch.
