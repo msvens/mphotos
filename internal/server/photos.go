@@ -200,24 +200,47 @@ func (s *mserver) handlePhoto(w http.ResponseWriter, r *http.Request) (interface
 	}
 }
 
-func (s *mserver) handlePhotos(r *http.Request) (interface{}, error) {
+// handlePhotos lists photos with optional paging and ordering. It is public
+// (loginInfo): a logged-in owner gets every photo, while a guest gets only the
+// members of the photostream album. That album is a typed user setting; if it is
+// unset, guests get an empty list.
+func (s *mserver) handlePhotos(r *http.Request, loggedIn bool) (interface{}, error) {
 	type request struct {
-		Limit  int
-		Offset int
+		Limit   int
+		Offset  int
+		OrderBy dao.PhotoOrder
 	}
 	var params request
 	if err := decodeRequest(r, &params); err != nil {
 		return nil, err
-	} else {
-		//dao.Range{Offset: params.Offset, Limit: params.Limit}
-		if photos, e1 := s.pg.Photo.List(); e1 != nil {
-			return nil, e1
-		} else {
-			return &PhotoFiles{Length: len(photos), Photos: photos}, nil
-		}
-
 	}
 
+	order := params.OrderBy
+	if order == dao.None {
+		order = dao.UploadDate
+	}
+
+	var filter dao.PhotoFilter
+	if !loggedIn {
+		user, err := s.pg.User.Get()
+		if err != nil {
+			return nil, err
+		}
+		if user.PhotoStreamAlbumId == "" {
+			return &PhotoFiles{Length: 0, Photos: []*dao.Photo{}}, nil
+		}
+		albumId, err := uuid.Parse(user.PhotoStreamAlbumId)
+		if err != nil {
+			return nil, InternalError("stored photostream album id is not a valid uuid")
+		}
+		filter.AlbumId = &albumId
+	}
+
+	photos, err := s.pg.Photo.Select(filter, dao.Range{Offset: params.Offset, Limit: params.Limit}, order)
+	if err != nil {
+		return nil, err
+	}
+	return &PhotoFiles{Length: len(photos), Photos: photos}, nil
 }
 
 // handleUpdatePhoto updates the photo named by {photoid}. The path identifies the photo;

@@ -90,7 +90,7 @@ type PhotoDAO interface {
 	Get(id uuid.UUID) (*Photo, error)
 	List() ([]*Photo, error)
 	ListSource(source string) ([]*Photo, error)
-	//Select(r Range, order PhotoOrder, filter PhotoFilter) ([]*Photo, error)
+	Select(filter PhotoFilter, r Range, order PhotoOrder) ([]*Photo, error)
 	//SetPrivate(private bool, id uuid.UUID) (*Photo, error)
 	Set(title string, description string, keywords []string, id uuid.UUID) (*Photo, error)
 	SetAlbums(id uuid.UUID, albumIds []uuid.UUID) (int, error)
@@ -176,7 +176,7 @@ func (pgd *PGDB) tableExists(table string) bool {
 }
 
 func (pgd *PGDB) CreateTables() error {
-	if _, err := pgd.db.Exec(schemaV3); err != nil {
+	if _, err := pgd.db.Exec(schemaV4); err != nil {
 		return err
 	} else { //make sure version is correct
 		_, err = pgd.Version.Update()
@@ -188,6 +188,6 @@ func (pgd *PGDB) CreateTables() error {
 }
 
 func (pgd *PGDB) DeleteTables() error {
-	_, err := pgd.db.Exec(deleteSchemaV3)
+	_, err := pgd.db.Exec(deleteSchemaV4)
 	return err
 }

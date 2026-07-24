@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-const DbVersion = 3
-const DbDescription = "Version 3 adds simple access control to albums and makes public access based on a default photo stream album"
+const DbVersion = 4
+const DbDescription = "Version 4 promotes the photo stream album id to a typed user column"
 
 type Album struct {
 	Id          uuid.UUID  `json:"id"`
@@ -114,8 +114,11 @@ type Photo struct {
 }
 
 type PhotoFilter struct {
-	//Private     bool
 	CameraModel string
+	// AlbumId scopes the result to members of one album. It is set server-side
+	// (never decoded from a client) and is how the public photo list is limited
+	// to the photostream. nil means no album scope (all photos).
+	AlbumId *uuid.UUID
 }
 
 type PhotoOrder int
@@ -142,12 +145,13 @@ const SourceGoogle = "gdrive"
 const SourceLocal = "local"
 
 type User struct {
-	Name            string `json:"name"`
-	Bio             string `json:"bio"`
-	Pic             string `json:"pic"`
-	DriveFolderId   string `json:"driveFolderId,omitempty"`
-	DriveFolderName string `json:"driveFolderName,omitempty"`
-	Config          string `json:"config,omitempty"`
+	Name               string `json:"name"`
+	Bio                string `json:"bio"`
+	Pic                string `json:"pic"`
+	DriveFolderId      string `json:"driveFolderId,omitempty"`
+	DriveFolderName    string `json:"driveFolderName,omitempty"`
+	PhotoStreamAlbumId string `json:"photoStreamAlbumId"`
+	Config             string `json:"config,omitempty"`
 }
 
 type Version struct {

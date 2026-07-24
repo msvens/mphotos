@@ -53,7 +53,7 @@ func (s *mserver) routes() {
 	s.mGET("/logout", s.mResponse(s.handleLogout))
 	s.mGET("/loggedin", s.loginInfo(s.handleLoggedIn))
 
-	s.mGET("/photos", s.authOnly(s.handlePhotos))
+	s.mGET("/photos", s.loginInfo(s.handlePhotos))
 	s.mDELETE("/photos", s.authOnly(s.handleDeletePhotos))
 	s.mGET("/photos/{photoid}/albums", s.loginInfo(s.handlePhotoAlbums))
 	s.mPUT("/photos/{photoid}/albums/add", s.authOnly(s.handleAddPhotoAlbums))
@@ -85,6 +85,7 @@ func (s *mserver) routes() {
 	s.mPUT("/user", s.authOnly(s.handleUpdateUser))
 	s.mPUT("/user/pic", s.authOnly(s.handleUpdatePicUser))
 	s.mPUT("/user/gdrive", s.authOnly(s.handleUpdateDriveUser))
+	s.mPUT("/user/photostream", s.authOnly(s.handleUpdatePhotostream))
 	s.mGET("/user/config", s.mResponse(s.handleUserConfig))
 	s.mPUT("/user/config", s.authOnly(s.handleUpdateConfig))
 }

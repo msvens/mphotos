@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"github.com/msvens/mphotos/internal/dao"
 	"net/http"
 )
@@ -11,11 +12,41 @@ func (s *mserver) handleUser(r *http.Request, loggedIn bool) (interface{}, error
 		if !loggedIn {
 			u.DriveFolderId = ""
 			u.DriveFolderName = ""
+			u.PhotoStreamAlbumId = ""
 		}
 		return u, nil
 	} else {
 		return nil, err
 	}
+}
+
+// handleUpdatePhotostream sets the album whose members make up the public photo
+// stream. It mirrors handleUpdateDriveUser: a typed, owner-only setter for a
+// server-critical value that used to live in the client config blob. An empty
+// id clears the stream.
+func (s *mserver) handleUpdatePhotostream(r *http.Request) (interface{}, error) {
+	type request struct {
+		PhotoStreamAlbumId string `json:"photoStreamAlbumId" schema:"photoStreamAlbumId"`
+	}
+	var params request
+	if err := decodeRequest(r, &params); err != nil {
+		return nil, err
+	}
+	if params.PhotoStreamAlbumId != "" {
+		id, err := uuid.Parse(params.PhotoStreamAlbumId)
+		if err != nil {
+			return nil, BadRequestError("photoStreamAlbumId is not a valid uuid")
+		}
+		if !s.pg.Album.Has(id) {
+			return nil, NotFoundError("Album not found: " + params.PhotoStreamAlbumId)
+		}
+	}
+	user, err := s.pg.User.Get()
+	if err != nil {
+		return nil, InternalError(err.Error())
+	}
+	user.PhotoStreamAlbumId = params.PhotoStreamAlbumId
+	return s.pg.User.Update(user)
 }
 
 func (s *mserver) handleUserConfig(_ http.ResponseWriter, r *http.Request) (interface{}, error) {

@@ -1,11 +1,11 @@
 package dao
 
-const schemaV2toV3 = `
-	ALTER TABLE album ADD COLUMN code TEXT, ADD COLUMN orderBy INTEGER;
-	UPDATE album SET code = '', orderBy = 0;
-	ALTER TABLE album ALTER COLUMN code SET NOT NULL, ALTER COLUMN orderBy SET NOT NULL;
+// schemaV3toV4 adds the photostreamalbumid column to usert. It is seeded from
+// the existing config blob by upgradeToV4 (schema.go can't read the old value).
+const schemaV3toV4 = `
+	ALTER TABLE usert ADD COLUMN photostreamalbumid TEXT NOT NULL DEFAULT '';
 `
-const schemaV3 = `
+const schemaV4 = `
 CREATE TABLE IF NOT EXISTS album (
 	Id UUID,
 	name TEXT,
@@ -127,6 +127,7 @@ CREATE TABLE IF NOT EXISTS usert (
 	pic TEXT NOT NULL,
 	driveFolderId TEXT NOT NULL,
 	driveFolderName TEXT NOT NULL,
+	photostreamalbumid TEXT NOT NULL DEFAULT '',
 	config TEXT NOT NULL
 );
 
@@ -142,7 +143,7 @@ INSERT INTO version (versionId,description) VALUES (0,'no version set') ON CONFL
 INSERT INTO usert (id, name, bio, pic, driveFolderId, driveFolderName, config) VALUES (23657, '', '', '', '','','{}') ON CONFLICT (id) DO NOTHING;
 `
 
-const deleteSchemaV3 = `
+const deleteSchemaV4 = `
 DROP TABLE IF EXISTS album;
 DROP TABLE IF EXISTS albumphotos;
 DROP TABLE IF EXISTS camera;

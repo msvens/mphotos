@@ -88,6 +88,17 @@ func TestUsers(t *testing.T) {
 		t.Errorf("Actual config is different from expected config")
 	}
 
+	//PhotoStreamAlbumId round-trips as a typed column
+	u.PhotoStreamAlbumId = "b3b8c0de-0000-0000-0000-000000000001"
+	if _, err = pgdb.User.Update(u); err != nil {
+		t.Errorf("could not update photostream album id: %s", err.Error())
+	}
+	if got, err := pgdb.User.Get(); err != nil {
+		t.Errorf("could not retrieve user: %s", err.Error())
+	} else if got.PhotoStreamAlbumId != u.PhotoStreamAlbumId {
+		t.Errorf("expected photoStreamAlbumId %q got %q", u.PhotoStreamAlbumId, got.PhotoStreamAlbumId)
+	}
+
 	//Dont accept non json config
 	u.Config = "some non json string"
 	if _, err = pgdb.User.Update(u); err == nil {
