@@ -9,6 +9,7 @@ import (
 	"github.com/msvens/mimage/metadata"
 	"github.com/msvens/mphotos/internal/config"
 	"go.uber.org/zap"
+	"time"
 )
 
 type AlbumDAO interface {
@@ -61,9 +62,21 @@ type GuestDAO interface {
 	Get(id uuid.UUID) (*Guest, error)
 	GetByEmail(email string) (*Guest, error)
 	Has(id uuid.UUID) bool
+	HasVerified(id uuid.UUID) bool
 	HasByEmail(email string) bool
 	HasByName(name string) bool
 	Update(email string, name string, id uuid.UUID) (*Guest, error)
+	UpdateProfile(id uuid.UUID, name, fullName, description string) (*Guest, error)
+	List() ([]*Guest, error)
+	DeleteUnverifiedBefore(t time.Time) (int64, error)
+}
+
+type GuestCodeDAO interface {
+	Issue(guestId uuid.UUID, purpose, code string, expires time.Time) error
+	FindSignup(code string) (uuid.UUID, bool, error)
+	ConsumeLogin(guestId uuid.UUID, code string) (bool, error)
+	Delete(guestId uuid.UUID, purpose string) error
+	DeleteExpiredBefore(t time.Time) (int64, error)
 }
 
 type ReactionDAO interface {
@@ -108,15 +121,16 @@ type VersionDAO interface {
 }
 
 type PGDB struct {
-	db       *sqlx.DB
-	Album    AlbumDAO
-	Camera   CameraDAO
-	Comment  CommentDAO
-	Guest    GuestDAO
-	Photo    PhotoDAO
-	Reaction ReactionDAO
-	User     UserDAO
-	Version  VersionDAO
+	db        *sqlx.DB
+	Album     AlbumDAO
+	Camera    CameraDAO
+	Comment   CommentDAO
+	Guest     GuestDAO
+	GuestCode GuestCodeDAO
+	Photo     PhotoDAO
+	Reaction  ReactionDAO
+	User      UserDAO
+	Version   VersionDAO
 }
 
 var logger *zap.SugaredLogger
@@ -145,15 +159,16 @@ func NewPGDB() (*PGDB, error) {
 			return nil, err
 		}
 		return &PGDB{
-			db:       db,
-			Album:    NewAlbumPG(db),
-			Camera:   NewCameraPG(db),
-			Comment:  NewCommentPG(db),
-			Guest:    NewGuestPG(db),
-			Photo:    NewPhotoPG(db),
-			Reaction: NewReactionPG(db),
-			User:     NewUserPG(db),
-			Version:  NewVersionPG(db),
+			db:        db,
+			Album:     NewAlbumPG(db),
+			Camera:    NewCameraPG(db),
+			Comment:   NewCommentPG(db),
+			Guest:     NewGuestPG(db),
+			GuestCode: NewGuestCodePG(db),
+			Photo:     NewPhotoPG(db),
+			Reaction:  NewReactionPG(db),
+			User:      NewUserPG(db),
+			Version:   NewVersionPG(db),
 		}, nil
 	}
 }
@@ -176,7 +191,7 @@ func (pgd *PGDB) tableExists(table string) bool {
 }
 
 func (pgd *PGDB) CreateTables() error {
-	if _, err := pgd.db.Exec(schemaV4); err != nil {
+	if _, err := pgd.db.Exec(schemaV5); err != nil {
 		return err
 	} else { //make sure version is correct
 		_, err = pgd.Version.Update()
@@ -188,6 +203,6 @@ func (pgd *PGDB) CreateTables() error {
 }
 
 func (pgd *PGDB) DeleteTables() error {
-	_, err := pgd.db.Exec(deleteSchemaV4)
+	_, err := pgd.db.Exec(deleteSchemaV5)
 	return err
 }

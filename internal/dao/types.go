@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-const DbVersion = 4
-const DbDescription = "Version 4 promotes the photo stream album id to a typed user column"
+const DbVersion = 5
+const DbDescription = "Version 5 enriches the guest profile and adds the one-time code store"
 
 type Album struct {
 	Id          uuid.UUID  `json:"id"`
@@ -69,11 +69,13 @@ type Exif struct {
 }
 
 type Guest struct {
-	Id         uuid.UUID `json:"-"`
-	Email      string    `json:"email"`
-	Name       string    `json:"name"`
-	Verified   bool      `json:"verified"`
-	VerifyTime time.Time `json:"verifyTime"`
+	Id          uuid.UUID `json:"-"`
+	Email       string    `json:"email"`
+	Name        string    `json:"name"`
+	FullName    string    `json:"fullName"`
+	Description string    `json:"description"`
+	Verified    bool      `json:"verified"`
+	VerifyTime  time.Time `json:"verifyTime"`
 }
 
 // GuestReaction is the public view of a reaction. It deliberately carries no
