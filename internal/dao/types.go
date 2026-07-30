@@ -81,8 +81,9 @@ type Guest struct {
 // GuestReaction is the public view of a reaction. It deliberately carries no
 // email: it is serialized by the unauthenticated GET /likes/{photoid} route.
 type GuestReaction struct {
-	Name string `json:"name"`
-	Kind string `json:"kind"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Kind        string `json:"kind"`
 }
 
 type Photo struct {

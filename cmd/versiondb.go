@@ -22,11 +22,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// upgradedbCmd represents the upgradedb command
+// versionCmd reports the database schema version. It is read-only: it must never
+// stamp the version, or it desyncs the version marker from the actual schema and
+// makes a subsequent `db upgrade` a silent no-op. Use `db upgrade` to migrate.
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Upgrade Db Version",
-	Long:  `Upgrade Db Version to current. Use with care as it does not do any checking`,
+	Short: "Show the current database schema version",
+	Long:  `Reports the database's current schema version and the version this binary targets. Read-only; use 'db upgrade' to migrate.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := config.InitConfig(); err != nil {
 			fmt.Println(err)
@@ -37,12 +39,17 @@ var versionCmd = &cobra.Command{
 			fmt.Println(err)
 			return
 		}
-		v, err := db.Version.Update()
+		v, err := db.Version.Get()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		fmt.Println("Database upgraded to version:", v.VersionId)
+		fmt.Printf("Database schema version: %d (this binary targets %d)\n", v.VersionId, dao.DbVersion)
+		if v.VersionId < dao.DbVersion {
+			fmt.Println("Run 'db upgrade' to migrate to the latest version.")
+		} else if v.VersionId > dao.DbVersion {
+			fmt.Println("Warning: database is newer than this binary.")
+		}
 	},
 }
 

@@ -70,6 +70,7 @@ func (s *mserver) routes() {
 
 	s.mPUT("/comments/{img}", s.guestOnly(s.handleCommentPhoto))
 	s.mGET("/comments/{img}", s.loginInfo(s.handlePhotoComments))
+	s.mGET("/guests", s.authOnly(s.handleGuests))
 	s.mPUT("/guest", s.mResponse(s.handleCreateGuest))
 	s.mGET("/guest", s.guestOnly(s.handleGuest))
 	s.mPUT("/guest/update", s.guestOnly(s.handleUpdateGuest))

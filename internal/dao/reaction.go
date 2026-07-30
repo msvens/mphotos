@@ -49,7 +49,7 @@ func (dao *ReactionPG) ListByGuest(guestId uuid.UUID) ([]uuid.UUID, error) {
 }
 
 func (dao *ReactionPG) ListByPhoto(photoId uuid.UUID) ([]*GuestReaction, error) {
-	const stmt = "select name,kind FROM reaction, guest WHERE photoId = $1 AND reaction.guestId = guest.id"
+	const stmt = "select name,description,kind FROM reaction, guest WHERE photoId = $1 AND reaction.guestId = guest.id"
 	ret := []*GuestReaction{}
 	err := dao.db.Select(&ret, stmt, photoId)
 	return ret, err

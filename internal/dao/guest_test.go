@@ -104,6 +104,32 @@ func TestGuestDeleteCascade(t *testing.T) {
 	}
 }
 
+func TestReactionListByPhotoCarriesDescription(t *testing.T) {
+	pgdb := openAndCreateTestDb(t)
+	defer deleteAndCloseTestDb(pgdb, t)
+
+	g, _ := pgdb.Guest.Add("liker", "liker@example.com")
+	if _, err := pgdb.Guest.UpdateProfile(g.Id, "liker", "Real Name", "loves landscapes"); err != nil {
+		t.Fatalf("could not set description: %v", err)
+	}
+	photoId := uuid.New()
+	if err := pgdb.Reaction.Add(&Reaction{GuestId: g.Id, PhotoId: photoId, Kind: "like"}); err != nil {
+		t.Fatalf("could not add reaction: %v", err)
+	}
+
+	rs, err := pgdb.Reaction.ListByPhoto(photoId)
+	if err != nil {
+		t.Fatalf("ListByPhoto failed: %v", err)
+	}
+	if len(rs) != 1 {
+		t.Fatalf("expected 1 reaction, got %d", len(rs))
+	}
+	// Public projection carries nickname + description, never full name/email.
+	if rs[0].Name != "liker" || rs[0].Description != "loves landscapes" || rs[0].Kind != "like" {
+		t.Errorf("unexpected public reaction: %+v", rs[0])
+	}
+}
+
 func TestGuestCodes(t *testing.T) {
 	pgdb := openAndCreateTestDb(t)
 	defer deleteAndCloseTestDb(pgdb, t)
