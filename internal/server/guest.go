@@ -116,11 +116,12 @@ func (s *mserver) handlePhotoComments(r *http.Request, loggedIn bool) (interface
 		return nil, BadRequestError("Could not parse img id")
 	} else {
 		type resp struct {
-			Id      int       `json:"id"`
-			Name    string    `json:"name"`
-			PhotoId uuid.UUID `json:"photoId"`
-			Time    time.Time `json:"time"`
-			Body    string    `json:"body"`
+			Id          int       `json:"id"`
+			Name        string    `json:"name"`
+			Description string    `json:"description"`
+			PhotoId     uuid.UUID `json:"photoId"`
+			Time        time.Time `json:"time"`
+			Body        string    `json:"body"`
 		}
 		comments, err := s.pg.Comment.ListByPhoto(photoId)
 		if err != nil {
@@ -129,7 +130,7 @@ func (s *mserver) handlePhotoComments(r *http.Request, loggedIn bool) (interface
 		ret := []*resp{}
 		for _, c := range comments {
 			u, _ := s.pg.Guest.Get(c.GuestId)
-			ret = append(ret, &resp{Id: c.Id, Name: u.Name, PhotoId: c.PhotoId, Time: c.Time, Body: c.Body})
+			ret = append(ret, &resp{Id: c.Id, Name: u.Name, Description: u.Description, PhotoId: c.PhotoId, Time: c.Time, Body: c.Body})
 		}
 		return ret, nil
 	}
@@ -137,6 +138,12 @@ func (s *mserver) handlePhotoComments(r *http.Request, loggedIn bool) (interface
 
 func (s *mserver) handleGuest(r *http.Request, uuid uuid.UUID) (interface{}, error) {
 	return s.pg.Guest.Get(uuid)
+}
+
+// handleGuests lists all guests for the owner. It is authOnly, so it may return
+// the owner-only fields (full name, email) that public responses never expose.
+func (s *mserver) handleGuests(r *http.Request) (interface{}, error) {
+	return s.pg.Guest.List()
 }
 
 func (s *mserver) handleLikePhoto(r *http.Request, guestId uuid.UUID) (interface{}, error) {
