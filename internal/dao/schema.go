@@ -1,11 +1,19 @@
 package dao
 
-// schemaV3toV4 adds the photostreamalbumid column to usert. It is seeded from
-// the existing config blob by upgradeToV4 (schema.go can't read the old value).
-const schemaV3toV4 = `
-	ALTER TABLE usert ADD COLUMN photostreamalbumid TEXT NOT NULL DEFAULT '';
+// schemaV4toV5 enriches the guest profile and adds the one-time code store.
+// upgradeToV5 also grandfathers existing guests to verified=true (see migrate.go).
+const schemaV4toV5 = `
+	ALTER TABLE guest ADD COLUMN fullname TEXT NOT NULL DEFAULT '';
+	ALTER TABLE guest ADD COLUMN description TEXT NOT NULL DEFAULT '';
+	CREATE TABLE IF NOT EXISTS guestcode (
+		guestid UUID NOT NULL,
+		purpose TEXT NOT NULL,
+		code    TEXT NOT NULL,
+		expires TIMESTAMP NOT NULL,
+		PRIMARY KEY (guestid, purpose)
+	);
 `
-const schemaV4 = `
+const schemaV5 = `
 CREATE TABLE IF NOT EXISTS album (
 	Id UUID,
 	name TEXT,
@@ -81,10 +89,20 @@ CREATE TABLE IF NOT EXISTS guest (
 	id UUID PRIMARY KEY,
 	name TEXT NOT NULL,
 	email TEXT NOT NULL,
+	fullname TEXT NOT NULL DEFAULT '',
+	description TEXT NOT NULL DEFAULT '',
 	verified BOOLEAN NOT NULL,
 	verifytime TIMESTAMP NOT NULL,
 	CONSTRAINT guest_email UNIQUE (email),
 	CONSTRAINT guest_name UNIQUE (name)
+);
+
+CREATE TABLE IF NOT EXISTS guestcode (
+	guestid UUID NOT NULL,
+	purpose TEXT NOT NULL,
+	code    TEXT NOT NULL,
+	expires TIMESTAMP NOT NULL,
+	PRIMARY KEY (guestid, purpose)
 );
 
 CREATE TABLE IF NOT EXISTS reaction (
@@ -143,13 +161,14 @@ INSERT INTO version (versionId,description) VALUES (0,'no version set') ON CONFL
 INSERT INTO usert (id, name, bio, pic, driveFolderId, driveFolderName, config) VALUES (23657, '', '', '', '','','{}') ON CONFLICT (id) DO NOTHING;
 `
 
-const deleteSchemaV4 = `
+const deleteSchemaV5 = `
 DROP TABLE IF EXISTS album;
 DROP TABLE IF EXISTS albumphotos;
 DROP TABLE IF EXISTS camera;
 DROP TABLE IF EXISTS comment;
 DROP TABLE IF EXISTS exifdata;
 DROP TABLE IF EXISTS guest;
+DROP TABLE IF EXISTS guestcode;
 DROP TABLE IF EXISTS reaction;
 DROP TABLE IF EXISTS img;
 DROP TABLE IF EXISTS usert;

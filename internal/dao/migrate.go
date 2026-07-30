@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"encoding/json"
 	"fmt"
 )
 
@@ -30,7 +29,7 @@ func UpgradeDb() error {
 			logger.Info("Database is up to date")
 			return nil
 		} else if canUpgradeDb(pgdb) {
-			return upgradeToV4(pgdb)
+			return upgradeToV5(pgdb)
 		} else {
 			return fmt.Errorf("cannot upgrade database, wrong current version")
 		}
@@ -45,11 +44,23 @@ func UpgradeDb() error {
 	return nil
 }
 
-func upgradeToV4(pgdb *PGDB) error {
+func upgradeToV5(pgdb *PGDB) error {
 	logger.Infow("Upgrading Db to Version", "version", DbVersion)
 
-	if _, err := pgdb.db.Exec(schemaV3toV4); err != nil {
+	if _, err := pgdb.db.Exec(schemaV4toV5); err != nil {
 		return err
+	}
+
+	// Grandfather every existing guest to verified=true. Under the old flow the
+	// verified flag was cosmetic and never enforced, so legacy guests were fully
+	// active regardless. Without this the new verified-only login would lock them
+	// out and the reaper would delete them (and their comments/likes) on first run.
+	res, err := pgdb.db.Exec("UPDATE guest SET verified = true WHERE verified = false")
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n > 0 {
+		logger.Infow("grandfathered existing guests to verified", "count", n)
 	}
 
 	logger.Info("Db Updated. Change Version Info")
@@ -57,26 +68,6 @@ func upgradeToV4(pgdb *PGDB) error {
 		return err
 	} else {
 		logger.Infow("Updated Db to version", "version", v.VersionId)
-	}
-
-	// Seed the new typed column once from the client config blob — the only place
-	// the photostream album id lived before this version. This is the single
-	// appropriate spot to read that blob; the running server never does.
-	var config string
-	if err := pgdb.db.Get(&config, "SELECT config FROM usert LIMIT 1"); err != nil {
-		logger.Warnw("could not read user config while seeding photostream id; leaving it unset", "error", err)
-		return nil
-	}
-	var conf map[string]interface{}
-	if err := json.Unmarshal([]byte(config), &conf); err != nil {
-		logger.Warnw("could not parse user config while seeding photostream id; leaving it unset", "error", err)
-		return nil
-	}
-	if id, ok := conf["photoStreamAlbumId"].(string); ok && id != "" {
-		if _, err := pgdb.db.Exec("UPDATE usert SET photostreamalbumid = $1", id); err != nil {
-			return err
-		}
-		logger.Infow("seeded photostream album id from config", "id", id)
 	}
 	return nil
 }
