@@ -40,6 +40,9 @@ func TestConfigFile(t *testing.T) {
 	if VerifyUrl() != "http://localhost:8050/api/guest/verify" {
 		t.Errorf("expected http://localhost:8050/api/guest/verify got #{VerifyUrl()}")
 	}
+	if !SecureCookies() {
+		t.Errorf("expected secureCookies true got %v", SecureCookies())
+	}
 
 	//session config:
 	if SessionCookieName() != "server-session" {

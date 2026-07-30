@@ -146,6 +146,12 @@ func VerifyUrl() string {
 	return viper.GetString("server.verifyUrl")
 }
 
+// SecureCookies reports whether session cookies should carry the Secure flag.
+// True in production (HTTPS behind nginx); false for local dev over http.
+func SecureCookies() bool {
+	return viper.GetBool("server.secureCookies")
+}
+
 func ServerPrefix() string {
 	return viper.GetString("server.prefix")
 }

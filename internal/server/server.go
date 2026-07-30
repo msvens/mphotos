@@ -51,9 +51,14 @@ func newServer(prefixPath string, logger *zap.SugaredLogger) *mserver {
 	)
 	s.store.Options = &sessions.Options{
 		Path:     "/api",
-		MaxAge:   60 * 60 * 24,
 		HttpOnly: true,
+		Secure:   config.SecureCookies(),
+		SameSite: http.SameSiteLaxMode,
 	}
+	// Align the securecookie codec TTL with the cookie MaxAge. NewCookieStore
+	// defaults the codec to 30 days but replacing Options above leaves it stuck;
+	// MaxAge sets both, so signatures and browser cookies expire together.
+	s.store.MaxAge(Session_Month)
 	gob.Register(AuthUser{})
 	gob.Register(SessionGuest{})
 
@@ -76,6 +81,9 @@ func newServer(prefixPath string, logger *zap.SugaredLogger) *mserver {
 	//start async job channel:
 	wg.Add(1)
 	go worker(jobChan)
+
+	//periodically reap unverified guests and expired one-time codes:
+	go s.reapGuests()
 
 	//init google auth:
 	s.tokenFile = config.ServicePath("token.json")
