@@ -78,6 +78,8 @@ func (s *mserver) routes() {
 	s.mGET("/guest/likes", s.guestOnly(s.handleGuestLikes))
 	s.mGET("/guest/likes/{photoid}", s.guestOnly(s.handleGuestLikePhoto))
 	s.mGET("/guest/verify", s.mResponse(s.handleVerifyGuest))
+	s.mPUT("/guest/login", s.mResponse(s.handleGuestLogin))
+	s.mPUT("/guest/login/verify", s.mResponse(s.handleGuestLoginVerify))
 	s.mPUT("/likes/{photoid}/like", s.guestOnly(s.handleLikePhoto))
 	s.mPUT("/likes/{photoid}/unlike", s.guestOnly(s.handleUnlikePhoto))
 	s.mGET("/likes/{photoid}", s.loginInfo(s.handlePhotoLikes))

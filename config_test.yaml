@@ -3,6 +3,7 @@ server:
   port: 8050
   host: localhost
   verifyUrl: http://localhost:8050/api/guest/verify
+  secureCookies: false
 
 service:
   root: .server

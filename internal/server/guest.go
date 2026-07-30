@@ -17,8 +17,16 @@ type SessionGuest struct {
 }
 
 const (
-	Session_Year  int = 60 * 60 * 24 * 365
 	Session_Month int = 60 * 60 * 24 * 30
+
+	// guestCookieMaxAge is how long a guest stays signed in before the cookie
+	// expires and an email one-time-code login is required again.
+	guestCookieMaxAge = Session_Month
+	// signupTokenMaxAge is the window to click the emailed verification link, and
+	// also the age past which an unverified guest is reaped.
+	signupTokenMaxAge = 60 * 60 * 24 // 24 hours
+	// loginCodeMaxAge is the lifetime of an emailed numeric login code.
+	loginCodeMaxAge = 15 * 60 // 15 minutes
 )
 
 var emptyuuid = uuid.UUID{}
@@ -29,7 +37,15 @@ type WelcomeEmail struct {
 	Name      string
 }
 
-var templates = template.Must(template.ParseFiles("tmpl/welcome-email.html"))
+type LoginCodeEmail struct {
+	Name string
+	Code string
+}
+
+var templates = template.Must(template.ParseFiles(
+	"tmpl/welcome-email.html",
+	"tmpl/login-code-email.html",
+))
 
 func sessionGuest(session *sessions.Session) (SessionGuest, bool) {
 	val := session.Values["guest"]
@@ -53,10 +69,10 @@ func guestUUID(w http.ResponseWriter, r *http.Request, s *mserver) (uuid.UUID, e
 		s.l.Warnw("could not parse session guest")
 		return s.clearGuestCookie(w, r, session)
 	} else {
-		if s.pg.Guest.Has(uuid) {
+		if s.pg.Guest.HasVerified(uuid) {
 			return uuid, nil
 		} else {
-			s.l.Debugw("guest not found in db")
+			s.l.Debugw("guest not found or not verified")
 			return s.clearGuestCookie(w, r, session)
 		}
 	}
@@ -155,26 +171,33 @@ func (s *mserver) handlePhotoLikes(r *http.Request, loggedIn bool) (interface{},
 	}
 }
 
+// handleVerifyGuest activates a guest from the one-time signup token in their
+// verification link, then signs them in. The token (unlike the old scheme, which
+// reused the guest's own uuid) is unguessable, single-use, and expires.
 func (s *mserver) handleVerifyGuest(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	type request struct {
 		Code string
 	}
 	var params request
-	var err error
-	var id uuid.UUID
-	if err = decodeRequest(r, &params); err != nil {
+	if err := decodeRequest(r, &params); err != nil {
 		return nil, err
 	}
-	if id, err = uuid.Parse(params.Code); err != nil {
-		return nil, BadRequestError("could not parse guest id: " + err.Error())
+	if params.Code == "" {
+		return nil, BadRequestError("missing verification code")
 	}
-	if ver, err := s.pg.Guest.Verify(id); err != nil {
+	id, ok, err := s.pg.GuestCode.FindSignup(params.Code)
+	if err != nil {
 		return nil, err
-	} else if ver.Verified {
-		return ver, s.saveGuestCookie(w, r, id, Session_Year)
-	} else {
-		return ver, nil
 	}
+	if !ok {
+		return nil, BadRequestError("invalid or expired verification link")
+	}
+	ver, err := s.pg.Guest.Verify(id)
+	if err != nil {
+		return nil, err
+	}
+	_ = s.pg.GuestCode.Delete(id, dao.GuestCodeSignup)
+	return ver, s.saveGuestCookie(w, r, id, guestCookieMaxAge)
 }
 
 func (s *mserver) handleIsGuest(w http.ResponseWriter, r *http.Request) (interface{}, error) {
@@ -210,78 +233,183 @@ func (s *mserver) handleGuestLikePhoto(r *http.Request, guestId uuid.UUID) (inte
 	}
 }
 
-func (s *mserver) handleCreateGuest(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-
-	sendEmail := func(g *dao.Guest) error {
-		var b strings.Builder
-		we := WelcomeEmail{Name: g.Name, Code: g.Id.String(), VerifyUrl: config.VerifyUrl()}
-		if err := templates.ExecuteTemplate(&b, "welcome-email.html", we); err != nil {
-			return err
-		}
-		_, err := s.ms.SendHtmlMessage(g.Email, "Mellowtech Guest Verification", b.String())
+// sendSignupEmail issues a fresh single-use signup token, stores it, and emails
+// the verification link.
+func (s *mserver) sendSignupEmail(guestId uuid.UUID, name, email string) error {
+	if s.ms == nil {
+		return InternalError("email service not configured")
+	}
+	token, err := generateOAuthState()
+	if err != nil {
+		return InternalError(err.Error())
+	}
+	expires := time.Now().Add(time.Duration(signupTokenMaxAge) * time.Second)
+	if err := s.pg.GuestCode.Issue(guestId, dao.GuestCodeSignup, token, expires); err != nil {
 		return err
 	}
-
-	type request struct {
-		Email string
-		Name  string
+	var b strings.Builder
+	we := WelcomeEmail{Name: name, Code: token, VerifyUrl: config.VerifyUrl()}
+	if err := templates.ExecuteTemplate(&b, "welcome-email.html", we); err != nil {
+		return err
 	}
+	_, err = s.ms.SendHtmlMessage(email, "Mellowtech Guest Verification", b.String())
+	return err
+}
 
+// handleCreateGuest registers a guest. The guest is created pending and is only
+// activated (and given a cookie) once they click the emailed verification link —
+// no cookie is issued here.
+func (s *mserver) handleCreateGuest(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	type request struct {
+		Email       string
+		Name        string
+		FullName    string
+		Description string
+	}
 	var params request
-
 	if err := decodeRequest(r, &params); err != nil {
 		return nil, err
 	}
-	if s.pg.Guest.HasByEmail(params.Email) {
-		s.l.Debugw("guest already exists send a new verify email", "email", params.Email)
-		guest, _ := s.pg.Guest.GetByEmail(params.Email)
+	if strings.TrimSpace(params.Email) == "" || strings.TrimSpace(params.Name) == "" {
+		return nil, BadRequestError("name and email are required")
+	}
 
-		if guest.Name != params.Name {
-			return nil, UnauthorizedError("name does not match provided email")
-		}
-		//here we should send a notification email...not a verify email
-		if err := sendEmail(guest); err != nil {
+	// Returning email: verified guests should log in; unverified (never clicked)
+	// guests get their pending signup refreshed and a new link.
+	if s.pg.Guest.HasByEmail(params.Email) {
+		existing, err := s.pg.Guest.GetByEmail(params.Email)
+		if err != nil {
 			return nil, err
 		}
-		return guest, s.saveGuestCookie(w, r, guest.Id, Session_Year)
+		if existing.Verified {
+			return nil, BadRequestError("an account with this email already exists — please log in")
+		}
+		if _, err := s.pg.Guest.UpdateProfile(existing.Id, params.Name, params.FullName, params.Description); err != nil {
+			return nil, err
+		}
+		if err := s.sendSignupEmail(existing.Id, params.Name, params.Email); err != nil {
+			return nil, err
+		}
+		return existing, nil
 	}
-	//user email not found try to create new user
+
 	if s.pg.Guest.HasByName(params.Name) {
-		return nil, UnauthorizedError("name already exists")
+		return nil, BadRequestError("name already taken")
 	}
-	//add new guest
-	if guest, err := s.pg.Guest.Add(params.Name, params.Email); err != nil {
+	guest, err := s.pg.Guest.Add(params.Name, params.Email)
+	if err != nil {
 		return nil, err
-	} else {
-		if err := sendEmail(guest); err != nil {
+	}
+	if params.FullName != "" || params.Description != "" {
+		if _, err := s.pg.Guest.UpdateProfile(guest.Id, params.Name, params.FullName, params.Description); err != nil {
 			_ = s.pg.Guest.Delete(guest.Id)
 			return nil, err
 		}
-		return guest, s.saveGuestCookie(w, r, guest.Id, Session_Year)
 	}
-
+	if err := s.sendSignupEmail(guest.Id, params.Name, params.Email); err != nil {
+		_ = s.pg.Guest.Delete(guest.Id)
+		return nil, err
+	}
+	return guest, nil
 }
 
-func (s *mserver) handleUpdateGuest(r *http.Request, guestId uuid.UUID) (interface{}, error) {
-
+// handleGuestLogin starts an email one-time-code login: a verified guest with
+// this email is emailed a numeric code. The response is deliberately neutral so
+// it never reveals whether an email is registered.
+func (s *mserver) handleGuestLogin(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	type request struct {
 		Email string
-		Name  string
 	}
-
 	var params request
-
 	if err := decodeRequest(r, &params); err != nil {
 		return nil, err
 	}
+	neutral := map[string]string{"message": "if that email is registered, a login code has been sent"}
+	if strings.TrimSpace(params.Email) == "" || !s.pg.Guest.HasByEmail(params.Email) {
+		return neutral, nil
+	}
+	guest, err := s.pg.Guest.GetByEmail(params.Email)
+	if err != nil || !guest.Verified {
+		return neutral, nil
+	}
+	if s.ms == nil {
+		return nil, InternalError("email service not configured")
+	}
+	code, err := generateLoginCode()
+	if err != nil {
+		return nil, InternalError(err.Error())
+	}
+	expires := time.Now().Add(time.Duration(loginCodeMaxAge) * time.Second)
+	if err := s.pg.GuestCode.Issue(guest.Id, dao.GuestCodeLogin, code, expires); err != nil {
+		return nil, err
+	}
+	var b strings.Builder
+	if err := templates.ExecuteTemplate(&b, "login-code-email.html", LoginCodeEmail{Name: guest.Name, Code: code}); err != nil {
+		return nil, err
+	}
+	if _, err := s.ms.SendHtmlMessage(guest.Email, "Your Mellowtech Photos login code", b.String()); err != nil {
+		return nil, err
+	}
+	return neutral, nil
+}
 
+// handleGuestLoginVerify consumes an email login code and signs the guest in.
+func (s *mserver) handleGuestLoginVerify(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	type request struct {
+		Email string
+		Code  string
+	}
+	var params request
+	if err := decodeRequest(r, &params); err != nil {
+		return nil, err
+	}
+	guest, err := s.pg.Guest.GetByEmail(params.Email)
+	if err != nil {
+		return nil, UnauthorizedError("invalid email or code")
+	}
+	ok, err := s.pg.GuestCode.ConsumeLogin(guest.Id, params.Code)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, UnauthorizedError("invalid email or code")
+	}
+	return guest, s.saveGuestCookie(w, r, guest.Id, guestCookieMaxAge)
+}
+
+// reapGuests periodically removes guests who never verified within the signup
+// window (cascading their comments/likes) and purges expired one-time codes.
+func (s *mserver) reapGuests() {
+	ticker := time.NewTicker(time.Hour)
+	defer ticker.Stop()
+	for range ticker.C {
+		cutoff := time.Now().Add(-time.Duration(signupTokenMaxAge) * time.Second)
+		if n, err := s.pg.Guest.DeleteUnverifiedBefore(cutoff); err != nil {
+			s.l.Warnw("guest reaper: could not delete unverified guests", zap.Error(err))
+		} else if n > 0 {
+			s.l.Infow("guest reaper: removed unverified guests", "count", n)
+		}
+		if n, err := s.pg.GuestCode.DeleteExpiredBefore(time.Now()); err != nil {
+			s.l.Warnw("guest reaper: could not delete expired codes", zap.Error(err))
+		} else if n > 0 {
+			s.l.Debugw("guest reaper: removed expired codes", "count", n)
+		}
+	}
+}
+
+func (s *mserver) handleUpdateGuest(r *http.Request, guestId uuid.UUID) (interface{}, error) {
+	type request struct {
+		Name        string
+		FullName    string
+		Description string
+	}
+	var params request
+	if err := decodeRequest(r, &params); err != nil {
+		return nil, err
+	}
 	if strings.TrimSpace(params.Name) == "" {
 		return nil, BadRequestError("name cannot contain only white space characters")
 	}
-	guest, _ := s.pg.Guest.Get(guestId)
-
-	if params.Email != "" && params.Email != guest.Email {
-		return nil, BadRequestError("change of email is not yet supported")
-	}
-	return s.pg.Guest.Update(params.Email, params.Name, guest.Id)
+	// Email is the login identity and is intentionally not updatable here.
+	return s.pg.Guest.UpdateProfile(guestId, params.Name, params.FullName, params.Description)
 }

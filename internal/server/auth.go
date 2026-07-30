@@ -9,6 +9,7 @@ import (
 	"github.com/msvens/mphotos/internal/config"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
+	"math/big"
 	"net/http"
 	"net/url"
 	"os"
@@ -312,6 +313,16 @@ func generateOAuthState() (string, error) {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(b), nil
+}
+
+// generateLoginCode returns a 6-digit numeric code from crypto/rand, suitable
+// for typing into a login form.
+func generateLoginCode() (string, error) {
+	n, err := rand.Int(rand.Reader, big.NewInt(1000000))
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%06d", n.Int64()), nil
 }
 
 func fetchGoogleUserinfo(ctx context.Context, token *oauth2.Token) (string, bool, error) {
