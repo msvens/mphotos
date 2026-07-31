@@ -78,6 +78,10 @@ func newServer(prefixPath string, logger *zap.SugaredLogger) *mserver {
 		s.l.Panicw("could not create camera dir", zap.Error(err))
 	}
 
+	if err = os.MkdirAll(config.AvatarPath(), 0744); err != nil {
+		s.l.Panicw("could not create avatar dir", zap.Error(err))
+	}
+
 	//start async job channel:
 	wg.Add(1)
 	go worker(jobChan)

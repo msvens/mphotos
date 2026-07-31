@@ -14,6 +14,7 @@ import (
 // version. UpgradeDb stamps each version after the step succeeds.
 var migrations = map[int]func(*PGDB) error{
 	5: upgradeToV5,
+	6: upgradeToV6,
 }
 
 // UpgradeDb brings the database up to the binary's DbVersion, applying each
@@ -84,4 +85,10 @@ func upgradeToV5(pgdb *PGDB) error {
 		logger.Infow("grandfathered existing guests to verified", "count", n)
 	}
 	return nil
+}
+
+// upgradeToV6 takes a v5 database to v6, adding the guest avatar column.
+func upgradeToV6(pgdb *PGDB) error {
+	_, err := pgdb.db.Exec(schemaV5toV6)
+	return err
 }

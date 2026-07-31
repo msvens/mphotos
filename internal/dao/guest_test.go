@@ -112,6 +112,12 @@ func TestReactionListByPhotoCarriesDescription(t *testing.T) {
 	if _, err := pgdb.Guest.UpdateProfile(g.Id, "liker", "Real Name", "loves landscapes"); err != nil {
 		t.Fatalf("could not set description: %v", err)
 	}
+	// UpdateAvatar round-trips the avatar reference.
+	if u, err := pgdb.Guest.UpdateAvatar(".jpg", g.Id); err != nil {
+		t.Fatalf("could not set avatar: %v", err)
+	} else if u.Avatar != ".jpg" {
+		t.Errorf("expected avatar .jpg got %q", u.Avatar)
+	}
 	photoId := uuid.New()
 	if err := pgdb.Reaction.Add(&Reaction{GuestId: g.Id, PhotoId: photoId, Kind: "like"}); err != nil {
 		t.Fatalf("could not add reaction: %v", err)
@@ -124,9 +130,11 @@ func TestReactionListByPhotoCarriesDescription(t *testing.T) {
 	if len(rs) != 1 {
 		t.Fatalf("expected 1 reaction, got %d", len(rs))
 	}
-	// Public projection carries nickname + description, never full name/email.
-	if rs[0].Name != "liker" || rs[0].Description != "loves landscapes" || rs[0].Kind != "like" {
-		t.Errorf("unexpected public reaction: %+v", rs[0])
+	// Public projection carries guest id + nickname + description + avatar, never
+	// full name/email.
+	r := rs[0]
+	if r.Id != g.Id || r.Name != "liker" || r.Description != "loves landscapes" || r.Avatar != ".jpg" || r.Kind != "like" {
+		t.Errorf("unexpected public reaction: %+v", r)
 	}
 }
 

@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-const DbVersion = 5
-const DbDescription = "Version 5 enriches the guest profile and adds the one-time code store"
+const DbVersion = 6
+const DbDescription = "Version 6 adds a guest avatar reference"
 
 type Album struct {
 	Id          uuid.UUID  `json:"id"`
@@ -74,16 +74,22 @@ type Guest struct {
 	Name        string    `json:"name"`
 	FullName    string    `json:"fullName"`
 	Description string    `json:"description"`
+	Avatar      string    `json:"avatar"`
 	Verified    bool      `json:"verified"`
 	VerifyTime  time.Time `json:"verifyTime"`
 }
 
 // GuestReaction is the public view of a reaction. It deliberately carries no
 // email: it is serialized by the unauthenticated GET /likes/{photoid} route.
+// The guest id + avatar let the frontend render the guest's avatar
+// (GET /guest/{guestId}/avatar); the id is not a secret (auth is the signed
+// cookie), and fullName/email are never exposed here.
 type GuestReaction struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Kind        string `json:"kind"`
+	Id          uuid.UUID `json:"guestId"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Avatar      string    `json:"avatar"`
+	Kind        string    `json:"kind"`
 }
 
 type Photo struct {
