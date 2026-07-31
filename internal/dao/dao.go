@@ -67,6 +67,7 @@ type GuestDAO interface {
 	HasByName(name string) bool
 	Update(email string, name string, id uuid.UUID) (*Guest, error)
 	UpdateProfile(id uuid.UUID, name, fullName, description string) (*Guest, error)
+	UpdateAvatar(avatar string, id uuid.UUID) (*Guest, error)
 	List() ([]*Guest, error)
 	DeleteUnverifiedBefore(t time.Time) (int64, error)
 }
@@ -192,7 +193,7 @@ func (pgd *PGDB) tableExists(table string) bool {
 }
 
 func (pgd *PGDB) CreateTables() error {
-	if _, err := pgd.db.Exec(schemaV5); err != nil {
+	if _, err := pgd.db.Exec(schemaV6); err != nil {
 		return err
 	} else { //make sure version is correct
 		_, err = pgd.Version.Update()
@@ -204,6 +205,6 @@ func (pgd *PGDB) CreateTables() error {
 }
 
 func (pgd *PGDB) DeleteTables() error {
-	_, err := pgd.db.Exec(deleteSchemaV5)
+	_, err := pgd.db.Exec(deleteSchemaV6)
 	return err
 }

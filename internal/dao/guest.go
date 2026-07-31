@@ -109,6 +109,15 @@ func (dao *GuestPG) UpdateProfile(id uuid.UUID, name, fullName, description stri
 	return dao.Get(id)
 }
 
+// UpdateAvatar sets the guest's avatar reference (the file extension, e.g.
+// ".jpg", or "" to clear it).
+func (dao *GuestPG) UpdateAvatar(avatar string, id uuid.UUID) (*Guest, error) {
+	if _, err := dao.db.Exec("UPDATE guest SET avatar = $1 WHERE id = $2", avatar, id); err != nil {
+		return nil, err
+	}
+	return dao.Get(id)
+}
+
 // List returns all guests, for the owner-facing guest view.
 func (dao *GuestPG) List() ([]*Guest, error) {
 	ret := []*Guest{}

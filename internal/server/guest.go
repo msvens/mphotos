@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -42,10 +43,24 @@ type LoginCodeEmail struct {
 	Code string
 }
 
-var templates = template.Must(template.ParseFiles(
-	"tmpl/welcome-email.html",
-	"tmpl/login-code-email.html",
-))
+// Email templates are loaded lazily (relative to the working dir) rather than at
+// package init, so importing this package — e.g. in tests run from the package
+// dir — never depends on the templates being reachable.
+var (
+	templatesOnce sync.Once
+	templates     *template.Template
+	templatesErr  error
+)
+
+func guestTemplates() (*template.Template, error) {
+	templatesOnce.Do(func() {
+		templates, templatesErr = template.ParseFiles(
+			"tmpl/welcome-email.html",
+			"tmpl/login-code-email.html",
+		)
+	})
+	return templates, templatesErr
+}
 
 func sessionGuest(session *sessions.Session) (SessionGuest, bool) {
 	val := session.Values["guest"]
@@ -117,8 +132,10 @@ func (s *mserver) handlePhotoComments(r *http.Request, loggedIn bool) (interface
 	} else {
 		type resp struct {
 			Id          int       `json:"id"`
+			GuestId     uuid.UUID `json:"guestId"`
 			Name        string    `json:"name"`
 			Description string    `json:"description"`
+			Avatar      string    `json:"avatar"`
 			PhotoId     uuid.UUID `json:"photoId"`
 			Time        time.Time `json:"time"`
 			Body        string    `json:"body"`
@@ -130,7 +147,7 @@ func (s *mserver) handlePhotoComments(r *http.Request, loggedIn bool) (interface
 		ret := []*resp{}
 		for _, c := range comments {
 			u, _ := s.pg.Guest.Get(c.GuestId)
-			ret = append(ret, &resp{Id: c.Id, Name: u.Name, Description: u.Description, PhotoId: c.PhotoId, Time: c.Time, Body: c.Body})
+			ret = append(ret, &resp{Id: c.Id, GuestId: c.GuestId, Name: u.Name, Description: u.Description, Avatar: u.Avatar, PhotoId: c.PhotoId, Time: c.Time, Body: c.Body})
 		}
 		return ret, nil
 	}
@@ -254,9 +271,13 @@ func (s *mserver) sendSignupEmail(guestId uuid.UUID, name, email string) error {
 	if err := s.pg.GuestCode.Issue(guestId, dao.GuestCodeSignup, token, expires); err != nil {
 		return err
 	}
+	tmpls, err := guestTemplates()
+	if err != nil {
+		return InternalError(err.Error())
+	}
 	var b strings.Builder
 	we := WelcomeEmail{Name: name, Code: token, VerifyUrl: config.VerifyUrl()}
-	if err := templates.ExecuteTemplate(&b, "welcome-email.html", we); err != nil {
+	if err := tmpls.ExecuteTemplate(&b, "welcome-email.html", we); err != nil {
 		return err
 	}
 	_, err = s.ms.SendHtmlMessage(email, "Mellowtech Guest Verification", b.String())
@@ -350,8 +371,12 @@ func (s *mserver) handleGuestLogin(w http.ResponseWriter, r *http.Request) (inte
 	if err := s.pg.GuestCode.Issue(guest.Id, dao.GuestCodeLogin, code, expires); err != nil {
 		return nil, err
 	}
+	tmpls, err := guestTemplates()
+	if err != nil {
+		return nil, InternalError(err.Error())
+	}
 	var b strings.Builder
-	if err := templates.ExecuteTemplate(&b, "login-code-email.html", LoginCodeEmail{Name: guest.Name, Code: code}); err != nil {
+	if err := tmpls.ExecuteTemplate(&b, "login-code-email.html", LoginCodeEmail{Name: guest.Name, Code: code}); err != nil {
 		return nil, err
 	}
 	if _, err := s.ms.SendHtmlMessage(guest.Email, "Your Mellowtech Photos login code", b.String()); err != nil {

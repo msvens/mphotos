@@ -17,10 +17,12 @@ func TestUpgradeWalk(t *testing.T) {
 	pgdb := openAndCreateTestDb(t)
 	defer deleteAndCloseTestDb(pgdb, t)
 
-	// Rewind to the v4 guest shape and insert a legacy, unverified guest.
+	// Rewind to the v4 guest shape and insert a legacy, unverified guest. This
+	// exercises the multi-version walk: v4 -> v5 -> v6.
 	for _, stmt := range []string{
 		"ALTER TABLE guest DROP COLUMN fullname",
 		"ALTER TABLE guest DROP COLUMN description",
+		"ALTER TABLE guest DROP COLUMN avatar",
 		"DROP TABLE IF EXISTS guestcode",
 		"UPDATE version SET versionId = 4",
 	} {
@@ -54,8 +56,13 @@ func TestUpgradeWalk(t *testing.T) {
 	if !g.Verified {
 		t.Error("expected legacy guest to be grandfathered to verified=true")
 	}
-	if g.FullName != "" || g.Description != "" {
-		t.Errorf("expected empty new profile fields, got fullName=%q description=%q", g.FullName, g.Description)
+	if g.FullName != "" || g.Description != "" || g.Avatar != "" {
+		t.Errorf("expected empty new profile fields, got fullName=%q description=%q avatar=%q", g.FullName, g.Description, g.Avatar)
+	}
+
+	// The v6 avatar column is present and writable.
+	if _, err := pgdb.Guest.UpdateAvatar(".jpg", gid); err != nil {
+		t.Errorf("avatar column not usable after upgrade: %v", err)
 	}
 
 	// guestcode table exists and is usable after the upgrade.

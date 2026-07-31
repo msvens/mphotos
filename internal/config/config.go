@@ -22,6 +22,7 @@ const (
 )
 
 const CameraDir = "camera"
+const AvatarDir = "avatar"
 
 var photoTypeDirNames = map[PhotoType]string{
 	Original:  "img",
@@ -182,6 +183,14 @@ func CameraPath() string {
 
 func CameraFilePath(fname string) string {
 	return filepath.Join(CameraPath(), fname)
+}
+
+func AvatarPath() string {
+	return filepath.Join(ServiceRoot(), AvatarDir)
+}
+
+func AvatarFilePath(fname string) string {
+	return filepath.Join(AvatarPath(), fname)
 }
 
 func AuthMethod() string {
