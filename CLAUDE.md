@@ -54,11 +54,14 @@ parallel-safe. `MPHOTOS_DB_HOST`, `MPHOTOS_DB_USER`, … override the file.
   names are derived by lowercasing Go field names (`getStructFields` in `sqlx.go`), so field and
   column names must match case-insensitively. Build statements with `buildInsertNamed` /
   `buildUpdateNamed2`; ad-hoc queries are plain SQL with `$1` placeholders.
-- **Schema changes are hand-rolled migrations** — no framework. Bump `DbVersion` in `types.go`,
-  add `schemaVN` + `schemaV(N-1)toVN` + `deleteSchemaVN` in `schema.go`, write `upgradeToVN` and
-  wire it into the dispatch in `migrate.go` (currently hardcoded to `upgradeToV3` — it must be
-  edited, not just appended to), and update the `schemaV3`/`deleteSchemaV3` references in
-  `dao.go`. Upgrades only support a single version step at a time.
+- **Schema changes are hand-rolled migrations** — no framework, but multi-step. To add version N:
+  bump `DbVersion`/`DbDescription` in `types.go`; add `schemaV(N-1)toVN` (the ALTER/DDL delta) and
+  rename the full-schema/teardown consts to `schemaVN`/`deleteSchemaVN` in `schema.go` (updating
+  their references in `dao.go`'s `CreateTables`/`DeleteTables`); write `upgradeToVN(pgdb)` that
+  applies only the delta — it must **not** stamp the version; and **append** `N: upgradeToVN` to the
+  `migrations` map in `migrate.go` (never delete older entries — the whole chain is kept). `UpgradeDb`
+  loops from the db's current version up to `DbVersion`, applying each registered step and stamping
+  the version after each via `Version.Set`, so any older db walks forward one step at a time.
 - **Config**: viper + YAML, accessed through free functions in `internal/config`. Searched in
   `$HOME/.mphotos`, `/etc/mphotos`, `.` (tests also `../..`). `config_example.yaml` documents
   every section — and is asserted by `internal/config/config_test.go`, so keep it in sync.

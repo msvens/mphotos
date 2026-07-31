@@ -117,6 +117,7 @@ type UserDAO interface {
 type VersionDAO interface {
 	Get() (*Version, error)
 	Update() (*Version, error)
+	Set(versionId int) (*Version, error)
 	IsCurrent() (bool, error)
 }
 
