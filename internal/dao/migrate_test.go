@@ -7,13 +7,13 @@ import (
 	"github.com/google/uuid"
 )
 
-// TestUpgradeToV5 rewinds a freshly created (v5) database to the v4 shape — no
+// TestUpgradeWalk rewinds a freshly created (v5) database to the v4 shape — no
 // fullname/description columns, no guestcode table, version 4, with an
-// unverified legacy guest — then runs upgradeToV5 and asserts the schema is
-// extended and every existing guest is grandfathered to verified=true. The
-// drop/recreate harness only ever creates the latest schema, so this is the only
-// coverage of the migration path.
-func TestUpgradeToV5(t *testing.T) {
+// unverified legacy guest — then runs the real UpgradeDb walk and asserts the
+// schema is extended, the version is stamped, and every existing guest is
+// grandfathered to verified=true. The drop/recreate harness only ever creates
+// the latest schema, so this is the only coverage of the migration path.
+func TestUpgradeWalk(t *testing.T) {
 	pgdb := openAndCreateTestDb(t)
 	defer deleteAndCloseTestDb(pgdb, t)
 
@@ -35,11 +35,11 @@ func TestUpgradeToV5(t *testing.T) {
 		t.Fatalf("could not insert legacy guest: %v", err)
 	}
 
-	if err := upgradeToV5(pgdb); err != nil {
-		t.Fatalf("upgradeToV5 failed: %v", err)
+	// UpgradeDb walks v4 -> v5 via the migrations map and stamps the version.
+	if err := UpgradeDb(); err != nil {
+		t.Fatalf("UpgradeDb failed: %v", err)
 	}
 
-	// Version bumped.
 	if v, err := pgdb.Version.Get(); err != nil {
 		t.Fatalf("could not read version: %v", err)
 	} else if v.VersionId != DbVersion {
@@ -61,5 +61,32 @@ func TestUpgradeToV5(t *testing.T) {
 	// guestcode table exists and is usable after the upgrade.
 	if err := pgdb.GuestCode.Issue(gid, GuestCodeLogin, "123456", time.Now().Add(time.Minute)); err != nil {
 		t.Errorf("guestcode table not usable after upgrade: %v", err)
+	}
+}
+
+// TestUpgradeUpToDate: a database already at the latest version is a no-op.
+func TestUpgradeUpToDate(t *testing.T) {
+	pgdb := openAndCreateTestDb(t)
+	defer deleteAndCloseTestDb(pgdb, t)
+
+	if err := UpgradeDb(); err != nil {
+		t.Fatalf("UpgradeDb on current db should be a no-op, got: %v", err)
+	}
+	if v, _ := pgdb.Version.Get(); v.VersionId != DbVersion {
+		t.Errorf("expected version %d got %d", DbVersion, v.VersionId)
+	}
+}
+
+// TestUpgradeNewerThanBinary: a database ahead of the binary must error, not
+// silently proceed.
+func TestUpgradeNewerThanBinary(t *testing.T) {
+	pgdb := openAndCreateTestDb(t)
+	defer deleteAndCloseTestDb(pgdb, t)
+
+	if _, err := pgdb.Version.Set(DbVersion + 1); err != nil {
+		t.Fatalf("could not set version ahead: %v", err)
+	}
+	if err := UpgradeDb(); err == nil {
+		t.Error("expected an error upgrading a db newer than the binary")
 	}
 }

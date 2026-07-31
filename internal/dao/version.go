@@ -21,8 +21,17 @@ func NewVersionPG(db *sqlx.DB) *VersionPG {
 	return &VersionPG{db, fields, uStmt, gStmt}
 }
 
+// Update stamps the version row to the binary's current DbVersion. Used when
+// creating a fresh database.
 func (dao *VersionPG) Update() (*Version, error) {
-	v := Version{DbVersion, DbDescription}
+	return dao.Set(DbVersion)
+}
+
+// Set stamps the version row to an explicit version. UpgradeDb calls it after
+// each migration step so the marker advances one version at a time and a crash
+// mid-upgrade leaves a consistent, resumable version.
+func (dao *VersionPG) Set(versionId int) (*Version, error) {
+	v := Version{versionId, DbDescription}
 	if _, err := dao.db.NamedExec(dao.updateVersionStmt, &v); err != nil {
 		return nil, err
 	}
