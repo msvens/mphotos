@@ -7,6 +7,39 @@ import (
 	"github.com/google/uuid"
 )
 
+func TestGuestGoogleId(t *testing.T) {
+	pgdb := openAndCreateTestDb(t)
+	defer deleteAndCloseTestDb(pgdb, t)
+
+	g, _ := pgdb.Guest.Add("goog", "goog@example.com")
+
+	// No link yet.
+	if _, err := pgdb.Guest.GetByGoogleId("sub-123"); err == nil {
+		t.Error("expected miss for an unlinked google id")
+	}
+
+	// Link it, then resolve by google id.
+	if _, err := pgdb.Guest.SetGoogleId(g.Id, "sub-123"); err != nil {
+		t.Fatalf("SetGoogleId failed: %v", err)
+	}
+	if got, err := pgdb.Guest.GetByGoogleId("sub-123"); err != nil {
+		t.Fatalf("GetByGoogleId failed: %v", err)
+	} else if got.Id != g.Id {
+		t.Errorf("expected %v got %v", g.Id, got.Id)
+	}
+
+	// The partial unique index forbids two guests sharing a google id, but many
+	// may keep the empty default.
+	g2, _ := pgdb.Guest.Add("goog2", "goog2@example.com")
+	if _, err := pgdb.Guest.SetGoogleId(g2.Id, "sub-123"); err == nil {
+		t.Error("expected unique-violation linking a second guest to the same google id")
+	}
+	g3, _ := pgdb.Guest.Add("goog3", "goog3@example.com")
+	if g3.GoogleId != "" {
+		t.Errorf("expected empty google id by default, got %q", g3.GoogleId)
+	}
+}
+
 func TestGuestProfileAndReap(t *testing.T) {
 	pgdb := openAndCreateTestDb(t)
 	defer deleteAndCloseTestDb(pgdb, t)

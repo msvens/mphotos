@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-const DbVersion = 6
-const DbDescription = "Version 6 adds a guest avatar reference"
+const DbVersion = 7
+const DbDescription = "Version 7 adds a Google account id for guest login"
 
 type Album struct {
 	Id          uuid.UUID  `json:"id"`
@@ -75,6 +75,7 @@ type Guest struct {
 	FullName    string    `json:"fullName"`
 	Description string    `json:"description"`
 	Avatar      string    `json:"avatar"`
+	GoogleId    string    `json:"-"`
 	Verified    bool      `json:"verified"`
 	VerifyTime  time.Time `json:"verifyTime"`
 }

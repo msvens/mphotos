@@ -109,6 +109,21 @@ func (dao *GuestPG) UpdateProfile(id uuid.UUID, name, fullName, description stri
 	return dao.Get(id)
 }
 
+// GetByGoogleId returns the guest linked to a Google account id (OIDC sub).
+func (dao *GuestPG) GetByGoogleId(googleId string) (*Guest, error) {
+	ret := Guest{}
+	err := dao.db.Get(&ret, "SELECT * FROM guest WHERE googleid = $1", googleId)
+	return &ret, err
+}
+
+// SetGoogleId links a guest to a Google account id.
+func (dao *GuestPG) SetGoogleId(id uuid.UUID, googleId string) (*Guest, error) {
+	if _, err := dao.db.Exec("UPDATE guest SET googleid = $1 WHERE id = $2", googleId, id); err != nil {
+		return nil, err
+	}
+	return dao.Get(id)
+}
+
 // UpdateAvatar sets the guest's avatar reference (the file extension, e.g.
 // ".jpg", or "" to clear it).
 func (dao *GuestPG) UpdateAvatar(avatar string, id uuid.UUID) (*Guest, error) {

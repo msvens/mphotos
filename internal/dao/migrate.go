@@ -15,6 +15,7 @@ import (
 var migrations = map[int]func(*PGDB) error{
 	5: upgradeToV5,
 	6: upgradeToV6,
+	7: upgradeToV7,
 }
 
 // UpgradeDb brings the database up to the binary's DbVersion, applying each
@@ -90,5 +91,11 @@ func upgradeToV5(pgdb *PGDB) error {
 // upgradeToV6 takes a v5 database to v6, adding the guest avatar column.
 func upgradeToV6(pgdb *PGDB) error {
 	_, err := pgdb.db.Exec(schemaV5toV6)
+	return err
+}
+
+// upgradeToV7 takes a v6 database to v7, adding the guest Google account id.
+func upgradeToV7(pgdb *PGDB) error {
+	_, err := pgdb.db.Exec(schemaV6toV7)
 	return err
 }

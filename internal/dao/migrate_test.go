@@ -23,6 +23,8 @@ func TestUpgradeWalk(t *testing.T) {
 		"ALTER TABLE guest DROP COLUMN fullname",
 		"ALTER TABLE guest DROP COLUMN description",
 		"ALTER TABLE guest DROP COLUMN avatar",
+		"ALTER TABLE guest DROP COLUMN googleid",
+		"DROP INDEX IF EXISTS guest_googleid_idx",
 		"DROP TABLE IF EXISTS guestcode",
 		"UPDATE version SET versionId = 4",
 	} {

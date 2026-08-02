@@ -279,19 +279,19 @@ func (s *mserver) handleGoogleLoginCallback(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	email, verified, err := fetchGoogleUserinfo(r.Context(), token)
+	info, err := fetchGoogleUserinfo(r.Context(), token)
 	if err != nil {
 		s.l.Errorw("userinfo fetch failed", zap.Error(err))
 		redirTo("exchange_failed")
 		return
 	}
-	if !verified {
-		s.l.Infow("google email not verified", "email", email)
+	if !info.EmailVerified {
+		s.l.Infow("google email not verified", "email", info.Email)
 		redirTo("unauthorized_email")
 		return
 	}
-	if !emailAllowed(email, config.AuthAllowedEmails()) {
-		s.l.Infow("email not in allowlist", "email", email)
+	if !emailAllowed(info.Email, config.AuthAllowedEmails()) {
+		s.l.Infow("email not in allowlist", "email", info.Email)
 		redirTo("unauthorized_email")
 		return
 	}
@@ -325,28 +325,33 @@ func generateLoginCode() (string, error) {
 	return fmt.Sprintf("%06d", n.Int64()), nil
 }
 
-func fetchGoogleUserinfo(ctx context.Context, token *oauth2.Token) (string, bool, error) {
+type googleUserinfo struct {
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+	Name          string `json:"name"`
+	Picture       string `json:"picture"`
+	Sub           string `json:"sub"`
+}
+
+func fetchGoogleUserinfo(ctx context.Context, token *oauth2.Token) (*googleUserinfo, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", "https://www.googleapis.com/oauth2/v3/userinfo", nil)
 	if err != nil {
-		return "", false, err
+		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+token.AccessToken)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", false, err
+		return nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
-		return "", false, fmt.Errorf("userinfo: status %d", resp.StatusCode)
+		return nil, fmt.Errorf("userinfo: status %d", resp.StatusCode)
 	}
-	var info struct {
-		Email         string `json:"email"`
-		EmailVerified bool   `json:"email_verified"`
-	}
+	var info googleUserinfo
 	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
-		return "", false, err
+		return nil, err
 	}
-	return info.Email, info.EmailVerified, nil
+	return &info, nil
 }
 
 func emailAllowed(email string, allowlist []string) bool {
