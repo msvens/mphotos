@@ -125,7 +125,17 @@ func (s *mserver) provisionGoogleGuest(info *googleUserinfo) (*dao.Guest, error)
 				return nil, err
 			}
 		}
-		return s.pg.Guest.SetGoogleId(g.Id, info.Sub)
+		linked, err := s.pg.Guest.SetGoogleId(g.Id, info.Sub)
+		if err != nil {
+			return nil, err
+		}
+		// Fill an empty avatar from the Google picture; never clobber one the
+		// guest has already set. They can remove it afterwards if they like.
+		if linked.Avatar == "" {
+			s.importGoogleAvatar(linked.Id, info.Picture)
+			return s.pg.Guest.Get(linked.Id)
+		}
+		return linked, nil
 	}
 	// 3. New guest.
 	displayName := googleDisplayName(info)
