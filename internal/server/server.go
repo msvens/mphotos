@@ -20,18 +20,19 @@ import (
 )
 
 type mserver struct {
-	pg           *dao.PGDB
-	ds           *gdrive.DriveService
-	ms           *gmail.GmailService
-	r            *http.ServeMux
-	l            *zap.SugaredLogger
-	prefixPath   string
-	store        *sessions.CookieStore
-	cookieName   string
-	guestCookie  string
-	tokenFile    string
-	gconfig      *oauth2.Config
-	gconfigLogin *oauth2.Config
+	pg                *dao.PGDB
+	ds                *gdrive.DriveService
+	ms                *gmail.GmailService
+	r                 *http.ServeMux
+	l                 *zap.SugaredLogger
+	prefixPath        string
+	store             *sessions.CookieStore
+	cookieName        string
+	guestCookie       string
+	tokenFile         string
+	gconfig           *oauth2.Config
+	gconfigLogin      *oauth2.Config
+	gconfigGuestLogin *oauth2.Config
 }
 
 func newServer(prefixPath string, logger *zap.SugaredLogger) *mserver {
@@ -105,6 +106,16 @@ func newServer(prefixPath string, logger *zap.SugaredLogger) *mserver {
 		ClientSecret: config.GoogleClientSecret(),
 		Endpoint:     google.Endpoint,
 		RedirectURL:  config.AuthGoogleLoginRedirectUrl(),
+		Scopes:       []string{"openid", "email", "profile"},
+	}
+
+	// Guest Google login reuses the same OAuth client and minimal scopes as the
+	// owner login, but a distinct callback URL so the server knows it's a guest.
+	s.gconfigGuestLogin = &oauth2.Config{
+		ClientID:     config.GoogleClientId(),
+		ClientSecret: config.GoogleClientSecret(),
+		Endpoint:     google.Endpoint,
+		RedirectURL:  config.GuestGoogleRedirectUrl(),
 		Scopes:       []string{"openid", "email", "profile"},
 	}
 

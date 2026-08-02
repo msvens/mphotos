@@ -19,7 +19,15 @@ const schemaV4toV5 = `
 const schemaV5toV6 = `
 	ALTER TABLE guest ADD COLUMN avatar TEXT NOT NULL DEFAULT '';
 `
-const schemaV6 = `
+
+// schemaV6toV7 adds the Google account id (OIDC 'sub') for guests who sign in
+// with Google. The partial unique index keeps it unique among linked guests
+// while allowing many ” (email-only) guests.
+const schemaV6toV7 = `
+	ALTER TABLE guest ADD COLUMN googleid TEXT NOT NULL DEFAULT '';
+	CREATE UNIQUE INDEX guest_googleid_idx ON guest (googleid) WHERE googleid <> '';
+`
+const schemaV7 = `
 CREATE TABLE IF NOT EXISTS album (
 	Id UUID,
 	name TEXT,
@@ -98,11 +106,14 @@ CREATE TABLE IF NOT EXISTS guest (
 	fullname TEXT NOT NULL DEFAULT '',
 	description TEXT NOT NULL DEFAULT '',
 	avatar TEXT NOT NULL DEFAULT '',
+	googleid TEXT NOT NULL DEFAULT '',
 	verified BOOLEAN NOT NULL,
 	verifytime TIMESTAMP NOT NULL,
 	CONSTRAINT guest_email UNIQUE (email),
 	CONSTRAINT guest_name UNIQUE (name)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS guest_googleid_idx ON guest (googleid) WHERE googleid <> '';
 
 CREATE TABLE IF NOT EXISTS guestcode (
 	guestid UUID NOT NULL,
@@ -168,7 +179,7 @@ INSERT INTO version (versionId,description) VALUES (0,'no version set') ON CONFL
 INSERT INTO usert (id, name, bio, pic, driveFolderId, driveFolderName, config) VALUES (23657, '', '', '', '','','{}') ON CONFLICT (id) DO NOTHING;
 `
 
-const deleteSchemaV6 = `
+const deleteSchemaV7 = `
 DROP TABLE IF EXISTS album;
 DROP TABLE IF EXISTS albumphotos;
 DROP TABLE IF EXISTS camera;

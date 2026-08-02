@@ -221,6 +221,13 @@ func AuthGoogleUIRedirectPath() string {
 	return p
 }
 
+// GuestGoogleRedirectUrl is the OAuth callback URL for the guest Google login
+// flow. It must be a distinct path from the owner login callback and registered
+// as an authorized redirect URI in the Google console.
+func GuestGoogleRedirectUrl() string {
+	return viper.GetString("auth.google.guestRedirectUrl")
+}
+
 func SessionAuthcKey() string {
 	return viper.GetString("session.authKey")
 }

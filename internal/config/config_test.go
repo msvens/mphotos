@@ -83,6 +83,9 @@ func TestConfigFile(t *testing.T) {
 	if AuthGoogleLoginRedirectUrl() != "http://localhost:8050/api/auth/login/callback" {
 		t.Errorf("unexpected login redirect url: %v", AuthGoogleLoginRedirectUrl())
 	}
+	if GuestGoogleRedirectUrl() != "http://localhost:8050/api/auth/guest/callback" {
+		t.Errorf("unexpected guest redirect url: %v", GuestGoogleRedirectUrl())
+	}
 	//google config:
 	if GoogleClientId() != "clientId" {
 		t.Errorf("expected clientId got %v", GoogleClientId())

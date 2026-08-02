@@ -18,6 +18,7 @@ auth:
       - msvens@gmail.com
     loginRedirectUrl: http://localhost:8050/api/auth/login/callback
     uiRedirectPath: /        # where to send the browser after login (success or failure with ?error=)
+    guestRedirectUrl: http://localhost:8050/api/auth/guest/callback  # OAuth callback for guest Google login; register in the Google console
 
 session:
   authKey: authKey #64 bytes recommended

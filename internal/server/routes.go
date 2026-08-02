@@ -18,6 +18,7 @@ func (s *mserver) routes() {
 
 	s.r.HandleFunc(s.prefixPath+"/auth/callback", s.handleGoogleCallback)
 	s.r.HandleFunc(s.prefixPath+"/auth/login/callback", s.handleGoogleLoginCallback)
+	s.r.HandleFunc(s.prefixPath+"/auth/guest/callback", s.handleGuestGoogleCallback)
 	s.mGET("/auth/method", s.mResponse(s.handleAuthMethod))
 
 	s.mGET("/cameras", s.loginInfo(s.handleCameras))
@@ -86,6 +87,7 @@ func (s *mserver) routes() {
 	s.mGET("/guest/verify", s.mResponse(s.handleVerifyGuest))
 	s.mPUT("/guest/login", s.mResponse(s.handleGuestLogin))
 	s.mPUT("/guest/login/verify", s.mResponse(s.handleGuestLoginVerify))
+	s.mGET("/guest/login/google", s.handleGuestGoogleRedirect)
 	s.mPUT("/likes/{photoid}/like", s.guestOnly(s.handleLikePhoto))
 	s.mPUT("/likes/{photoid}/unlike", s.guestOnly(s.handleUnlikePhoto))
 	s.mGET("/likes/{photoid}", s.loginInfo(s.handlePhotoLikes))
