@@ -9,7 +9,7 @@ require (
 	github.com/gorilla/sessions v1.4.0
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/msvens/mimage v0.0.17
+	github.com/msvens/mimage v0.0.20
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	go.uber.org/zap v1.27.1
@@ -35,7 +35,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/go-xmlfmt/xmlfmt v1.1.3 // indirect
-	github.com/golang/geo v0.0.0-20260302211937-87f5a40ea07a // indirect
+	github.com/golang/geo v0.0.0-20260713102120-857a528af641 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.14 // indirect
 	github.com/googleapis/gax-go/v2 v2.19.0 // indirect
