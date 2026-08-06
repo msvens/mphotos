@@ -86,6 +86,51 @@ func TestUpgradeUpToDate(t *testing.T) {
 	}
 }
 
+// TestUpgradeToV8NoCamera: the v7->v8 step normalizes the blank camera row and
+// cameraless photos to the "No Camera" sentinel.
+func TestUpgradeToV8NoCamera(t *testing.T) {
+	pgdb := openAndCreateTestDb(t)
+	defer deleteAndCloseTestDb(pgdb, t)
+
+	// Simulate the pre-v8 state: a blank camera row + a photo with an empty
+	// cameramodel (as a no-EXIF import produced), and version at 7.
+	if _, err := pgdb.db.Exec("DELETE FROM camera"); err != nil {
+		t.Fatalf("clear camera: %v", err)
+	}
+	if _, err := pgdb.db.Exec("INSERT INTO camera (id, model, make) VALUES ('', '', '')"); err != nil {
+		t.Fatalf("insert blank camera: %v", err)
+	}
+	pid := uuid.New()
+	if _, err := pgdb.db.Exec(`INSERT INTO img
+		(id, md5, source, uploaddate, originaldate, filename, title, cameramake, cameramodel, iso, fnumber, exposure, width, height)
+		VALUES ($1,'m','local',now(),now(),'f.jpg','','','',0,0,'',100,100)`, pid); err != nil {
+		t.Fatalf("insert cameraless photo: %v", err)
+	}
+	if _, err := pgdb.db.Exec("UPDATE version SET versionId = 7"); err != nil {
+		t.Fatalf("set version 7: %v", err)
+	}
+
+	if err := UpgradeDb(); err != nil {
+		t.Fatalf("UpgradeDb failed: %v", err)
+	}
+
+	// Photo's cameramodel normalized; only that field.
+	var model string
+	if err := pgdb.db.Get(&model, "SELECT cameramodel FROM img WHERE id = $1", pid); err != nil {
+		t.Fatalf("read photo: %v", err)
+	}
+	if model != "No Camera" {
+		t.Errorf("expected cameramodel 'No Camera', got %q", model)
+	}
+	// Blank camera row replaced by the 'no-camera' sentinel.
+	if pgdb.Camera.Has("") {
+		t.Error("blank camera row should be gone")
+	}
+	if !pgdb.Camera.Has("no-camera") {
+		t.Error("expected a 'no-camera' sentinel camera row")
+	}
+}
+
 // TestUpgradeNewerThanBinary: a database ahead of the binary must error, not
 // silently proceed.
 func TestUpgradeNewerThanBinary(t *testing.T) {

@@ -13,11 +13,12 @@ import (
 	"os"
 )
 
-// var cameraSizes []int = []int{48, 192, 512}
+// cameraSizes are the width-constrained variants generated for each camera image.
+// The output Format is set per upload (variantFormat) to match the source ext.
 var cameraSizes = []img.Options{
-	img.NewOptions(img.Resize, 48, 0, false),
-	img.NewOptions(img.Resize, 192, 0, false),
-	img.NewOptions(img.Resize, 512, 0, false),
+	img.NewOptions(img.Resize, 48, 0, false, img.FormatJpeg),
+	img.NewOptions(img.Resize, 192, 0, false, img.FormatJpeg),
+	img.NewOptions(img.Resize, 512, 0, false, img.FormatJpeg),
 }
 
 func (s *mserver) handleCamera(r *http.Request, loggedIn bool) (interface{}, error) {
@@ -116,10 +117,13 @@ func (s *mserver) uploadCameraImageFromFile(r *http.Request) (interface{}, error
 	}
 	//src := cameraPath(s, fileName)
 	src := config.CameraFilePath(fileName)
+	format := variantFormat(ext)
 	sizes := make(map[string]img.Options)
 	for _, size := range cameraSizes {
-		sizes[config.CameraFilePath(fmt.Sprint(id, "-", size.Width, ext))] = size
-		//sizes[cameraPath(s, fmt.Sprint(id, "-", size, ext))] = size
+		opt := size
+		opt.Format = format
+		// Base path without extension; TransformFile appends it from opt.Format.
+		sizes[config.CameraFilePath(fmt.Sprint(id, "-", size.Width))] = opt
 	}
 
 	if err = img.TransformFile(src, sizes); err != nil {
@@ -175,10 +179,13 @@ func (s *mserver) uploadCameraImageFromURL(r *http.Request) (interface{}, error)
 	}
 	//src := cameraPath(s, fileName)
 	src := config.CameraFilePath(fileName)
+	format := variantFormat(ext)
 	sizes := make(map[string]img.Options)
 	for _, size := range cameraSizes {
-		sizes[config.CameraFilePath(fmt.Sprint(id, "-", size.Width, ext))] = size
-		//sizes[cameraPath(s, fmt.Sprint(id, "-", size, ext))] = size
+		opt := size
+		opt.Format = format
+		// Base path without extension; TransformFile appends it from opt.Format.
+		sizes[config.CameraFilePath(fmt.Sprint(id, "-", size.Width))] = opt
 	}
 	if err = img.TransformFile(src, sizes); err != nil {
 		return nil, err

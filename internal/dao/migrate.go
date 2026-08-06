@@ -16,6 +16,7 @@ var migrations = map[int]func(*PGDB) error{
 	5: upgradeToV5,
 	6: upgradeToV6,
 	7: upgradeToV7,
+	8: upgradeToV8,
 }
 
 // UpgradeDb brings the database up to the binary's DbVersion, applying each
@@ -97,5 +98,12 @@ func upgradeToV6(pgdb *PGDB) error {
 // upgradeToV7 takes a v6 database to v7, adding the guest Google account id.
 func upgradeToV7(pgdb *PGDB) error {
 	_, err := pgdb.db.Exec(schemaV6toV7)
+	return err
+}
+
+// upgradeToV8 takes a v7 database to v8, normalizing cameraless photos/cameras to
+// the "No Camera" sentinel.
+func upgradeToV8(pgdb *PGDB) error {
+	_, err := pgdb.db.Exec(schemaV7toV8)
 	return err
 }

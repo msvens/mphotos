@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/msvens/mimage/metadata"
 	"github.com/msvens/mphotos/internal/config"
@@ -12,7 +11,6 @@ import (
 	"math"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 	"time"
 )
@@ -86,7 +84,6 @@ func (s *mserver) handleCheckDrive(_ *http.Request) (interface{}, error) {
 }
 
 func addDrivePhoto(s *mserver, f *drive.File) (bool, error) {
-	var err error
 	if s.pg.Photo.HasMd5(f.Md5Checksum) {
 		return false, nil
 	}
@@ -95,54 +92,27 @@ func addDrivePhoto(s *mserver, f *drive.File) (bool, error) {
 	photo.SourceId = f.Id
 	photo.Md5 = f.Md5Checksum
 	photo.Source = dao.SourceGoogle
-
-	//photo.FileName = f.Id + ".jpg"
-	photo.FileName = photo.Id.String() + ".jpg" //use the same filename naming convention for gdrive and local files
+	photo.FileName = photo.Id.String() + ".jpg" //same naming convention for gdrive and local; non-jpeg is converted
 	if t, err := gdrive.ParseTime(f.CreatedTime); err == nil {
 		photo.SourceDate = t
 	}
 	photo.UploadDate = time.Now()
 
-	if err = downloadDrivePhoto(s, &photo); err != nil {
+	// Download into a staged temp file, then detect the format by content: Drive's
+	// reported mime can be wrong, and this also gates out anything we can't decode.
+	stagedPath := config.PhotoFilePath(config.Original, photo.Id.String()+".import")
+	if _, err := s.ds.Download(f.Id, stagedPath); err != nil {
 		s.l.Errorw("error downloading img", zap.Error(err))
 		return false, err
 	}
-	var md *metadata.MetaData
-
-	if md, err = metadata.NewMetaDataFromFile(config.PhotoFilePath(config.Original, photo.FileName)); err == nil {
-		photo.CameraMake = md.Summary().CameraMake
-		photo.CameraModel = md.Summary().CameraModel
-		photo.FocalLength = fmt.Sprintf("%v mm", md.Summary().FocalLength.Float32())
-		photo.FocalLength35 = fmt.Sprintf("%v mm", md.Summary().FocalLengthIn35mmFormat)
-		photo.LensMake = md.Summary().LensMake
-		photo.LensModel = md.Summary().LensModel
-		photo.Exposure = md.Summary().ExposureTime.String()
-		photo.Width = md.ImageWidth
-		photo.Height = md.ImageHeight
-		photo.FNumber = md.Summary().FNumber.Float32()
-		photo.Iso = uint(md.Summary().ISO)
-		photo.Title = md.Summary().Title
-		if len(md.Summary().Keywords) > 0 {
-			photo.Keywords = strings.Join(md.Summary().Keywords, ",")
-		}
-		if md.Summary().OriginalDate.IsZero() {
-			photo.OriginalDate = photo.SourceDate
-		} else {
-			photo.OriginalDate = md.Summary().OriginalDate
-		}
-	} else {
-		return false, err
+	srcFormat, err := metadata.DetectFormatFile(stagedPath)
+	if err != nil || !srcFormat.Supported() {
+		_ = os.Remove(stagedPath)
+		s.l.Debugw("skipping unsupported drive image", "name", f.Name, "mime", f.MimeType)
+		return false, nil
 	}
-
-	if err = s.pg.Photo.Add(&photo, md.Summary()); err != nil {
-		s.l.Errorw("error adding img: ", zap.Error(err))
+	if err := s.finalizeImport(&photo, stagedPath, srcFormat); err != nil {
 		return false, err
-	}
-
-	if !s.pg.Camera.HasModel(photo.CameraModel) {
-		if err = s.pg.Camera.AddFromPhoto(&photo); err != nil {
-			s.l.Fatalw("error adding camera model: ", zap.Error(err))
-		}
 	}
 	s.l.Infow("added img", "driveId", photo.Id)
 	return true, nil
@@ -165,14 +135,6 @@ func addDrivePhotos(s *mserver) (*DriveFiles, error) {
 		}
 	}
 	return toDriveFiles(files), nil
-}
-
-func downloadDrivePhoto(s *mserver, photo *dao.Photo) error {
-	if _, err := s.ds.Download(photo.SourceId, config.PhotoFilePath(config.Original, photo.FileName)); err != nil {
-		return err
-	}
-	//create img versions
-	return dao.GenerateImages(photo.FileName)
 }
 
 func checkDrivePhotos(s *mserver) ([]*drive.File, error) {
@@ -210,7 +172,10 @@ func searchDriveFiles(s *mserver, id string, name string) ([]*drive.File, error)
 			id = f.Id
 		}
 	}
-	query := gdrive.NewQuery().Parents().In(id).And().MimeType().Eq(gdrive.Jpeg).TrashedEq(false)
+	// List all images in the folder. Format support is decided per file at import
+	// time by content (addDrivePhoto), since Drive's reported mime can be wrong and
+	// unsupported types (heic/webp/svg/...) are cheap to skip after download.
+	query := gdrive.NewQuery().Parents().In(id).And().MimeType().Contains("image/").TrashedEq(false)
 	return s.ds.SearchAll(query, fileFields)
 }
 
