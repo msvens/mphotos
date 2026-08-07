@@ -27,7 +27,16 @@ const schemaV6toV7 = `
 	ALTER TABLE guest ADD COLUMN googleid TEXT NOT NULL DEFAULT '';
 	CREATE UNIQUE INDEX guest_googleid_idx ON guest (googleid) WHERE googleid <> '';
 `
-const schemaV7 = `
+
+// schemaV7toV8 normalizes photos/cameras that were imported without camera EXIF
+// to the "No Camera" sentinel, replacing the blank camera row those produced.
+// Only the camera model is touched; no other photo field changes. Idempotent.
+const schemaV7toV8 = `
+	UPDATE img SET cameramodel = 'No Camera' WHERE cameramodel = '';
+	DELETE FROM camera WHERE id = '';
+	INSERT INTO camera (id, model, make) VALUES ('no-camera', 'No Camera', '') ON CONFLICT (id) DO NOTHING;
+`
+const schemaV8 = `
 CREATE TABLE IF NOT EXISTS album (
 	Id UUID,
 	name TEXT,
@@ -179,7 +188,7 @@ INSERT INTO version (versionId,description) VALUES (0,'no version set') ON CONFL
 INSERT INTO usert (id, name, bio, pic, driveFolderId, driveFolderName, config) VALUES (23657, '', '', '', '','','{}') ON CONFLICT (id) DO NOTHING;
 `
 
-const deleteSchemaV7 = `
+const deleteSchemaV8 = `
 DROP TABLE IF EXISTS album;
 DROP TABLE IF EXISTS albumphotos;
 DROP TABLE IF EXISTS camera;

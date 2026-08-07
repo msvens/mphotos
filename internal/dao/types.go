@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-const DbVersion = 7
-const DbDescription = "Version 7 adds a Google account id for guest login"
+const DbVersion = 8
+const DbDescription = "Version 8 normalizes cameraless photos to the No Camera sentinel"
 
 type Album struct {
 	Id          uuid.UUID  `json:"id"`
@@ -157,6 +157,10 @@ type Reaction struct {
 
 const SourceGoogle = "gdrive"
 const SourceLocal = "local"
+
+// NoCameraModel is the sentinel camera model assigned to photos imported without
+// camera EXIF (its camera id slug is "no-camera").
+const NoCameraModel = "No Camera"
 
 type User struct {
 	Name               string `json:"name"`

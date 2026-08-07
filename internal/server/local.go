@@ -7,12 +7,10 @@ import (
 	"github.com/msvens/mimage/metadata"
 	"github.com/msvens/mphotos/internal/config"
 	"github.com/msvens/mphotos/internal/dao"
-	"github.com/msvens/mphotos/internal/gdrive"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -49,24 +47,22 @@ func (s *mserver) handleUploadLocalPhoto(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	//Detect type
+	// Detect the format by content (mimage covers jpeg/png/gif/bmp/tiff).
 	buff := make([]byte, 512)
-	_, err = file.Read(buff)
-	if err != nil {
+	if _, err = file.Read(buff); err != nil {
 		return nil, err
 	}
-	mt := http.DetectContentType(buff)
-	if mt != gdrive.Jpeg {
-		return nil, BadRequestError("Image is not of the correct mimetype: " + mt)
+	srcFormat := metadata.DetectFormat(buff)
+	if !srcFormat.Supported() {
+		return nil, BadRequestError("unsupported image type: " + srcFormat.String())
 	}
 
 	sourceId := r.FormValue("sourceId")
 	if sourceId == "" {
 		sourceId = head.Filename
 	}
-	sourceDateStr := r.FormValue("sourceDate")
 	sourceDate := time.Now()
-	if sourceDateStr != "" {
+	if sourceDateStr := r.FormValue("sourceDate"); sourceDateStr != "" {
 		if d, err := time.Parse(time.RFC3339, sourceDateStr); err == nil {
 			sourceDate = d
 		} else {
@@ -87,62 +83,24 @@ func (s *mserver) handleUploadLocalPhoto(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	dst, err := os.Create(config.PhotoFilePath(config.Original, photo.FileName))
+	// Stage the upload to a temp file; finalizeImport converts it to the stored
+	// <uuid>.jpg (or moves it into place if already jpeg) and handles metadata/variants.
+	stagedPath := config.PhotoFilePath(config.Original, photo.Id.String()+".import")
+	dst, err := os.Create(stagedPath)
 	if err != nil {
 		return nil, err
 	}
 	if _, err = io.Copy(dst, file); err != nil {
+		_ = dst.Close()
 		return nil, err
 	}
 	_ = dst.Close()
 
-	/*
-		if err := GenerateImages(config.PhotoFilePath(config.Original, photo.FileName), config.ServiceRoot()); err != nil {
-			return nil, err
-		}*/
-	if err := dao.GenerateImages(photo.FileName); err != nil {
+	if err := s.finalizeImport(&photo, stagedPath, srcFormat); err != nil {
 		return nil, err
-	}
-
-	var md *metadata.MetaData
-
-	if md, err = metadata.NewMetaDataFromFile(config.PhotoFilePath(config.Original, photo.FileName)); err == nil {
-		photo.CameraMake = md.Summary().CameraMake
-		photo.CameraModel = md.Summary().CameraModel
-		photo.FocalLength = fmt.Sprintf("%v mm", md.Summary().FocalLength.Float32())
-		photo.FocalLength35 = fmt.Sprintf("%v mm", md.Summary().FocalLengthIn35mmFormat)
-		photo.LensMake = md.Summary().LensMake
-		photo.LensModel = md.Summary().LensModel
-		photo.Exposure = md.Summary().ExposureTime.String()
-		photo.Width = md.ImageWidth
-		photo.Height = md.ImageHeight
-		photo.FNumber = md.Summary().FNumber.Float32()
-		photo.Iso = uint(md.Summary().ISO)
-		photo.Title = md.Summary().Title
-		if len(md.Summary().Keywords) > 0 {
-			photo.Keywords = strings.Join(md.Summary().Keywords, ",")
-		}
-		if md.Summary().OriginalDate.IsZero() {
-			photo.OriginalDate = photo.SourceDate
-		} else {
-			photo.OriginalDate = md.Summary().OriginalDate
-		}
-	} else {
-		return nil, err
-	}
-
-	if err = s.pg.Photo.Add(&photo, md.Summary()); err != nil {
-		s.l.Errorw("error adding img: ", zap.Error(err))
-		return nil, err
-	}
-	if !s.pg.Camera.HasModel(photo.CameraModel) {
-		if err = s.pg.Camera.AddFromPhoto(&photo); err != nil {
-			s.l.Fatalw("error adding camera model: ", zap.Error(err))
-		}
 	}
 
 	s.l.Infow("added img", "Id", photo.Id, "SourceId", photo.SourceId)
-
 	return &photo, nil
 }
 

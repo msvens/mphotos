@@ -4,14 +4,17 @@ import (
 	"github.com/msvens/mimage/img"
 	"github.com/msvens/mphotos/internal/config"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
+// Display variants are always jpeg (the stored original is always jpeg).
 var (
-	thumb     = img.NewOptions(img.ResizeAndCrop, 400, 400, false)
-	landscape = img.NewOptions(img.ResizeAndCrop, 1200, 628, true)
-	square    = img.NewOptions(img.ResizeAndCrop, 1200, 1200, true)
-	portrait  = img.NewOptions(img.ResizeAndCrop, 1080, 1350, true)
-	resize    = img.NewOptions(img.Resize, 1200, 0, true)
+	thumb     = img.NewOptions(img.ResizeAndCrop, 400, 400, false, img.FormatJpeg)
+	landscape = img.NewOptions(img.ResizeAndCrop, 1200, 628, true, img.FormatJpeg)
+	square    = img.NewOptions(img.ResizeAndCrop, 1200, 1200, true, img.FormatJpeg)
+	portrait  = img.NewOptions(img.ResizeAndCrop, 1080, 1350, true, img.FormatJpeg)
+	resize    = img.NewOptions(img.Resize, 1200, 0, true, img.FormatJpeg)
 )
 
 var photoTypes = map[config.PhotoType]img.Options{
@@ -85,21 +88,12 @@ func CleanImageDirs(db *PGDB) error {
 
 func GenerateImages(fName string) error {
 	srcFile := config.PhotoFilePath(config.Original, fName)
-	//base := filepath.Base(srcFile)
+	// TransformFile derives each variant's extension from its Options.Format, so the
+	// destination keys must be base paths without an extension (<uuid>, not <uuid>.jpg).
+	base := strings.TrimSuffix(fName, filepath.Ext(fName))
 	imgMap := map[string]img.Options{}
-
 	for pt, opt := range photoTypes {
-		imgMap[config.PhotoFilePath(pt, fName)] = opt
+		imgMap[config.PhotoFilePath(pt, base)] = opt
 	}
 	return img.TransformFile(srcFile, imgMap)
-	/*
-		base := filepath.Base(srcFile)
-
-		imgMap := map[string]img.Options{}
-		for name, opt := range photoTypes {
-			imgMap[filepath.Join(dir, name, base)] = opt
-		}
-		return img.TransformFile(srcFile, imgMap)
-	*/
-
 }

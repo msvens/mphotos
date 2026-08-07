@@ -17,9 +17,10 @@ import (
 )
 
 // avatarSizes are the square-cropped variants generated for each guest avatar.
+// The output Format is set per upload (variantFormat) to match the source ext.
 var avatarSizes = []img.Options{
-	img.NewOptions(img.ResizeAndCrop, 48, 48, false),
-	img.NewOptions(img.ResizeAndCrop, 192, 192, false),
+	img.NewOptions(img.ResizeAndCrop, 48, 48, false, img.FormatJpeg),
+	img.NewOptions(img.ResizeAndCrop, 192, 192, false, img.FormatJpeg),
 }
 
 const maxAvatarBytes = 10 << 20 // 10 MB
@@ -137,9 +138,13 @@ func storeGuestAvatar(guestId uuid.UUID, r io.Reader) (string, error) {
 	if _, err := io.Copy(dst, io.MultiReader(bytes.NewReader(buff), r)); err != nil {
 		return "", err
 	}
+	format := variantFormat(ext)
 	sizes := make(map[string]img.Options)
 	for _, size := range avatarSizes {
-		sizes[config.AvatarFilePath(fmt.Sprint(id, "-", size.Width, ext))] = size
+		opt := size
+		opt.Format = format
+		// Base path without extension; TransformFile appends it from opt.Format.
+		sizes[config.AvatarFilePath(fmt.Sprint(id, "-", size.Width))] = opt
 	}
 	if err := img.TransformFile(fileName, sizes); err != nil {
 		return "", err
