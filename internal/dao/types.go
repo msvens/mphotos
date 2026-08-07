@@ -69,7 +69,7 @@ type Exif struct {
 }
 
 type Guest struct {
-	Id          uuid.UUID `json:"-"`
+	Id          uuid.UUID `json:"guestId"`
 	Email       string    `json:"email"`
 	Name        string    `json:"name"`
 	FullName    string    `json:"fullName"`
@@ -83,7 +83,7 @@ type Guest struct {
 // GuestReaction is the public view of a reaction. It deliberately carries no
 // email: it is serialized by the unauthenticated GET /likes/{photoid} route.
 // The guest id + avatar let the frontend render the guest's avatar
-// (GET /guest/{guestId}/avatar); the id is not a secret (auth is the signed
+// (GET /guest/avatar/{guestId}); the id is not a secret (auth is the signed
 // cookie), and fullName/email are never exposed here.
 type GuestReaction struct {
 	Id          uuid.UUID `json:"guestId"`
@@ -98,7 +98,7 @@ type Photo struct {
 	Md5          string    `json:"md5"`
 	Source       string    `json:"source"`
 	SourceId     string    `json:"-"`
-	SourceOther  string    `json:"-"`
+	SourceOther  string    `json:"sourceOther,omitempty"`
 	SourceDate   time.Time `json:"sourceDate"`
 	UploadDate   time.Time `json:"uploadDate"`
 	OriginalDate time.Time `json:"originalDate"`

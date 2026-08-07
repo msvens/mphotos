@@ -10,6 +10,18 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
 
 ## [Unreleased]
 
+### Added
+
+- `GET /api/guest` (plus the guest login/verify and avatar-mutation responses) now
+  includes the guest's own id as `guestId`, so a logged-in guest can build their own
+  avatar URL `/api/guest/avatar/{guestId}` — the same field name reactions and comments
+  already use.
+  - **Frontend impact:** the guest profile page and edit dialog can now show and manage
+    the guest's *own* avatar (others' already worked via `guestId` in likes/comments).
+- Photo responses now include `sourceOther`, the original image format (`tiff`, `png`, …),
+  omitted when empty (photos imported before conversion tracking).
+  - **Frontend impact:** optional — enables a "converted from TIFF/PNG/…" badge.
+
 ## [0.4.0] - 2026-08-07
 
 ### Added
