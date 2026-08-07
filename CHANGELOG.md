@@ -10,6 +10,8 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-07
+
 ### Added
 
 - Multi-format photo import: accept JPEG, TIFF, PNG, GIF and BMP on both Drive and
@@ -54,5 +56,6 @@ merged since v0.2.0 (2021); see the git history for the full detail.
 - Guest email addresses are no longer leaked from the likes endpoint.
 - Several camera handler defects and a swallowed DAO error.
 
-[Unreleased]: https://github.com/msvens/mphotos/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/msvens/mphotos/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/msvens/mphotos/releases/tag/v0.4.0
 [0.3.0]: https://github.com/msvens/mphotos/releases/tag/v0.3.0
