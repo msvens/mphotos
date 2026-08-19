@@ -122,6 +122,7 @@ type VersionDAO interface {
 	Update() (*Version, error)
 	Set(versionId int) (*Version, error)
 	IsCurrent() (bool, error)
+	Check() error
 }
 
 type PGDB struct {

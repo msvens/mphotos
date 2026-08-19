@@ -140,6 +140,14 @@ func StartMServer() {
 	}
 
 	s := newServer("/api", l.Sugar())
+
+	// Refuse to start against a mismatched schema: a behind or ahead database fails
+	// here with a clear message instead of silently breaking at runtime. Upgrading
+	// stays a deliberate, separate `db upgrade` step.
+	if err := s.pg.Version.Check(); err != nil {
+		s.l.Fatalw("database schema check failed", zap.Error(err))
+	}
+
 	s.routes()
 
 	//auth

@@ -10,6 +10,13 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
 
 ## [Unreleased]
 
+### Changed
+
+- The server now verifies the database schema version at startup and refuses to
+  start — with a clear message — when the database is behind or ahead of the
+  binary, instead of failing later at runtime on a missing column. Upgrading
+  remains a deliberate, separate `db upgrade` step (the server never auto-migrates).
+
 ## [0.5.0] - 2026-08-07
 
 ### Added

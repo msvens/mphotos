@@ -55,3 +55,23 @@ func (dao *VersionPG) IsCurrent() (bool, error) {
 		return v.VersionId == DbVersion, nil
 	}
 }
+
+// Check verifies the database schema matches the binary's DbVersion, returning a
+// descriptive error (it never mutates) when the database is behind, ahead, or
+// unreadable. The server calls this at startup to refuse a mismatched schema up
+// front instead of failing at runtime on a missing column. It does not upgrade —
+// migrations stay a deliberate, separate `db upgrade` step.
+func (dao *VersionPG) Check() error {
+	v, err := dao.Get()
+	if err != nil {
+		return fmt.Errorf("could not read database version (is the database initialized? run `db create` / `db upgrade`): %w", err)
+	}
+	switch {
+	case v.VersionId == DbVersion:
+		return nil
+	case v.VersionId < DbVersion:
+		return fmt.Errorf("database schema is at version %d but this binary requires %d; run `db upgrade` before starting the server", v.VersionId, DbVersion)
+	default:
+		return fmt.Errorf("database schema is at version %d, newer than this binary (%d); deploy the matching build", v.VersionId, DbVersion)
+	}
+}
