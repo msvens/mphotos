@@ -163,6 +163,50 @@ func (s *mserver) handleGuests(r *http.Request) (interface{}, error) {
 	return s.pg.Guest.List()
 }
 
+// deleteGuest removes a guest, all of its data (likes, comments, one-time codes),
+// and its avatar files. The avatar files are removed only after a successful DB
+// delete, so a DB failure leaves a consistent, still-avatared guest.
+func (s *mserver) deleteGuest(guestId uuid.UUID) error {
+	guest, err := s.pg.Guest.Get(guestId)
+	if err != nil {
+		return err // sql.ErrNoRows -> 404 via ResolveError
+	}
+	if err := s.pg.Guest.Delete(guestId); err != nil {
+		return err
+	}
+	s.removeAvatarFiles(guestId, guest.Avatar) // best-effort, tolerates missing files
+	return nil
+}
+
+// handleDeleteGuest lets the owner delete any guest by id.
+func (s *mserver) handleDeleteGuest(r *http.Request) (interface{}, error) {
+	guestId, err := uuid.Parse(Var(r, "guestid"))
+	if err != nil {
+		return nil, BadRequestError("could not parse guest id")
+	}
+	if err := s.deleteGuest(guestId); err != nil {
+		return nil, err
+	}
+	return guestId, nil
+}
+
+// handleDeleteGuestSelf lets a logged-in guest delete their own account. It uses
+// mResponse (not guestOnly) because it needs w to clear the session cookie, and
+// self-gates on the guest uuid from the request context.
+func (s *mserver) handleDeleteGuestSelf(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	guestId := ctxGuest(r.Context())
+	if guestId == emptyuuid {
+		return nil, UnauthorizedError("guest not found")
+	}
+	if err := s.deleteGuest(guestId); err != nil {
+		return nil, err
+	}
+	if err := s.saveGuestCookie(w, r, emptyuuid, -1); err != nil {
+		return nil, err
+	}
+	return AuthUser{false}, nil
+}
+
 func (s *mserver) handleLikePhoto(r *http.Request, guestId uuid.UUID) (interface{}, error) {
 	if photoId, err := uuid.Parse(Var(r, "photoid")); err != nil {
 		return nil, BadRequestError("Could not parse img id")

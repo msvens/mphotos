@@ -26,25 +26,28 @@ func (dao *GuestPG) Add(name, email string) (*Guest, error) {
 	}
 	return dao.Get(g.Id)
 }
+
+// Delete removes a guest and all of its data (likes, comments, one-time codes)
+// in a single transaction, so a mid-sequence failure can't orphan child rows.
+// Deleting rows for an absent guest simply affects nothing. It does not touch
+// on-disk avatar files — the server layer handles those.
 func (dao *GuestPG) Delete(id uuid.UUID) error {
-	var cnt int64
-	if res, err := dao.db.Exec("DELETE FROM guest WHERE id = $1", id); err != nil {
+	tx, err := dao.db.Beginx()
+	if err != nil {
 		return err
-	} else {
-		cnt, _ = res.RowsAffected()
 	}
-	if cnt > 0 {
-		if _, err := dao.db.Exec("DELETE from reaction WHERE guestId = $1", id); err != nil {
-			return err
-		}
-		if _, err := dao.db.Exec("DELETE from comment WHERE guestId = $1", id); err != nil {
-			return err
-		}
-		if _, err := dao.db.Exec("DELETE from guestcode WHERE guestid = $1", id); err != nil {
+	defer func() { _ = tx.Rollback() }()
+	for _, stmt := range []string{
+		"DELETE FROM reaction WHERE guestId = $1",
+		"DELETE FROM comment WHERE guestId = $1",
+		"DELETE FROM guestcode WHERE guestid = $1",
+		"DELETE FROM guest WHERE id = $1",
+	} {
+		if _, err := tx.Exec(stmt, id); err != nil {
 			return err
 		}
 	}
-	return nil
+	return tx.Commit()
 }
 
 func (dao *GuestPG) Verify(id uuid.UUID) (*Guest, error) {

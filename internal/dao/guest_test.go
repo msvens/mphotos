@@ -119,6 +119,9 @@ func TestGuestDeleteCascade(t *testing.T) {
 	if err := pgdb.Reaction.Add(&Reaction{GuestId: g.Id, PhotoId: photoId, Kind: "like"}); err != nil {
 		t.Fatalf("could not add reaction: %v", err)
 	}
+	if _, err := pgdb.Comment.Add(g.Id, photoId, "nice shot"); err != nil {
+		t.Fatalf("could not add comment: %v", err)
+	}
 	if err := pgdb.GuestCode.Issue(g.Id, GuestCodeSignup, "tok", time.Now().Add(time.Hour)); err != nil {
 		t.Fatalf("could not issue code: %v", err)
 	}
@@ -131,6 +134,11 @@ func TestGuestDeleteCascade(t *testing.T) {
 	}
 	if pgdb.Reaction.Has(g.Id, photoId) {
 		t.Error("reaction should be cascaded away")
+	}
+	if cs, err := pgdb.Comment.ListByGuest(g.Id); err != nil {
+		t.Fatalf("ListByGuest failed: %v", err)
+	} else if len(cs) != 0 {
+		t.Errorf("comment should be cascaded away, got %d", len(cs))
 	}
 	if _, ok, _ := pgdb.GuestCode.FindSignup("tok"); ok {
 		t.Error("guest code should be cascaded away")

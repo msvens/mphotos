@@ -10,6 +10,15 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
 
 ## [Unreleased]
 
+### Added
+
+- Guest deletion. `DELETE /api/guests/{guestid}` lets the owner delete any guest,
+  and `DELETE /api/guest` lets a logged-in guest delete their own account (which
+  also clears their session). Both remove all of the guest's data — likes,
+  comments, one-time codes, and avatar files.
+  - **Frontend impact:** the owner guest list can offer a delete action, and the
+    guest account page can offer "delete my account".
+
 ## [0.5.1] - 2026-08-19
 
 ### Changed
