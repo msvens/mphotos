@@ -10,6 +10,18 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
 
 ## [Unreleased]
 
+### Added
+
+- `db check` CLI subcommand — a read-only gate that exits non-zero (with a
+  message) when the database schema doesn't match the binary. Intended for a
+  deploy script to run before starting the server, which otherwise hard-stops
+  and crash-loops on a mismatch while `systemctl start` reports success.
+
+### Fixed
+
+- `db upgrade` now exits non-zero when a migration fails (it previously printed
+  the error but exited 0, hiding failures from deploy scripts).
+
 ## [0.6.0] - 2026-08-19
 
 ### Added

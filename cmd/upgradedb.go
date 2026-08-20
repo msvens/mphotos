@@ -26,14 +26,15 @@ var upgradedbCmd = &cobra.Command{
 	Use:   "upgrade",
 	Short: "Upgrade mphotos database",
 	Long:  `Upgrades the mphotos database to the latest version if possible`,
-	Run: func(cmd *cobra.Command, args []string) {
+	// RunE so a failed migration exits non-zero (UpgradeDb is a no-op, exit 0, when
+	// already current). Silence cobra's error/usage dump; Execute() prints the error.
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if err := config.InitConfig(); err != nil {
-			println(err.Error())
-			return
+			return err
 		}
-		if err := dao.UpgradeDb(); err != nil {
-			println(err.Error())
-		}
+		return dao.UpgradeDb()
 	},
 }
 
