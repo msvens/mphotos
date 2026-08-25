@@ -17,6 +17,7 @@ var migrations = map[int]func(*PGDB) error{
 	6: upgradeToV6,
 	7: upgradeToV7,
 	8: upgradeToV8,
+	9: upgradeToV9,
 }
 
 // UpgradeDb brings the database up to the binary's DbVersion, applying each
@@ -105,5 +106,13 @@ func upgradeToV7(pgdb *PGDB) error {
 // the "No Camera" sentinel.
 func upgradeToV8(pgdb *PGDB) error {
 	_, err := pgdb.db.Exec(schemaV7toV8)
+	return err
+}
+
+// upgradeToV9 takes a v8 database to v9, backfilling NULL camera columns and
+// pinning them NOT NULL DEFAULT so a partially-filled camera can't crash the
+// /api/cameras row scan.
+func upgradeToV9(pgdb *PGDB) error {
+	_, err := pgdb.db.Exec(schemaV8toV9)
 	return err
 }

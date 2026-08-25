@@ -131,6 +131,62 @@ func TestUpgradeToV8NoCamera(t *testing.T) {
 	}
 }
 
+// TestUpgradeToV9CameraNulls: the v8->v9 step backfills NULL camera columns and
+// pins them NOT NULL, so a partially-filled camera no longer aborts the whole
+// /api/cameras row scan. Rewinds a few representative columns to the nullable
+// pre-v9 shape, inserts a camera with NULLs, and asserts the list scan goes from
+// failing to succeeding with the NULLs backfilled to zero values.
+func TestUpgradeToV9CameraNulls(t *testing.T) {
+	pgdb := openAndCreateTestDb(t)
+	defer deleteAndCloseTestDb(pgdb, t)
+
+	// Rewind an int/real/bool/text column to nullable-without-default (the v8 shape).
+	for _, stmt := range []string{
+		"ALTER TABLE camera ALTER COLUMN year DROP NOT NULL, ALTER COLUMN year DROP DEFAULT",
+		"ALTER TABLE camera ALTER COLUMN cropFactor DROP NOT NULL, ALTER COLUMN cropFactor DROP DEFAULT",
+		"ALTER TABLE camera ALTER COLUMN gps DROP NOT NULL, ALTER COLUMN gps DROP DEFAULT",
+		"ALTER TABLE camera ALTER COLUMN sensorSize DROP NOT NULL, ALTER COLUMN sensorSize DROP DEFAULT",
+	} {
+		if _, err := pgdb.db.Exec(stmt); err != nil {
+			t.Fatalf("rewind %q: %v", stmt, err)
+		}
+	}
+	if _, err := pgdb.db.Exec(
+		"INSERT INTO camera (id, model, make, year, cropFactor, gps, sensorSize) VALUES ('nulcam','M','Mk',NULL,NULL,NULL,NULL)"); err != nil {
+		t.Fatalf("insert null camera: %v", err)
+	}
+	if _, err := pgdb.db.Exec("UPDATE version SET versionId = 8"); err != nil {
+		t.Fatalf("set version 8: %v", err)
+	}
+
+	// The bug: a NULL column aborts the whole list scan before the migration.
+	if _, err := pgdb.Camera.List(); err == nil {
+		t.Fatal("expected Camera.List to fail on a NULL camera column pre-migration")
+	}
+
+	if err := UpgradeDb(); err != nil {
+		t.Fatalf("UpgradeDb failed: %v", err)
+	}
+
+	// After: the list scans cleanly and the NULLs are backfilled to zero values.
+	cams, err := pgdb.Camera.List()
+	if err != nil {
+		t.Fatalf("Camera.List should succeed after v9, got: %v", err)
+	}
+	var c *Camera
+	for _, cam := range cams {
+		if cam.Id == "nulcam" {
+			c = cam
+		}
+	}
+	if c == nil {
+		t.Fatal("camera row missing after migration")
+	}
+	if c.Year != 0 || c.CropFactor != 0 || c.Gps || c.SensorSize != "" {
+		t.Errorf("NULLs not backfilled to zero values: %+v", c)
+	}
+}
+
 // TestUpgradeNewerThanBinary: a database ahead of the binary must error, not
 // silently proceed.
 func TestUpgradeNewerThanBinary(t *testing.T) {

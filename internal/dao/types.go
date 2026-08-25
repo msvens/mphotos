@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-const DbVersion = 8
-const DbDescription = "Version 8 normalizes cameraless photos to the No Camera sentinel"
+const DbVersion = 9
+const DbDescription = "Version 9 makes all camera columns non-null with defaults"
 
 type Album struct {
 	Id          uuid.UUID  `json:"id"`
