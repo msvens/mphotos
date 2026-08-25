@@ -10,6 +10,13 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
 
 ## [Unreleased]
 
+### Fixed
+
+- `GET /api/cameras` no longer fails (500 in the envelope) when a camera row has
+  NULL columns. Every camera column is now non-null with a default, and a v9
+  migration backfills existing NULLs. Previously a single NULL (e.g. `year`)
+  aborted the row scan and took out the whole list.
+
 ## [0.6.1] - 2026-08-20
 
 ### Added
