@@ -20,6 +20,7 @@ func (s *mserver) routes() {
 	s.r.HandleFunc(s.prefixPath+"/auth/login/callback", s.handleGoogleLoginCallback)
 	s.r.HandleFunc(s.prefixPath+"/auth/guest/callback", s.handleGuestGoogleCallback)
 	s.mGET("/auth/method", s.mResponse(s.handleAuthMethod))
+	s.mGET("/capabilities", s.loginInfo(s.handleCapabilities))
 
 	s.mGET("/cameras", s.loginInfo(s.handleCameras))
 	s.mGET("/cameras/{cameraid}", s.loginInfo(s.handleCamera))
@@ -37,6 +38,7 @@ func (s *mserver) routes() {
 	s.mGET("/drive/check", s.authOnly(s.handleCheckDrive))
 	s.mPUT("/drive/upload", s.authOnly(s.handleAddDrivePhotos))
 	s.mPUT("/drive/job/schedule", s.authOnly(s.handleScheduleDriveJob))
+	s.mPUT("/drive/video/job/schedule", s.authOnly(s.handleScheduleVideoJob))
 	s.mGET("/drive/job/{jobid}", s.authOnly(s.handleStatusDriveJob))
 
 	s.mPUT("/local/upload", s.authOnly(s.handleUploadLocalPhoto))

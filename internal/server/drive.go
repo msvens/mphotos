@@ -75,12 +75,28 @@ func (s *mserver) handleDisconnectDrive(_ *http.Request) (interface{}, error) {
 	return AuthUser{false}, nil
 }
 
+// DriveCheck is the "what's new" overview: how many not-yet-imported images and
+// videos are in the Drive folder. Whether video is supported at all is a server
+// capability (see GET /api/capabilities), not a Drive-check concern.
+type DriveCheck struct {
+	Images int `json:"images"`
+	Videos int `json:"videos"`
+}
+
 func (s *mserver) handleCheckDrive(_ *http.Request) (interface{}, error) {
-	if files, err := checkDrivePhotos(s); err != nil {
+	images, err := checkDrivePhotos(s)
+	if err != nil {
 		return nil, err
-	} else {
-		return toDriveFiles(files), nil
 	}
+	check := DriveCheck{Images: len(images)}
+	if s.videoEnabled {
+		videos, err := checkDriveVideos(s)
+		if err != nil {
+			return nil, err
+		}
+		check.Videos = len(videos)
+	}
+	return check, nil
 }
 
 func addDrivePhoto(s *mserver, f *drive.File) (bool, error) {
@@ -162,6 +178,13 @@ func listDriveFiles(s *mserver) ([]*drive.File, error) {
 }
 
 func searchDriveFiles(s *mserver, id string, name string) ([]*drive.File, error) {
+	return searchDriveByMime(s, id, name, "image/")
+}
+
+// searchDriveByMime lists files in the folder whose mime type starts with
+// mimePrefix ("image/" or "video/"). Format support is still decided per file at
+// import time by content, since Drive's reported mime can be wrong.
+func searchDriveByMime(s *mserver, id, name, mimePrefix string) ([]*drive.File, error) {
 	if s.ds == nil {
 		return nil, UnauthorizedError("No Drive Service Connected")
 	}
@@ -172,10 +195,7 @@ func searchDriveFiles(s *mserver, id string, name string) ([]*drive.File, error)
 			id = f.Id
 		}
 	}
-	// List all images in the folder. Format support is decided per file at import
-	// time by content (addDrivePhoto), since Drive's reported mime can be wrong and
-	// unsupported types (heic/webp/svg/...) are cheap to skip after download.
-	query := gdrive.NewQuery().Parents().In(id).And().MimeType().Contains("image/").TrashedEq(false)
+	query := gdrive.NewQuery().Parents().In(id).And().MimeType().Contains(mimePrefix).TrashedEq(false)
 	return s.ds.SearchAll(query, fileFields)
 }
 
@@ -207,19 +227,22 @@ func (s *mserver) handleScheduleDriveJob(_ *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	job := Job{}
-	job.Id = uuid.New().String()
-	job.files = fl
-	job.s = s
-	job.NumFiles = len(fl)
-	job.State = StateScheduled
-	jobMap[job.Id] = &job
-	jobChan <- &job
-	return &job, nil
+	job := &Job{
+		Id:       uuid.New().String(),
+		Kind:     "image",
+		files:    fl,
+		s:        s,
+		NumFiles: len(fl),
+		State:    StateScheduled,
+	}
+	addJob(job)
+	jobChan <- job
+	snap, _ := getJob(job.Id)
+	return snap, nil
 }
 
 func (s *mserver) handleStatusDriveJob(r *http.Request) (interface{}, error) {
-	if job, found := jobMap[Var(r, "jobid")]; found {
+	if job, found := getJob(Var(r, "jobid")); found {
 		return job, nil
 	} else {
 		return nil, NotFoundError("job not found")
@@ -231,50 +254,116 @@ const StateStarted = "STARTED"
 const StateFinished = "FINISHED"
 const StateAborted = "ABORTED"
 
+// JobFailure records one file that failed within a job (for the UI, e.g.
+// "1 skipped: hdr").
+type JobFailure struct {
+	Name     string `json:"name"`
+	Category string `json:"category"`
+}
+
 type Job struct {
-	Id           string `json:"id"`
-	State        string `json:"state"`
-	Percent      int    `json:"percent"`
-	files        []*drive.File
+	Id           string        `json:"id"`
+	Kind         string        `json:"kind"` // "image" | "video"
+	State        string        `json:"state"`
+	Percent      int           `json:"percent"`
+	files        []*drive.File // image jobs
+	videoSources []videoSource // video jobs
 	s            *mserver
-	NumFiles     int       `json:"numFiles"`
-	NumProcessed int       `json:"numProcessed"`
-	Err          *ApiError `json:"error,omitempty"`
+	NumFiles     int          `json:"numFiles"`
+	NumProcessed int          `json:"numProcessed"`
+	NumAdded     int          `json:"numAdded"`
+	NumSkipped   int          `json:"numSkipped"`
+	NumFailed    int          `json:"numFailed"`
+	Failures     []JobFailure `json:"failures,omitempty"`
+	Err          *ApiError    `json:"error,omitempty"`
 }
 
 var jobChan = make(chan *Job, 10)
 var wg sync.WaitGroup
 var jobMap = make(map[string]*Job)
 
+// jobMu guards jobMap and in-flight job field mutations, which are written by the
+// worker goroutines and read by the status handler.
+var jobMu sync.Mutex
+
+func addJob(job *Job) {
+	jobMu.Lock()
+	jobMap[job.Id] = job
+	jobMu.Unlock()
+}
+
+// getJob returns a snapshot copy of a job, safe to serialize while a worker keeps
+// mutating the live job.
+func getJob(id string) (*Job, bool) {
+	jobMu.Lock()
+	defer jobMu.Unlock()
+	j, ok := jobMap[id]
+	if !ok {
+		return nil, false
+	}
+	cp := *j
+	cp.Failures = append([]JobFailure(nil), j.Failures...)
+	return &cp, true
+}
+
+func jobSetState(job *Job, state string) {
+	jobMu.Lock()
+	job.State = state
+	jobMu.Unlock()
+}
+
+func jobAdded(job *Job)   { jobMu.Lock(); job.NumAdded++; jobMu.Unlock() }
+func jobSkipped(job *Job) { jobMu.Lock(); job.NumSkipped++; jobMu.Unlock() }
+
+func jobFailed(job *Job, name, category string) {
+	jobMu.Lock()
+	job.NumFailed++
+	job.Failures = append(job.Failures, JobFailure{Name: name, Category: category})
+	jobMu.Unlock()
+}
+
+func jobProgress(job *Job) {
+	jobMu.Lock()
+	job.NumProcessed++
+	if job.NumFiles > 0 {
+		job.Percent = int(math.Round(float64(job.NumProcessed) / float64(job.NumFiles) * 100))
+	}
+	jobMu.Unlock()
+}
+
 func worker(jobChan <-chan *Job) {
-
 	defer wg.Done()
-
 	for job := range jobChan {
 		job.s.l.Infow("Processing job", "jobid", job.Id, "files", job.NumFiles)
 		process(job)
 	}
 }
 
+// process runs an image job. A hard error aborts the whole job (image imports are
+// fast and an error usually means a systemic problem); skipped/added are counted.
 func process(job *Job) {
-
-	job.State = StateStarted
-
+	jobSetState(job, StateStarted)
 	for _, f := range job.files {
-		if _, err := addDrivePhoto(job.s, f); err != nil {
+		added, err := addDrivePhoto(job.s, f)
+		if err != nil {
 			finishJob(job, err)
 			return
 		}
-		job.NumProcessed = job.NumProcessed + 1
-		percent := float64(job.NumProcessed) / float64(job.NumFiles)
-		job.Percent = int(math.Round(percent * 100))
-		job.s.l.Debugw("", "jobid", job.Id, "progress", job.Percent)
+		if added {
+			jobAdded(job)
+		} else {
+			jobSkipped(job)
+		}
+		jobProgress(job)
 	}
 	finishJob(job, nil)
 }
 
 func finishJob(job *Job, err error) {
+	jobMu.Lock()
+	defer jobMu.Unlock()
 	job.files = nil
+	job.videoSources = nil
 	job.s = nil
 	if err != nil {
 		job.State = StateAborted

@@ -187,6 +187,54 @@ func TestUpgradeToV9CameraNulls(t *testing.T) {
 	}
 }
 
+// TestUpgradeToV10Video: the v9->v10 step adds kind/duration to img (existing rows
+// default to a photo) and creates the import_error table.
+func TestUpgradeToV10Video(t *testing.T) {
+	pgdb := openAndCreateTestDb(t)
+	defer deleteAndCloseTestDb(pgdb, t)
+
+	// Rewind to the pre-v10 shape and insert a photo row.
+	for _, stmt := range []string{
+		"ALTER TABLE img DROP COLUMN kind",
+		"ALTER TABLE img DROP COLUMN duration",
+		"DROP TABLE IF EXISTS import_error",
+	} {
+		if _, err := pgdb.db.Exec(stmt); err != nil {
+			t.Fatalf("rewind %q: %v", stmt, err)
+		}
+	}
+	pid := uuid.New()
+	if _, err := pgdb.db.Exec(`INSERT INTO img
+		(id, md5, source, uploaddate, originaldate, filename, title, cameramake, cameramodel, iso, fnumber, exposure, width, height)
+		VALUES ($1,'m','local',now(),now(),'f.jpg','','','',0,0,'',100,100)`, pid); err != nil {
+		t.Fatalf("insert photo: %v", err)
+	}
+	if _, err := pgdb.db.Exec("UPDATE version SET versionId = 9"); err != nil {
+		t.Fatalf("set version 9: %v", err)
+	}
+
+	if err := UpgradeDb(); err != nil {
+		t.Fatalf("UpgradeDb failed: %v", err)
+	}
+
+	// Existing row backfilled to the photo defaults.
+	var kind string
+	var duration float64
+	if err := pgdb.db.QueryRow("SELECT kind, duration FROM img WHERE id = $1", pid).Scan(&kind, &duration); err != nil {
+		t.Fatalf("read img: %v", err)
+	}
+	if kind != KindPhoto || duration != 0 {
+		t.Errorf("expected kind=%q duration=0, got kind=%q duration=%v", KindPhoto, kind, duration)
+	}
+	// import_error table exists and is usable after the upgrade.
+	if err := pgdb.ImportError.Record(&ImportError{Md5: "x", Category: "hdr", Name: "v.mp4"}); err != nil {
+		t.Errorf("import_error not usable after upgrade: %v", err)
+	}
+	if !pgdb.ImportError.HasMd5("x") {
+		t.Error("expected import_error to have md5 x")
+	}
+}
+
 // TestUpgradeNewerThanBinary: a database ahead of the binary must error, not
 // silently proceed.
 func TestUpgradeNewerThanBinary(t *testing.T) {

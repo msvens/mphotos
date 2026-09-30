@@ -10,6 +10,25 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
 
 ## [Unreleased]
 
+### Added
+
+- Video support. Videos import from the same Google Drive folder via a separate
+  video sync (`PUT /api/drive/video/job/schedule`) and from local upload, are
+  transcoded server-side to H.264 MP4 (mimage v0.2.0 / ffmpeg), and become
+  first-class media rows (`kind="video"`, `duration`) alongside photos — played
+  from `/api/images/<id>.mp4` (range requests) with a poster-derived thumbnail.
+  `GET /api/capabilities` reports whether video is available (`{videoEnabled}`,
+  Drive-independent), and `GET /api/drive/check` now reports counts by kind (`{images, videos}`);
+  failed imports (HDR, truncated, …) are recorded in an `import_error` table and
+  skipped on later syncs, and job status now carries per-file `added/skipped/failed`
+  with failure reasons. Requires `ffmpeg`/`ffprobe` on the server; without them
+  video is disabled and photos are unaffected.
+  - **Frontend impact:** switch on `kind` to render a `<video>` (poster from
+    `/api/squares/<id>.jpg`, source `/api/images/<id>.mp4`). Build variant/thumbnail
+    URLs from `<id>.jpg` but play/download from `FileName` — they differ for video.
+    Local video upload returns a **job** (async) to poll, not a photo. `GET /api/drive/check`
+    changed shape from a file list to counts by kind.
+
 ### Fixed
 
 - `GET /api/cameras` no longer fails (500 in the envelope) when a camera row has

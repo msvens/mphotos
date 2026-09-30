@@ -49,6 +49,12 @@ var photosCmd = &cobra.Command{
 		}
 
 		for _, photo := range photos {
+			// Video thumbnails come from an extracted poster frame, not the stored
+			// mp4, so the image pipeline can't regenerate them here. Skip videos
+			// (poster re-extraction is a future enhancement).
+			if photo.Kind == dao.KindVideo {
+				continue
+			}
 			if err = dao.GenerateImages(photo.FileName); err != nil {
 				fmt.Println(err)
 				return

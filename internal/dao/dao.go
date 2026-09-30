@@ -82,6 +82,13 @@ type GuestCodeDAO interface {
 	DeleteExpiredBefore(t time.Time) (int64, error)
 }
 
+type ImportErrorDAO interface {
+	Record(e *ImportError) error
+	HasMd5(md5 string) bool
+	List() ([]*ImportError, error)
+	Delete(md5 string) error
+}
+
 type ReactionDAO interface {
 	Add(reaction *Reaction) error
 	Delete(reaction *Reaction) error
@@ -126,16 +133,17 @@ type VersionDAO interface {
 }
 
 type PGDB struct {
-	db        *sqlx.DB
-	Album     AlbumDAO
-	Camera    CameraDAO
-	Comment   CommentDAO
-	Guest     GuestDAO
-	GuestCode GuestCodeDAO
-	Photo     PhotoDAO
-	Reaction  ReactionDAO
-	User      UserDAO
-	Version   VersionDAO
+	db          *sqlx.DB
+	Album       AlbumDAO
+	Camera      CameraDAO
+	Comment     CommentDAO
+	Guest       GuestDAO
+	GuestCode   GuestCodeDAO
+	ImportError ImportErrorDAO
+	Photo       PhotoDAO
+	Reaction    ReactionDAO
+	User        UserDAO
+	Version     VersionDAO
 }
 
 var logger *zap.SugaredLogger
@@ -164,16 +172,17 @@ func NewPGDB() (*PGDB, error) {
 			return nil, err
 		}
 		return &PGDB{
-			db:        db,
-			Album:     NewAlbumPG(db),
-			Camera:    NewCameraPG(db),
-			Comment:   NewCommentPG(db),
-			Guest:     NewGuestPG(db),
-			GuestCode: NewGuestCodePG(db),
-			Photo:     NewPhotoPG(db),
-			Reaction:  NewReactionPG(db),
-			User:      NewUserPG(db),
-			Version:   NewVersionPG(db),
+			db:          db,
+			Album:       NewAlbumPG(db),
+			Camera:      NewCameraPG(db),
+			Comment:     NewCommentPG(db),
+			Guest:       NewGuestPG(db),
+			GuestCode:   NewGuestCodePG(db),
+			ImportError: NewImportErrorPG(db),
+			Photo:       NewPhotoPG(db),
+			Reaction:    NewReactionPG(db),
+			User:        NewUserPG(db),
+			Version:     NewVersionPG(db),
 		}, nil
 	}
 }
@@ -196,7 +205,7 @@ func (pgd *PGDB) tableExists(table string) bool {
 }
 
 func (pgd *PGDB) CreateTables() error {
-	if _, err := pgd.db.Exec(schemaV9); err != nil {
+	if _, err := pgd.db.Exec(schemaV10); err != nil {
 		return err
 	} else { //make sure version is correct
 		_, err = pgd.Version.Update()
@@ -208,6 +217,6 @@ func (pgd *PGDB) CreateTables() error {
 }
 
 func (pgd *PGDB) DeleteTables() error {
-	_, err := pgd.db.Exec(deleteSchemaV9)
+	_, err := pgd.db.Exec(deleteSchemaV10)
 	return err
 }

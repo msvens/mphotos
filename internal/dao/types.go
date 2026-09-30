@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-const DbVersion = 9
-const DbDescription = "Version 9 makes all camera columns non-null with defaults"
+const DbVersion = 10
+const DbDescription = "Version 10 adds video support: kind/duration on img and an import_error table"
 
 type Album struct {
 	Id          uuid.UUID  `json:"id"`
@@ -120,7 +120,21 @@ type Photo struct {
 	FNumber  float32 `json:"fNumber"`
 	Width    uint    `json:"width"`
 	Height   uint    `json:"height"`
+	Kind     string  `json:"kind"`
+	Duration float64 `json:"duration,omitempty"`
 	//Private  bool    `json:"private"`
+}
+
+// ImportError records a source file that failed to import (e.g. an HDR or
+// truncated video). Keyed by the source md5 so a failed file is not
+// re-downloaded/re-processed on later syncs, and so skip reasons survive restarts.
+type ImportError struct {
+	Md5      string    `json:"md5"`
+	DriveId  string    `json:"driveId,omitempty"`
+	Name     string    `json:"name"`
+	Category string    `json:"category"`
+	Message  string    `json:"message,omitempty"`
+	Time     time.Time `json:"time"`
 }
 
 type PhotoFilter struct {
@@ -157,6 +171,10 @@ type Reaction struct {
 
 const SourceGoogle = "gdrive"
 const SourceLocal = "local"
+
+// Photo.Kind values distinguishing a still image from a video in the img table.
+const KindPhoto = "photo"
+const KindVideo = "video"
 
 // NoCameraModel is the sentinel camera model assigned to photos imported without
 // camera EXIF (its camera id slug is "no-camera").

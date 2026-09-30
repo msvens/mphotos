@@ -13,11 +13,12 @@ import (
 // A migration must only apply its schema/data changes; it must NOT stamp the
 // version. UpgradeDb stamps each version after the step succeeds.
 var migrations = map[int]func(*PGDB) error{
-	5: upgradeToV5,
-	6: upgradeToV6,
-	7: upgradeToV7,
-	8: upgradeToV8,
-	9: upgradeToV9,
+	5:  upgradeToV5,
+	6:  upgradeToV6,
+	7:  upgradeToV7,
+	8:  upgradeToV8,
+	9:  upgradeToV9,
+	10: upgradeToV10,
 }
 
 // UpgradeDb brings the database up to the binary's DbVersion, applying each
@@ -114,5 +115,12 @@ func upgradeToV8(pgdb *PGDB) error {
 // /api/cameras row scan.
 func upgradeToV9(pgdb *PGDB) error {
 	_, err := pgdb.db.Exec(schemaV8toV9)
+	return err
+}
+
+// upgradeToV10 takes a v9 database to v10, adding video support: the kind/duration
+// columns on img and the import_error table.
+func upgradeToV10(pgdb *PGDB) error {
+	_, err := pgdb.db.Exec(schemaV9toV10)
 	return err
 }
