@@ -17,7 +17,8 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
   transcoded server-side to H.264 MP4 (mimage v0.2.0 / ffmpeg), and become
   first-class media rows (`kind="video"`, `duration`) alongside photos — played
   from `/api/images/<id>.mp4` (range requests) with a poster-derived thumbnail.
-  `GET /api/drive/check` now reports counts by kind (`{images, videos, videoEnabled}`);
+  `GET /api/capabilities` reports whether video is available (`{videoEnabled}`,
+  Drive-independent), and `GET /api/drive/check` now reports counts by kind (`{images, videos}`);
   failed imports (HDR, truncated, …) are recorded in an `import_error` table and
   skipped on later syncs, and job status now carries per-file `added/skipped/failed`
   with failure reasons. Requires `ffmpeg`/`ffprobe` on the server; without them

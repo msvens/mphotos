@@ -76,11 +76,11 @@ func (s *mserver) handleDisconnectDrive(_ *http.Request) (interface{}, error) {
 }
 
 // DriveCheck is the "what's new" overview: how many not-yet-imported images and
-// videos are in the Drive folder, plus whether video import is available at all.
+// videos are in the Drive folder. Whether video is supported at all is a server
+// capability (see GET /api/capabilities), not a Drive-check concern.
 type DriveCheck struct {
-	Images       int  `json:"images"`
-	Videos       int  `json:"videos"`
-	VideoEnabled bool `json:"videoEnabled"`
+	Images int `json:"images"`
+	Videos int `json:"videos"`
 }
 
 func (s *mserver) handleCheckDrive(_ *http.Request) (interface{}, error) {
@@ -88,7 +88,7 @@ func (s *mserver) handleCheckDrive(_ *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	check := DriveCheck{Images: len(images), VideoEnabled: s.videoEnabled}
+	check := DriveCheck{Images: len(images)}
 	if s.videoEnabled {
 		videos, err := checkDriveVideos(s)
 		if err != nil {
