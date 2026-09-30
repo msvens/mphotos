@@ -39,6 +39,9 @@ func (s *mserver) handleEditImage(r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, BadRequestError("could not find photo")
 	}
+	if p.Kind == dao.KindVideo {
+		return nil, BadRequestError("cannot edit a video")
+	}
 	//Transform image:
 	fname := config.PhotoFilePath(config.Original, p.FileName)
 	srcImage, exifBytes, err := img.OpenOpts(fname, false, true)
@@ -92,6 +95,10 @@ func (s *mserver) handleEditPreviewImage(w http.ResponseWriter, r *http.Request)
 	p, err := s.pg.Photo.Get(id)
 	if err != nil {
 		http.Error(w, "file not found", http.StatusNotFound)
+		return
+	}
+	if p.Kind == dao.KindVideo {
+		http.Error(w, "cannot edit a video", http.StatusBadRequest)
 		return
 	}
 	fname := config.PhotoFilePath(config.Original, p.FileName)

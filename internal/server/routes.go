@@ -37,6 +37,7 @@ func (s *mserver) routes() {
 	s.mGET("/drive/check", s.authOnly(s.handleCheckDrive))
 	s.mPUT("/drive/upload", s.authOnly(s.handleAddDrivePhotos))
 	s.mPUT("/drive/job/schedule", s.authOnly(s.handleScheduleDriveJob))
+	s.mPUT("/drive/video/job/schedule", s.authOnly(s.handleScheduleVideoJob))
 	s.mGET("/drive/job/{jobid}", s.authOnly(s.handleStatusDriveJob))
 
 	s.mPUT("/local/upload", s.authOnly(s.handleUploadLocalPhoto))

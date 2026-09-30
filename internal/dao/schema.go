@@ -110,7 +110,25 @@ ALTER TABLE camera
 	ALTER COLUMN gps SET DEFAULT FALSE, ALTER COLUMN gps SET NOT NULL,
 	ALTER COLUMN image SET DEFAULT '', ALTER COLUMN image SET NOT NULL;
 `
-const schemaV9 = `
+
+// schemaV9toV10 adds video support: a kind discriminator and duration on img (so
+// videos live in the same table as photos, riding the existing album/like/comment/
+// listing plumbing), plus an import_error table recording per-file import failures
+// keyed by the source md5, so a failed video is not re-downloaded/re-transcoded on
+// later syncs. Idempotent; existing rows default to kind='photo'.
+const schemaV9toV10 = `
+ALTER TABLE img ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'photo';
+ALTER TABLE img ADD COLUMN IF NOT EXISTS duration REAL NOT NULL DEFAULT 0;
+CREATE TABLE IF NOT EXISTS import_error (
+	md5 TEXT PRIMARY KEY,
+	driveId TEXT NOT NULL DEFAULT '',
+	name TEXT NOT NULL DEFAULT '',
+	category TEXT NOT NULL,
+	message TEXT NOT NULL DEFAULT '',
+	time TIMESTAMP NOT NULL
+);
+`
+const schemaV10 = `
 CREATE TABLE IF NOT EXISTS album (
 	Id UUID,
 	name TEXT,
@@ -236,7 +254,18 @@ CREATE TABLE IF NOT EXISTS img (
 	fNumber REAL NOT NULL,
 	exposure TEXT NOT NULL,
 	width INTEGER NOT NULL,
-	height INTEGER NOT NULL
+	height INTEGER NOT NULL,
+	kind TEXT NOT NULL DEFAULT 'photo',
+	duration REAL NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS import_error (
+	md5 TEXT PRIMARY KEY,
+	driveId TEXT NOT NULL DEFAULT '',
+	name TEXT NOT NULL DEFAULT '',
+	category TEXT NOT NULL,
+	message TEXT NOT NULL DEFAULT '',
+	time TIMESTAMP NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS usert (
@@ -262,7 +291,7 @@ INSERT INTO version (versionId,description) VALUES (0,'no version set') ON CONFL
 INSERT INTO usert (id, name, bio, pic, driveFolderId, driveFolderName, config) VALUES (23657, '', '', '', '','','{}') ON CONFLICT (id) DO NOTHING;
 `
 
-const deleteSchemaV9 = `
+const deleteSchemaV10 = `
 DROP TABLE IF EXISTS album;
 DROP TABLE IF EXISTS albumphotos;
 DROP TABLE IF EXISTS camera;
@@ -272,6 +301,7 @@ DROP TABLE IF EXISTS guest;
 DROP TABLE IF EXISTS guestcode;
 DROP TABLE IF EXISTS reaction;
 DROP TABLE IF EXISTS img;
+DROP TABLE IF EXISTS import_error;
 DROP TABLE IF EXISTS usert;
 DROP TABLE IF EXISTS version;
 `

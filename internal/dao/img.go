@@ -36,11 +36,19 @@ func CreateImageDirs() error {
 
 //Removes any images that are not in the db
 
+// DeleteImg removes a media item's stored files: the original by its filename
+// (e.g. <uuid>.jpg or <uuid>.mp4) and the size variants, which are always
+// <base>.jpg regardless of the original's kind. For photos the original and the
+// variant name coincide; for videos they differ (.mp4 vs .jpg).
 func DeleteImg(fname string) error {
+	base := strings.TrimSuffix(fname, filepath.Ext(fname))
 	for pt := range config.PhotoPaths() {
-		fpath := config.PhotoFilePath(pt, fname)
-		err := os.Remove(fpath)
-		if err != nil && !os.IsNotExist(err) {
+		name := fname
+		if pt != config.Original {
+			name = base + ".jpg"
+		}
+		fpath := config.PhotoFilePath(pt, name)
+		if err := os.Remove(fpath); err != nil && !os.IsNotExist(err) {
 			return err
 		}
 	}
@@ -73,27 +81,44 @@ func CleanImageDirs(db *PGDB) error {
 	if err != nil {
 		return err
 	}
-	fNames := make(map[string]bool)
+	// The Original dir keeps each item's real filename (<uuid>.jpg or <uuid>.mp4);
+	// the variant dirs keep <base>.jpg (variants are always jpeg, incl. video posters).
+	keepOriginal := make(map[string]bool)
+	keepVariant := make(map[string]bool)
 	for _, p := range photos {
-		fNames[p.FileName] = true
+		keepOriginal[p.FileName] = true
+		base := strings.TrimSuffix(p.FileName, filepath.Ext(p.FileName))
+		keepVariant[base+".jpg"] = true
 	}
-	for k := range config.PhotoPaths() {
-		err := cleanImgDir(fNames, k)
-		if err != nil {
+	for pt := range config.PhotoPaths() {
+		keep := keepVariant
+		if pt == config.Original {
+			keep = keepOriginal
+		}
+		if err := cleanImgDir(keep, pt); err != nil {
 			logger.Errorw("Error cleaning imgDir", "error", err)
 		}
 	}
 	return nil
 }
 
+// GenerateImages generates the size variants for a stored original (a jpeg photo),
+// deriving the source path from its filename.
 func GenerateImages(fName string) error {
 	srcFile := config.PhotoFilePath(config.Original, fName)
-	// TransformFile derives each variant's extension from its Options.Format, so the
-	// destination keys must be base paths without an extension (<uuid>, not <uuid>.jpg).
 	base := strings.TrimSuffix(fName, filepath.Ext(fName))
+	return GenerateImagesFromSource(srcFile, base)
+}
+
+// GenerateImagesFromSource generates the size variants from an explicit source
+// image into <variant>/<baseName>.jpg for each variant. Used for photos (source =
+// the stored original) and for videos (source = the extracted poster jpeg).
+// TransformFile derives each variant's extension from its Options.Format, so the
+// destination keys must be base paths without an extension (<uuid>, not <uuid>.jpg).
+func GenerateImagesFromSource(srcImagePath, baseName string) error {
 	imgMap := map[string]img.Options{}
 	for pt, opt := range photoTypes {
-		imgMap[config.PhotoFilePath(pt, base)] = opt
+		imgMap[config.PhotoFilePath(pt, baseName)] = opt
 	}
-	return img.TransformFile(srcFile, imgMap)
+	return img.TransformFile(srcImagePath, imgMap)
 }

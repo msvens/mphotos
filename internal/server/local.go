@@ -54,7 +54,13 @@ func (s *mserver) handleUploadLocalPhoto(r *http.Request) (interface{}, error) {
 	}
 	srcFormat := metadata.DetectFormat(buff)
 	if !srcFormat.Supported() {
-		return nil, BadRequestError("unsupported image type: " + srcFormat.String())
+		return nil, BadRequestError("unsupported media type: " + srcFormat.String())
+	}
+
+	// Video is transcoded (minutes) so it can't be handled synchronously: stage it
+	// and hand off to the video worker, returning a job the client polls.
+	if srcFormat.IsVideo() {
+		return s.uploadLocalVideo(r, file, head.Filename, md5str)
 	}
 
 	sourceId := r.FormValue("sourceId")

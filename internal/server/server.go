@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"github.com/gorilla/sessions"
+	"github.com/msvens/mimage/video"
 	"github.com/msvens/mphotos/internal/config"
 	"github.com/msvens/mphotos/internal/dao"
 	"github.com/msvens/mphotos/internal/gdrive"
@@ -33,6 +34,9 @@ type mserver struct {
 	gconfig           *oauth2.Config
 	gconfigLogin      *oauth2.Config
 	gconfigGuestLogin *oauth2.Config
+	// videoEnabled is set at startup from video.Available(): true when ffmpeg/ffprobe
+	// are present. When false, video sync/upload is refused and photos are unaffected.
+	videoEnabled bool
 }
 
 func newServer(prefixPath string, logger *zap.SugaredLogger) *mserver {
@@ -83,9 +87,12 @@ func newServer(prefixPath string, logger *zap.SugaredLogger) *mserver {
 		s.l.Panicw("could not create avatar dir", zap.Error(err))
 	}
 
-	//start async job channel:
+	//start async job channels: images and (separately) videos, so a slow transcode
+	//never blocks an image import.
 	wg.Add(1)
 	go worker(jobChan)
+	wg.Add(1)
+	go videoWorker(videoJobChan)
 
 	//periodically reap unverified guests and expired one-time codes:
 	go s.reapGuests()
@@ -148,6 +155,16 @@ func StartMServer() {
 		s.l.Fatalw("database schema check failed", zap.Error(err))
 	}
 
+	// Video import needs ffmpeg/ffprobe. Probe once at startup; if missing, disable
+	// video sync/upload (with a clear log) while photos keep working.
+	if err := video.Available(); err != nil {
+		s.videoEnabled = false
+		s.l.Warnw("video support disabled: ffmpeg/ffprobe not available", zap.Error(err))
+	} else {
+		s.videoEnabled = true
+		s.l.Info("video support enabled")
+	}
+
 	s.routes()
 
 	//auth
@@ -183,6 +200,7 @@ func StartMServer() {
 	}()
 
 	close(jobChan)
+	close(videoJobChan)
 	wg.Wait()
 
 	if err := srv.Shutdown(ctx); err != nil {
