@@ -10,6 +10,8 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-30
+
 ### Added
 
 - Video support. Videos import from the same Google Drive folder via a separate
@@ -130,7 +132,8 @@ merged since v0.2.0 (2021); see the git history for the full detail.
 - Guest email addresses are no longer leaked from the likes endpoint.
 - Several camera handler defects and a swallowed DAO error.
 
-[Unreleased]: https://github.com/msvens/mphotos/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/msvens/mphotos/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/msvens/mphotos/releases/tag/v0.7.0
 [0.6.1]: https://github.com/msvens/mphotos/releases/tag/v0.6.1
 [0.6.0]: https://github.com/msvens/mphotos/releases/tag/v0.6.0
 [0.5.1]: https://github.com/msvens/mphotos/releases/tag/v0.5.1
