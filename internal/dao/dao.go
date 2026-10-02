@@ -110,6 +110,7 @@ type PhotoDAO interface {
 	Exif(id uuid.UUID) (*Exif, error)
 	Has(id uuid.UUID) bool
 	HasMd5(md5 string) bool
+	HasMd5s(md5s []string) (map[string]bool, error)
 	Get(id uuid.UUID) (*Photo, error)
 	List() ([]*Photo, error)
 	ListSource(source string) ([]*Photo, error)
