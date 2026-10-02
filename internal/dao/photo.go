@@ -168,6 +168,30 @@ func (dao *PhotoPG) HasMd5(md5 string) bool {
 	}
 }
 
+// HasMd5s is the batch form of HasMd5: it maps every given md5 to whether a stored
+// photo has it, letting a client find out which local files are new before uploading.
+func (dao *PhotoPG) HasMd5s(md5s []string) (map[string]bool, error) {
+	ret := make(map[string]bool, len(md5s))
+	if len(md5s) == 0 {
+		return ret, nil
+	}
+	for _, m := range md5s {
+		ret[m] = false
+	}
+	query, args, err := sqlx.In("SELECT md5 FROM img WHERE md5 IN (?)", md5s)
+	if err != nil {
+		return nil, err
+	}
+	var found []string
+	if err = dao.db.Select(&found, dao.db.Rebind(query), args...); err != nil {
+		return nil, err
+	}
+	for _, m := range found {
+		ret[m] = true
+	}
+	return ret, nil
+}
+
 func (dao *PhotoPG) Get(id uuid.UUID) (*Photo, error) {
 	ret := &Photo{}
 	stmt := "SELECT * FROM img WHERE id = $1"
