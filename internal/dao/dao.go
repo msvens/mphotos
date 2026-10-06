@@ -205,7 +205,7 @@ func (pgd *PGDB) tableExists(table string) bool {
 }
 
 func (pgd *PGDB) CreateTables() error {
-	if _, err := pgd.db.Exec(schemaV10); err != nil {
+	if _, err := pgd.db.Exec(schemaV11); err != nil {
 		return err
 	} else { //make sure version is correct
 		_, err = pgd.Version.Update()
@@ -217,6 +217,6 @@ func (pgd *PGDB) CreateTables() error {
 }
 
 func (pgd *PGDB) DeleteTables() error {
-	_, err := pgd.db.Exec(deleteSchemaV10)
+	_, err := pgd.db.Exec(deleteSchemaV11)
 	return err
 }

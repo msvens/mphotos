@@ -235,6 +235,44 @@ func TestUpgradeToV10Video(t *testing.T) {
 	}
 }
 
+// TestUpgradeToV11FocusRange: the v10->v11 step turns the integer camera focus
+// ranges into REAL, keeping existing values and accepting decimals afterwards.
+func TestUpgradeToV11FocusRange(t *testing.T) {
+	pgdb := openAndCreateTestDb(t)
+	defer deleteAndCloseTestDb(pgdb, t)
+
+	// Rewind to the pre-v11 integer columns and store a camera with integer ranges.
+	for _, stmt := range []string{
+		"ALTER TABLE camera ALTER COLUMN focusRange TYPE INTEGER, ALTER COLUMN macroFocusRange TYPE INTEGER",
+		"INSERT INTO camera (id, model, make, focusRange, macroFocusRange) VALUES ('cam', 'Cam', 'Make', 30, 3)",
+		"UPDATE version SET versionId = 10",
+	} {
+		if _, err := pgdb.db.Exec(stmt); err != nil {
+			t.Fatalf("rewind %q: %v", stmt, err)
+		}
+	}
+
+	if err := UpgradeDb(); err != nil {
+		t.Fatalf("UpgradeDb failed: %v", err)
+	}
+
+	c, err := pgdb.Camera.Get("cam")
+	if err != nil {
+		t.Fatalf("get camera: %v", err)
+	}
+	if c.FocusRange != 30 || c.MacroFocusRange != 3 {
+		t.Errorf("existing ranges not preserved: focus=%v macro=%v", c.FocusRange, c.MacroFocusRange)
+	}
+
+	c.MacroFocusRange = 1.5
+	if c, err = pgdb.Camera.Update(c); err != nil {
+		t.Fatalf("update camera: %v", err)
+	}
+	if c.MacroFocusRange != 1.5 {
+		t.Errorf("expected decimal macro range 1.5 to round-trip, got %v", c.MacroFocusRange)
+	}
+}
+
 // TestUpgradeNewerThanBinary: a database ahead of the binary must error, not
 // silently proceed.
 func TestUpgradeNewerThanBinary(t *testing.T) {

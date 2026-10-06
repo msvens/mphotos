@@ -128,7 +128,16 @@ CREATE TABLE IF NOT EXISTS import_error (
 	time TIMESTAMP NOT NULL
 );
 `
-const schemaV10 = `
+
+// schemaV10toV11 makes the camera focus ranges (cm) decimal, matching cropFactor/
+// opticalZoom: macro distances like 1.5 cm exist, and the frontend already sends
+// decimals. Existing integers convert losslessly; re-running is a no-op.
+const schemaV10toV11 = `
+ALTER TABLE camera
+	ALTER COLUMN focusRange TYPE REAL,
+	ALTER COLUMN macroFocusRange TYPE REAL;
+`
+const schemaV11 = `
 CREATE TABLE IF NOT EXISTS album (
 	Id UUID,
 	name TEXT,
@@ -163,8 +172,8 @@ CREATE TABLE IF NOT EXISTS camera (
 	iso TEXT NOT NULL DEFAULT '',
 	raw BOOLEAN NOT NULL DEFAULT FALSE,
 	manualFocus BOOLEAN NOT NULL DEFAULT FALSE,
-	focusRange INTEGER NOT NULL DEFAULT 0,
-	macroFocusRange INTEGER NOT NULL DEFAULT 0,
+	focusRange REAL NOT NULL DEFAULT 0,
+	macroFocusRange REAL NOT NULL DEFAULT 0,
 	focalLengthEquiv TEXT NOT NULL DEFAULT '',
 	aperturePriority BOOLEAN NOT NULL DEFAULT FALSE,
 	maxAperture TEXT NOT NULL DEFAULT '',
@@ -291,7 +300,7 @@ INSERT INTO version (versionId,description) VALUES (0,'no version set') ON CONFL
 INSERT INTO usert (id, name, bio, pic, driveFolderId, driveFolderName, config) VALUES (23657, '', '', '', '','','{}') ON CONFLICT (id) DO NOTHING;
 `
 
-const deleteSchemaV10 = `
+const deleteSchemaV11 = `
 DROP TABLE IF EXISTS album;
 DROP TABLE IF EXISTS albumphotos;
 DROP TABLE IF EXISTS camera;
