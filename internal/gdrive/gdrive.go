@@ -73,8 +73,10 @@ func (ds *DriveService) Check() error {
 	return err
 }
 
-func (ds *DriveService) Download(id string, path string) (int64, error) {
-	resp, err := ds.service.Files.Get(id).Download()
+// Download writes the Drive file to path. Cancelling ctx aborts an in-flight
+// transfer (e.g. a cancelled import job); the caller removes the partial file.
+func (ds *DriveService) Download(ctx context.Context, id string, path string) (int64, error) {
+	resp, err := ds.service.Files.Get(id).Context(ctx).Download()
 	if err != nil {
 		return 0, err
 	}

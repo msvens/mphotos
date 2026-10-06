@@ -54,10 +54,25 @@ func videoWorker(ch <-chan *Job) {
 // processVideo imports each source, continuing past per-file failures (unlike the
 // image worker, which aborts): a bad clip (HDR, truncated) is recorded and skipped
 // so the rest of the batch still imports.
+// A cancel stops it before the next file and interrupts the current one.
 func (s *mserver) processVideo(job *Job) {
+	if job.ctx.Err() != nil { // cancelled while queued
+		removeStaged(job.videoSources)
+		finishJob(job, nil)
+		return
+	}
 	jobSetState(job, StateStarted)
-	for _, src := range job.videoSources {
-		added, err := s.importVideo(src)
+	for i, src := range job.videoSources {
+		if job.ctx.Err() != nil {
+			removeStaged(job.videoSources[i:])
+			break
+		}
+		added, err := s.importVideo(job.ctx, src)
+		if err != nil && job.ctx.Err() != nil {
+			// interrupted by the cancel, not a bad file: don't record it
+			removeStaged(job.videoSources[i+1:])
+			break
+		}
 		if err != nil {
 			cat := videoErrorCategory(err)
 			if rerr := s.pg.ImportError.Record(&dao.ImportError{
@@ -77,23 +92,37 @@ func (s *mserver) processVideo(job *Job) {
 	finishJob(job, nil)
 }
 
+// removeStaged deletes the pre-staged files (local uploads) of sources that will
+// not be imported because the job was cancelled.
+func removeStaged(sources []videoSource) {
+	for _, src := range sources {
+		if src.stagedPath != "" {
+			_ = os.Remove(src.stagedPath)
+		}
+	}
+}
+
 // importVideo transcodes one source to the stored <uuid>.mp4, derives the poster
 // and its jpeg variants, and persists the row. Returns (added, err): (false, nil)
 // means already imported.
-func (s *mserver) importVideo(src videoSource) (bool, error) {
+func (s *mserver) importVideo(jobCtx context.Context, src videoSource) (bool, error) {
 	if s.pg.Photo.HasMd5(src.md5) {
+		if src.stagedPath != "" { // local upload staged for nothing
+			_ = os.Remove(src.stagedPath)
+		}
 		return false, nil
 	}
 
 	staged := src.stagedPath
 	if staged == "" { // Drive: download to a staged temp
 		staged = config.PhotoFilePath(config.Original, src.id.String()+".import")
-		if _, err := s.ds.Download(src.driveId, staged); err != nil {
+		if _, err := s.ds.Download(jobCtx, src.driveId, staged); err != nil {
+			_ = os.Remove(staged)
 			return false, err
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), transcodeTimeout)
+	ctx, cancel := context.WithTimeout(jobCtx, transcodeTimeout)
 	defer cancel()
 
 	base := config.PhotoFilePath(config.Original, src.id.String()) // Original/<uuid>, no ext
@@ -271,14 +300,8 @@ func (s *mserver) handleScheduleVideoJob(_ *http.Request) (interface{}, error) {
 		}
 		sources = append(sources, src)
 	}
-	job := &Job{
-		Id:           uuid.New().String(),
-		Kind:         "video",
-		videoSources: sources,
-		s:            s,
-		NumFiles:     len(sources),
-		State:        StateScheduled,
-	}
+	job := newJob(s, "video", len(sources))
+	job.videoSources = sources
 	addJob(job)
 	videoJobChan <- job
 	snap, _ := getJob(job.Id)
@@ -327,14 +350,8 @@ func (s *mserver) uploadLocalVideo(r *http.Request, file multipart.File, filenam
 		sourceDate: sourceDate,
 		stagedPath: staged,
 	}
-	job := &Job{
-		Id:           uuid.New().String(),
-		Kind:         "video",
-		videoSources: []videoSource{src},
-		s:            s,
-		NumFiles:     1,
-		State:        StateScheduled,
-	}
+	job := newJob(s, "video", 1)
+	job.videoSources = []videoSource{src}
 	addJob(job)
 	videoJobChan <- job
 	snap, _ := getJob(job.Id)
