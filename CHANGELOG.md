@@ -10,6 +10,8 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-06
+
 ### Added
 
 - Job endpoints under `/api/jobs`, since import jobs aren't Drive-specific (local
@@ -33,7 +35,7 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
   files (e.g. a picked directory) and upload only the new ones, like the Drive check.
   Previously the route was an unimplemented stub that always returned a 500.
   **Frontend impact:** optional — needs client-side MD5 (WebCrypto has no MD5;
-  use e.g. `spark-md5`, hashing the raw file bytes).
+  use e.g. `hash-wasm`, hashing the raw file bytes).
 
 ### Changed
 
@@ -168,7 +170,8 @@ merged since v0.2.0 (2021); see the git history for the full detail.
 - Guest email addresses are no longer leaked from the likes endpoint.
 - Several camera handler defects and a swallowed DAO error.
 
-[Unreleased]: https://github.com/msvens/mphotos/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/msvens/mphotos/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/msvens/mphotos/releases/tag/v0.8.0
 [0.7.0]: https://github.com/msvens/mphotos/releases/tag/v0.7.0
 [0.6.1]: https://github.com/msvens/mphotos/releases/tag/v0.6.1
 [0.6.0]: https://github.com/msvens/mphotos/releases/tag/v0.6.0
