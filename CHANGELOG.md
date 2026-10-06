@@ -10,6 +10,14 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
 
 ## [Unreleased]
 
+### Changed
+
+- **Schema v11:** camera `focusRange` / `macroFocusRange` (cm) are now decimal
+  (`REAL`) instead of integer, so values like a 1.5 cm macro distance can be stored.
+  Previously a decimal sent by the frontend was rejected. Run `db upgrade` on deploy;
+  existing values convert without loss. **Frontend impact:** none — the svelte
+  dialog already sends these as decimals.
+
 ## [0.7.0] - 2026-09-30
 
 ### Added

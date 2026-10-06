@@ -19,6 +19,7 @@ var migrations = map[int]func(*PGDB) error{
 	8:  upgradeToV8,
 	9:  upgradeToV9,
 	10: upgradeToV10,
+	11: upgradeToV11,
 }
 
 // UpgradeDb brings the database up to the binary's DbVersion, applying each
@@ -122,5 +123,11 @@ func upgradeToV9(pgdb *PGDB) error {
 // columns on img and the import_error table.
 func upgradeToV10(pgdb *PGDB) error {
 	_, err := pgdb.db.Exec(schemaV9toV10)
+	return err
+}
+
+// upgradeToV11 takes a v10 database to v11, making the camera focus ranges decimal.
+func upgradeToV11(pgdb *PGDB) error {
+	_, err := pgdb.db.Exec(schemaV10toV11)
 	return err
 }

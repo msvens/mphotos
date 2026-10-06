@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-const DbVersion = 10
-const DbDescription = "Version 10 adds video support: kind/duration on img and an import_error table"
+const DbVersion = 11
+const DbDescription = "Version 11 makes camera focusRange/macroFocusRange decimal (REAL)"
 
 type Album struct {
 	Id          uuid.UUID  `json:"id"`
@@ -35,8 +35,8 @@ type Camera struct {
 	Iso                string  `json:"iso"`
 	Raw                bool    `json:"raw"`
 	ManualFocus        bool    `json:"manualFocus"`
-	FocusRange         int     `json:"focusRange"`
-	MacroFocusRange    int     `json:"macroFocusRange"`
+	FocusRange         float32 `json:"focusRange"`
+	MacroFocusRange    float32 `json:"macroFocusRange"`
 	FocalLengthEquiv   string  `json:"focalLengthEquiv"`
 	AperturePriority   bool    `json:"aperturePriority"`
 	MaxAperture        string  `json:"maxAperture"`
