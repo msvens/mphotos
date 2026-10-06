@@ -10,6 +10,15 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
 
 ## [Unreleased]
 
+### Added
+
+- `PUT/POST /api/local/check` (owner): takes `{"md5s": [...]}` and returns
+  `{"md5s": {"<md5>": true|false, ...}}` — whether each is already imported. This lets a client hash local
+  files (e.g. a picked directory) and upload only the new ones, like the Drive check.
+  Previously the route was an unimplemented stub that always returned a 500.
+  **Frontend impact:** optional — needs client-side MD5 (WebCrypto has no MD5;
+  use e.g. `spark-md5`, hashing the raw file bytes).
+
 ### Changed
 
 - **Schema v11:** camera `focusRange` / `macroFocusRange` (cm) are now decimal

@@ -238,3 +238,34 @@ func TestPhotoSelectEquipmentFilters(t *testing.T) {
 		t.Errorf("album+filter expected [p1] got %v", idsOf(photos))
 	}
 }
+
+func TestPhotoHasMd5s(t *testing.T) {
+	pgdb := openAndCreateTestDb(t)
+	defer deleteAndCloseTestDb(pgdb, t)
+
+	base := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+	p := mkSelectPhoto("Alpha", base, base)
+	if err := pgdb.Photo.Add(&p, nil); err != nil {
+		t.Fatalf("could not add photo: %v", err)
+	}
+
+	// duplicate input md5s collapse into one entry
+	got, err := pgdb.Photo.HasMd5s([]string{"unknown1", p.Md5, "unknown2", p.Md5})
+	if err != nil {
+		t.Fatalf("HasMd5s: %v", err)
+	}
+	want := map[string]bool{"unknown1": false, p.Md5: true, "unknown2": false}
+	if len(got) != len(want) {
+		t.Fatalf("expected %v, got %v", want, got)
+	}
+	for k, v := range want {
+		if got[k] != v {
+			t.Errorf("md5 %s: expected %v, got %v", k, v, got[k])
+		}
+	}
+
+	got, err = pgdb.Photo.HasMd5s(nil)
+	if err != nil || got == nil || len(got) != 0 {
+		t.Errorf("expected empty non-nil map for no input, got %v (err %v)", got, err)
+	}
+}

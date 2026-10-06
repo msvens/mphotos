@@ -110,7 +110,23 @@ func (s *mserver) handleUploadLocalPhoto(r *http.Request) (interface{}, error) {
 	return &photo, nil
 }
 
+// handleCheckLocalPhotos maps each given md5 to whether it is already imported, so a
+// client can hash local files and upload only the new ones (the local counterpart
+// of comparing Drive's md5Checksum listing).
 func (s *mserver) handleCheckLocalPhotos(r *http.Request) (interface{}, error) {
-
-	return nil, nil
+	type request struct {
+		Md5s []string `json:"md5s" schema:"md5s"`
+	}
+	type response struct {
+		Md5s map[string]bool `json:"md5s"`
+	}
+	var params request
+	if err := decodeRequest(r, &params); err != nil {
+		return nil, err
+	}
+	has, err := s.pg.Photo.HasMd5s(params.Md5s)
+	if err != nil {
+		return nil, err
+	}
+	return &response{Md5s: has}, nil
 }
