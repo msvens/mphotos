@@ -39,10 +39,15 @@ func (s *mserver) routes() {
 	s.mPUT("/drive/upload", s.authOnly(s.handleAddDrivePhotos))
 	s.mPUT("/drive/job/schedule", s.authOnly(s.handleScheduleDriveJob))
 	s.mPUT("/drive/video/job/schedule", s.authOnly(s.handleScheduleVideoJob))
-	s.mGET("/drive/job/{jobid}", s.authOnly(s.handleStatusDriveJob))
+	// Deprecated alias of GET /jobs/{jobid}, kept until the frontend has moved over.
+	s.mGET("/drive/job/{jobid}", s.authOnly(s.handleJobStatus))
 
 	s.mPUT("/local/upload", s.authOnly(s.handleUploadLocalPhoto))
 	s.mPUT("/local/check", s.authOnly(s.handleCheckLocalPhotos))
+
+	// Import jobs, whatever started them (Drive sync or a local video upload).
+	s.mGET("/jobs/{jobid}", s.authOnly(s.handleJobStatus))
+	s.mPUT("/jobs/{jobid}/cancel", s.authOnly(s.handleCancelJob))
 
 	s.mGET("/images/{name}", s.handleImage)
 	s.mGET("/thumbs/{name}", s.handleThumb)

@@ -12,6 +12,22 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
 
 ### Added
 
+- Job endpoints under `/api/jobs`, since import jobs aren't Drive-specific (local
+  video uploads create them too):
+  - `GET /api/jobs/{jobid}`: job status (same response as before).
+  - `PUT/POST /api/jobs/{jobid}/cancel` (owner): stops a queued or running import job —
+    Drive image sync, Drive video sync, or a local video upload. Image jobs stop
+    before the next file; video jobs also interrupt the current download/transcode.
+    Files imported before the cancel are kept. The job ends in a new state,
+    `CANCELLED` (distinct from `ABORTED`, which means it failed). The call returns
+    the job snapshot, which may still read `SCHEDULED`/`STARTED` until the worker
+    stops; cancelling a job that already ended is a no-op.
+
+  **Frontend impact:** poll `GET /api/jobs/{jobid}` instead of
+  `/api/drive/job/{jobid}`, add a cancel action on running jobs, and handle
+  `CANCELLED` in the job poller. Starting jobs is unchanged
+  (`/api/drive/job/schedule`, `/api/drive/video/job/schedule`, `/api/local/upload`).
+
 - `PUT/POST /api/local/check` (owner): takes `{"md5s": [...]}` and returns
   `{"md5s": {"<md5>": true|false, ...}}` — whether each is already imported. This lets a client hash local
   files (e.g. a picked directory) and upload only the new ones, like the Drive check.
@@ -20,6 +36,9 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
   use e.g. `spark-md5`, hashing the raw file bytes).
 
 ### Changed
+
+- `GET /api/drive/job/{jobid}` is **deprecated** in favour of `GET /api/jobs/{jobid}`.
+  It still works for now and will be removed once the frontend has switched.
 
 - **Schema v11:** camera `focusRange` / `macroFocusRange` (cm) are now decimal
   (`REAL`) instead of integer, so values like a 1.5 cm macro distance can be stored.

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"github.com/google/uuid"
 	"github.com/msvens/mimage/metadata"
 	"github.com/msvens/mphotos/internal/config"
@@ -32,8 +33,8 @@ type DriveFiles struct {
 	Files  []*DriveFile `json:"files,omitempty"`
 }
 
-func (s *mserver) handleAddDrivePhotos(_ *http.Request) (interface{}, error) {
-	return addDrivePhotos(s)
+func (s *mserver) handleAddDrivePhotos(r *http.Request) (interface{}, error) {
+	return addDrivePhotos(r.Context(), s)
 }
 
 func (s *mserver) handleSearchDrive(r *http.Request) (interface{}, error) {
@@ -99,7 +100,7 @@ func (s *mserver) handleCheckDrive(_ *http.Request) (interface{}, error) {
 	return check, nil
 }
 
-func addDrivePhoto(s *mserver, f *drive.File) (bool, error) {
+func addDrivePhoto(ctx context.Context, s *mserver, f *drive.File) (bool, error) {
 	if s.pg.Photo.HasMd5(f.Md5Checksum) {
 		return false, nil
 	}
@@ -117,7 +118,8 @@ func addDrivePhoto(s *mserver, f *drive.File) (bool, error) {
 	// Download into a staged temp file, then detect the format by content: Drive's
 	// reported mime can be wrong, and this also gates out anything we can't decode.
 	stagedPath := config.PhotoFilePath(config.Original, photo.Id.String()+".import")
-	if _, err := s.ds.Download(f.Id, stagedPath); err != nil {
+	if _, err := s.ds.Download(ctx, f.Id, stagedPath); err != nil {
+		_ = os.Remove(stagedPath)
 		s.l.Errorw("error downloading img", zap.Error(err))
 		return false, err
 	}
@@ -134,7 +136,7 @@ func addDrivePhoto(s *mserver, f *drive.File) (bool, error) {
 	return true, nil
 }
 
-func addDrivePhotos(s *mserver) (*DriveFiles, error) {
+func addDrivePhotos(ctx context.Context, s *mserver) (*DriveFiles, error) {
 	fl, err := listDriveFiles(s)
 	if err != nil {
 		return nil, err
@@ -142,7 +144,7 @@ func addDrivePhotos(s *mserver) (*DriveFiles, error) {
 
 	var files []*drive.File
 	for _, f := range fl {
-		added, err := addDrivePhoto(s, f)
+		added, err := addDrivePhoto(ctx, s, f)
 		if err != nil {
 			return nil, err
 		}
@@ -227,21 +229,37 @@ func (s *mserver) handleScheduleDriveJob(_ *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	job := &Job{
-		Id:       uuid.New().String(),
-		Kind:     "image",
-		files:    fl,
-		s:        s,
-		NumFiles: len(fl),
-		State:    StateScheduled,
-	}
+	job := newJob(s, "image", len(fl))
+	job.files = fl
 	addJob(job)
 	jobChan <- job
 	snap, _ := getJob(job.Id)
 	return snap, nil
 }
 
-func (s *mserver) handleStatusDriveJob(r *http.Request) (interface{}, error) {
+// handleCancelJob stops a queued or running import job (Drive image/video sync or
+// a local video upload). The worker
+// reacts between files (and, for video, mid-download/transcode); files imported
+// before the cancel are kept. The state turns CANCELLED once the worker has stopped,
+// so the returned snapshot may still say SCHEDULED/STARTED. Cancelling a job that
+// already ended is a no-op that returns its status.
+func (s *mserver) handleCancelJob(r *http.Request) (interface{}, error) {
+	id := Var(r, "jobid")
+	jobMu.Lock()
+	job, found := jobMap[id]
+	if found && (job.State == StateScheduled || job.State == StateStarted) {
+		job.cancel()
+	}
+	jobMu.Unlock()
+	if !found {
+		return nil, NotFoundError("job not found")
+	}
+	snap, _ := getJob(id)
+	return snap, nil
+}
+
+// handleJobStatus returns the status of any import job.
+func (s *mserver) handleJobStatus(r *http.Request) (interface{}, error) {
 	if job, found := getJob(Var(r, "jobid")); found {
 		return job, nil
 	} else {
@@ -252,7 +270,8 @@ func (s *mserver) handleStatusDriveJob(r *http.Request) (interface{}, error) {
 const StateScheduled = "SCHEDULED"
 const StateStarted = "STARTED"
 const StateFinished = "FINISHED"
-const StateAborted = "ABORTED"
+const StateAborted = "ABORTED"     // failed with an error
+const StateCancelled = "CANCELLED" // stopped by the owner
 
 // JobFailure records one file that failed within a job (for the UI, e.g.
 // "1 skipped: hdr").
@@ -276,6 +295,24 @@ type Job struct {
 	NumFailed    int          `json:"numFailed"`
 	Failures     []JobFailure `json:"failures,omitempty"`
 	Err          *ApiError    `json:"error,omitempty"`
+	// ctx is cancelled by handleCancelJob; workers check it between files and
+	// pass it to downloads/transcodes.
+	ctx    context.Context
+	cancel context.CancelFunc
+}
+
+// newJob returns a SCHEDULED job with its own cancellable context.
+func newJob(s *mserver, kind string, numFiles int) *Job {
+	ctx, cancel := context.WithCancel(context.Background())
+	return &Job{
+		Id:       uuid.New().String(),
+		Kind:     kind,
+		s:        s,
+		NumFiles: numFiles,
+		State:    StateScheduled,
+		ctx:      ctx,
+		cancel:   cancel,
+	}
 }
 
 var jobChan = make(chan *Job, 10)
@@ -341,10 +378,18 @@ func worker(jobChan <-chan *Job) {
 
 // process runs an image job. A hard error aborts the whole job (image imports are
 // fast and an error usually means a systemic problem); skipped/added are counted.
+// A cancel stops it before the next file.
 func process(job *Job) {
+	if job.ctx.Err() != nil { // cancelled while queued
+		finishJob(job, nil)
+		return
+	}
 	jobSetState(job, StateStarted)
 	for _, f := range job.files {
-		added, err := addDrivePhoto(job.s, f)
+		if job.ctx.Err() != nil {
+			break
+		}
+		added, err := addDrivePhoto(job.ctx, job.s, f)
 		if err != nil {
 			finishJob(job, err)
 			return
@@ -365,7 +410,13 @@ func finishJob(job *Job, err error) {
 	job.files = nil
 	job.videoSources = nil
 	job.s = nil
-	if err != nil {
+	// A cancel takes precedence: an error caused by the cancel (e.g. an interrupted
+	// download) is not a failure.
+	cancelled := job.ctx.Err() != nil
+	job.cancel() // release the context
+	if cancelled {
+		job.State = StateCancelled
+	} else if err != nil {
 		job.State = StateAborted
 		job.Err = ResolveError(err)
 	} else {
