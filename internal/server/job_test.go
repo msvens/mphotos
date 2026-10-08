@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"google.golang.org/api/drive/v3"
 )
@@ -114,4 +115,73 @@ func TestHandleCancelJob(t *testing.T) {
 	if snap := res.(*Job); snap.State != StateFinished {
 		t.Errorf("expected finished job to stay %s, got %s", StateFinished, snap.State)
 	}
+}
+
+// TestCancelQueuedJob: cancelling a job the worker hasn't reached reads CANCELLED at
+// once and drops its staged upload; the worker later skips it without reviving it.
+func TestCancelQueuedJob(t *testing.T) {
+	staged := filepath.Join(t.TempDir(), "clip.import")
+	if err := os.WriteFile(staged, []byte("video"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	s := &mserver{}
+	job := newJob(s, "video", 1)
+	job.videoSources = []videoSource{{name: "clip.mp4", stagedPath: staged}}
+	addJob(job)
+
+	res, err := s.handleCancelJob(cancelReq(job.Id))
+	if err != nil {
+		t.Fatalf("cancel queued job: %v", err)
+	}
+	if snap := res.(*Job); snap.State != StateCancelled {
+		t.Errorf("expected queued job to read %s at once, got %s", StateCancelled, snap.State)
+	}
+	if _, err := os.Stat(staged); !os.IsNotExist(err) {
+		t.Errorf("expected staged file to be removed on cancel, stat err = %v", err)
+	}
+
+	// The worker dequeues it later: it must stay CANCELLED with nothing processed.
+	s.processVideo(job)
+	if snap, _ := getJob(job.Id); snap.State != StateCancelled || snap.NumProcessed != 0 {
+		t.Errorf("expected worker to skip the cancelled job, got state=%s processed=%d", snap.State, snap.NumProcessed)
+	}
+}
+
+// TestJobStartKeepsCancelled: a worker starting a job that was cancelled while
+// queued doesn't flip it back to STARTED.
+func TestJobStartKeepsCancelled(t *testing.T) {
+	job := newJob(&mserver{}, "image", 1)
+	job.State = StateCancelled
+	jobStart(job)
+	if job.State != StateCancelled {
+		t.Errorf("expected %s to stick, got %s", StateCancelled, job.State)
+	}
+	job = newJob(&mserver{}, "image", 1)
+	jobStart(job)
+	if job.State != StateStarted {
+		t.Errorf("expected a scheduled job to start, got %s", job.State)
+	}
+}
+
+// TestFinishedJobIsReaped: an ended job stays queryable for jobRetention, then is
+// removed from jobMap.
+func TestFinishedJobIsReaped(t *testing.T) {
+	old := jobRetention
+	jobRetention = 50 * time.Millisecond
+	defer func() { jobRetention = old }()
+
+	job := newJob(&mserver{}, "image", 1)
+	addJob(job)
+	finishJob(job, nil)
+	if _, found := getJob(job.Id); !found {
+		t.Fatal("expected the job to still be queryable right after it ended")
+	}
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		if _, found := getJob(job.Id); !found {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Error("expected the ended job to be removed after jobRetention")
 }

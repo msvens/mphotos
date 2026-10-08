@@ -61,7 +61,7 @@ func (s *mserver) processVideo(job *Job) {
 		finishJob(job, nil)
 		return
 	}
-	jobSetState(job, StateStarted)
+	jobStart(job)
 	for i, src := range job.videoSources {
 		if job.ctx.Err() != nil {
 			removeStaged(job.videoSources[i:])
