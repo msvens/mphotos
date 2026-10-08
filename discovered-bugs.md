@@ -16,8 +16,10 @@ fix. Newest issues can be appended at the end.
 | 6 | Missing `return` after an error response in the image editor | **fixed** (PR #25) |
 | 7 | Update handlers ignore the id in the URL | **fixed** |
 | 8 | Photos in code-protected albums reachable by direct id | **closed — by design** |
+| 9 | Finished jobs are never removed from `jobMap` | **fixed** |
+| 10 | A job cancelled while queued reads SCHEDULED until the worker reaches it | **fixed** |
 
-All eight are resolved.
+Items 1–8 are resolved.
 
 ---
 
@@ -161,3 +163,41 @@ handler actually reads; #1 is the only path-variable mismatch in the package.
   if you have the image URL you can always view it. That is the intended policy.
 - Revisit only if the site later adopts genuinely private images. Even then the album code is an
   awkward mechanism for it, since it is just a shared code.
+
+---
+
+## 9. Finished jobs are never removed from `jobMap` — FIXED
+
+- **Where:** `internal/server/drive.go` — `addJob` puts every job in the global `jobMap`; nothing
+  ever deletes from it (`finishJob` only clears the job's file lists).
+- **Symptom:** every Drive sync and every local video upload leaves a job behind for the life of
+  the process. Small per job, but it grows without bound until a restart.
+- **Fix:** drop ended jobs after a grace period (at least ~1 minute after `finishJob`), or cap the
+  map. **Frontend constraint:** mphotos-svelte polls a job every 0.5–1 s until it reads FINISHED,
+  ABORTED or CANCELLED, then stops. If an ended job vanished immediately, the poll right after it
+  ended would get a 404 and the UI would say "Lost track of the import job" instead of the result.
+  With a grace period no frontend change is needed.
+- **Fixed:** `finishJob` schedules removal with `time.AfterFunc(jobRetention, …)`
+  (`jobRetention` = 10 minutes), deleting the job from `jobMap` under `jobMu`. An ended job
+  stays queryable well past the frontend's last poll, then goes. No frontend change.
+
+## 10. A job cancelled while queued reads SCHEDULED until the worker reaches it — FIXED
+
+- **Where:** `internal/server/drive.go` `handleCancelJob` (only calls `job.cancel()`); the state
+  turns CANCELLED in `process`/`processVideo` when the worker dequeues the job.
+- **Symptom:** a video job queued behind another transcode keeps reporting SCHEDULED after a
+  cancel, possibly for minutes, so the frontend shows "Stopping…" that long. The staged upload is
+  also only deleted then.
+- **Fix:** in `handleCancelJob`, a job that is still SCHEDULED can be marked CANCELLED immediately
+  (its staged files removed); the worker then skips it when dequeued, as it already does.
+  **Frontend:** no change needed — mphotos-svelte already treats CANCELLED as ended; the
+  "Stopping…" state just ends at the next poll instead of when the worker gets there.
+- **Also:** mphotos-svelte `feat/cancel-job` switches to `GET /api/jobs/{id}`, so the deprecated
+  `GET /api/drive/job/{id}` alias can be removed — deploy it together with (or after) that frontend.
+- **Fixed:** `handleCancelJob` now cancels a SCHEDULED job's context, sets it to CANCELLED and
+  removes its staged uploads right away (under `jobMu`). The worker skips it when dequeued and
+  finishes it then — the handler deliberately doesn't call `finishJob`, which clears `job.s`
+  that the worker still logs through. Starting a dequeued job now only moves SCHEDULED →
+  STARTED (`jobStart`), so a worker can't flip a cancelled job back. A running job still turns
+  CANCELLED once the worker stops. The `GET /api/drive/job/{id}` alias was removed in the same
+  change.

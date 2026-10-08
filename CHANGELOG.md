@@ -10,6 +10,22 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
 
 ## [Unreleased]
 
+### Fixed
+
+- Ended import jobs are now removed from memory 10 minutes after they finish; before,
+  every Drive sync and local video upload stayed in the job table until a restart.
+  **Frontend impact:** none (well past the last poll).
+- Cancelling a job that is still queued (e.g. behind a long video transcode) marks it
+  `CANCELLED` immediately and removes its staged upload, instead of reading
+  `SCHEDULED` until the worker reaches it. **Frontend impact:** none — the "Stopping…"
+  state just ends at the next poll.
+
+### Removed
+
+- The deprecated `GET /api/drive/job/{jobid}` alias; use `GET /api/jobs/{jobid}`.
+  **Frontend impact:** deploy together with or after mphotos-svelte PR #30, which
+  switches polling to `/api/jobs`.
+
 ## [0.8.0] - 2026-10-06
 
 ### Added

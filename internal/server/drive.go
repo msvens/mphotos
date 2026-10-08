@@ -240,15 +240,26 @@ func (s *mserver) handleScheduleDriveJob(_ *http.Request) (interface{}, error) {
 // handleCancelJob stops a queued or running import job (Drive image/video sync or
 // a local video upload). The worker
 // reacts between files (and, for video, mid-download/transcode); files imported
-// before the cancel are kept. The state turns CANCELLED once the worker has stopped,
-// so the returned snapshot may still say SCHEDULED/STARTED. Cancelling a job that
-// already ended is a no-op that returns its status.
+// before the cancel are kept. A queued job reads CANCELLED immediately; a running one
+// turns CANCELLED once the worker has stopped, so its snapshot may still say STARTED.
+// Cancelling a job that already ended is a no-op that returns its status.
 func (s *mserver) handleCancelJob(r *http.Request) (interface{}, error) {
 	id := Var(r, "jobid")
 	jobMu.Lock()
 	job, found := jobMap[id]
-	if found && (job.State == StateScheduled || job.State == StateStarted) {
-		job.cancel()
+	if found {
+		switch job.State {
+		case StateScheduled:
+			// Not picked up yet (e.g. queued behind a long transcode): report it
+			// cancelled now and drop its staged uploads. The worker skips it when it
+			// dequeues it and finishes it then (finishJob also clears job.s, which the
+			// worker still needs, so it must not run here).
+			job.cancel()
+			job.State = StateCancelled
+			removeStaged(job.videoSources)
+		case StateStarted:
+			job.cancel()
+		}
 	}
 	jobMu.Unlock()
 	if !found {
@@ -323,6 +334,10 @@ var jobMap = make(map[string]*Job)
 // worker goroutines and read by the status handler.
 var jobMu sync.Mutex
 
+// jobRetention is how long an ended job stays queryable, so a client polling for
+// its result still sees it (a var so tests can shorten it).
+var jobRetention = 10 * time.Minute
+
 func addJob(job *Job) {
 	jobMu.Lock()
 	jobMap[job.Id] = job
@@ -343,9 +358,13 @@ func getJob(id string) (*Job, bool) {
 	return &cp, true
 }
 
-func jobSetState(job *Job, state string) {
+// jobStart marks a dequeued job as running. Only a SCHEDULED job moves on, so a job
+// cancelled while queued keeps reading CANCELLED.
+func jobStart(job *Job) {
 	jobMu.Lock()
-	job.State = state
+	if job.State == StateScheduled {
+		job.State = StateStarted
+	}
 	jobMu.Unlock()
 }
 
@@ -384,7 +403,7 @@ func process(job *Job) {
 		finishJob(job, nil)
 		return
 	}
-	jobSetState(job, StateStarted)
+	jobStart(job)
 	for _, f := range job.files {
 		if job.ctx.Err() != nil {
 			break
@@ -423,4 +442,10 @@ func finishJob(job *Job, err error) {
 		job.Percent = 100
 		job.State = StateFinished
 	}
+	id := job.Id
+	time.AfterFunc(jobRetention, func() {
+		jobMu.Lock()
+		delete(jobMap, id)
+		jobMu.Unlock()
+	})
 }
