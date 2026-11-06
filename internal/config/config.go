@@ -215,6 +215,28 @@ func AuthPassword() string {
 	return viper.GetString("auth.password")
 }
 
+// CheckSecrets reports the secrets the server cannot run safely without. Once
+// secrets live in an env file, a missing or misnamed variable silently reads as
+// "" — an empty auth.password would let an empty login in. db.password is not
+// checked: peer/trust auth legitimately has none.
+func CheckSecrets() error {
+	var missing []string
+	if AuthMethod() == "password" && AuthPassword() == "" {
+		missing = append(missing, "auth.password")
+	}
+	if SessionAuthcKey() == "" {
+		missing = append(missing, "session.authKey")
+	}
+	if SessionEncKey() == "" {
+		missing = append(missing, "session.encKey")
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("empty required config: %s (set in config.yaml or MPHOTOS_* env)",
+			strings.Join(missing, ", "))
+	}
+	return nil
+}
+
 func AuthAllowedEmails() []string {
 	return viper.GetStringSlice("auth.google.allowedEmails")
 }

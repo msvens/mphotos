@@ -10,6 +10,14 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
 
 ## [Unreleased]
 
+### Changed
+
+- The server refuses to start when `auth.password` (with `auth.method: password`),
+  `session.authKey` or `session.encKey` is empty, and password login never accepts an
+  empty configured password. Before, an empty `auth.password` let an empty login in as
+  owner. **Deploy:** check those are set (in `config.yaml` or the env) before upgrading.
+  **Frontend impact:** none.
+
 ### Fixed
 
 - `MPHOTOS_*` environment variables now override `config.yaml` for the server and

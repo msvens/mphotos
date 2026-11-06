@@ -1,6 +1,11 @@
 package config
 
-import "testing"
+import (
+	"strings"
+	"testing"
+
+	"github.com/spf13/viper"
+)
 
 func TestConfigFile(t *testing.T) {
 	if err := testConfig(); err != nil {
@@ -131,5 +136,38 @@ func TestEnvOverridesSecrets(t *testing.T) {
 				t.Errorf("set: expected from-env got %q", got)
 			}
 		})
+	}
+}
+
+func TestCheckSecrets(t *testing.T) {
+	if err := testConfig(); err != nil {
+		t.Fatalf("could not create config %v", err)
+	}
+	if err := CheckSecrets(); err != nil {
+		t.Fatalf("example config should pass: %v", err)
+	}
+	set := func(key string, v interface{}) {
+		old := viper.Get(key)
+		viper.Set(key, v)
+		t.Cleanup(func() { viper.Set(key, old) })
+	}
+
+	set("auth.password", "")
+	set("session.encKey", "")
+	err := CheckSecrets()
+	if err == nil {
+		t.Fatal("expected empty auth.password and session.encKey to fail")
+	}
+	for _, k := range []string{"auth.password", "session.encKey"} {
+		if !strings.Contains(err.Error(), k) {
+			t.Errorf("expected error to name %s, got %v", k, err)
+		}
+	}
+
+	// Google login has no password, so an empty auth.password is fine there.
+	set("auth.method", "google")
+	set("session.encKey", "encKey")
+	if err := CheckSecrets(); err != nil {
+		t.Errorf("google method: expected no error, got %v", err)
 	}
 }
