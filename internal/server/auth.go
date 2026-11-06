@@ -29,6 +29,10 @@ func (s *mserver) handleLogin(w http.ResponseWriter, r *http.Request) (interface
 	type request struct {
 		Password string `json:"password" schema:"password"`
 	}
+	// Backstop to config.CheckSecrets at startup: never match an empty password.
+	if config.AuthPassword() == "" {
+		return nil, InternalError("password login not configured")
+	}
 	session, _ := s.store.Get(r, s.cookieName)
 	var loginParams request
 	if err := decodeRequest(r, &loginParams); err != nil {

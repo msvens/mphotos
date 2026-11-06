@@ -50,6 +50,16 @@ func setPhotoTypePaths() error {
 	return nil
 }
 
+// bindEnv lets MPHOTOS_* environment variables override the config file: the key
+// upper-cased with "." as "_" (db.password -> MPHOTOS_DB_PASSWORD,
+// google.clientSecret -> MPHOTOS_GOOGLE_CLIENTSECRET). An unset or empty variable
+// falls back to the file, so secrets can move out of config.yaml gradually.
+func bindEnv() {
+	viper.SetEnvPrefix("MPHOTOS")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
+}
+
 func InitConfig() error {
 	if configed {
 		return nil
@@ -59,6 +69,7 @@ func InitConfig() error {
 	viper.AddConfigPath("$HOME/.mphotos")
 	viper.AddConfigPath("/etc/mphotos")
 	viper.AddConfigPath(".")
+	bindEnv()
 
 	err := viper.ReadInConfig()
 	if err == nil {
@@ -75,9 +86,7 @@ func NewConfig(name string) error {
 	viper.AddConfigPath("/etc/mphotos")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("../..")
-	viper.SetEnvPrefix("MPHOTOS")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.AutomaticEnv()
+	bindEnv()
 	err := viper.ReadInConfig()
 	if err == nil {
 		err = setPhotoTypePaths()
@@ -91,6 +100,7 @@ func testConfig() error {
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("../..")
+	bindEnv()
 	err := viper.ReadInConfig()
 	if err == nil {
 		err = setPhotoTypePaths()
@@ -203,6 +213,28 @@ func AuthMethod() string {
 
 func AuthPassword() string {
 	return viper.GetString("auth.password")
+}
+
+// CheckSecrets reports the secrets the server cannot run safely without. Once
+// secrets live in an env file, a missing or misnamed variable silently reads as
+// "" — an empty auth.password would let an empty login in. db.password is not
+// checked: peer/trust auth legitimately has none.
+func CheckSecrets() error {
+	var missing []string
+	if AuthMethod() == "password" && AuthPassword() == "" {
+		missing = append(missing, "auth.password")
+	}
+	if SessionAuthcKey() == "" {
+		missing = append(missing, "session.authKey")
+	}
+	if SessionEncKey() == "" {
+		missing = append(missing, "session.encKey")
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("empty required config: %s (set in config.yaml or MPHOTOS_* env)",
+			strings.Join(missing, ", "))
+	}
+	return nil
 }
 
 func AuthAllowedEmails() []string {

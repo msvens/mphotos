@@ -145,6 +145,9 @@ func StartMServer() {
 	if err != nil {
 		l.Sugar().Panicw("Could not init config", zap.Error(err))
 	}
+	if err := config.CheckSecrets(); err != nil {
+		l.Sugar().Fatalw("refusing to start", zap.Error(err))
+	}
 
 	s := newServer("/api", l.Sugar())
 

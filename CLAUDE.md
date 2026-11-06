@@ -63,7 +63,10 @@ parallel-safe. `MPHOTOS_DB_HOST`, `MPHOTOS_DB_USER`, … override the file.
   loops from the db's current version up to `DbVersion`, applying each registered step and stamping
   the version after each via `Version.Set`, so any older db walks forward one step at a time.
 - **Config**: viper + YAML, accessed through free functions in `internal/config`. Searched in
-  `$HOME/.mphotos`, `/etc/mphotos`, `.` (tests also `../..`). `config_example.yaml` documents
+  `$HOME/.mphotos`, `/etc/mphotos`, `.` (tests also `../..`). `MPHOTOS_*` env vars override any
+  key (`.`→`_`, upper-cased: `MPHOTOS_DB_PASSWORD`, `MPHOTOS_GOOGLE_CLIENTSECRET`); unset/empty
+  falls back to the file. In prod, secrets come from a root-only env file loaded by systemd's
+  `EnvironmentFile=` — the binary never reads `.env` files itself. `config_example.yaml` documents
   every section — and is asserted by `internal/config/config_test.go`, so keep it in sync.
 - **Logging**: zap, structured. No `fmt.Println` / `log.Printf`.
 - Drive imports run async through a package-level worker (`jobChan` in `server.go`); schedule via
