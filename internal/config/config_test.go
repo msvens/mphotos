@@ -98,3 +98,38 @@ func TestConfigFile(t *testing.T) {
 	}
 
 }
+
+// TestEnvOverridesSecrets covers the variables a systemd EnvironmentFile sets in
+// production: each must override config.yaml, and an unset or empty variable
+// must fall back to the file so an existing config.yaml keeps working.
+func TestEnvOverridesSecrets(t *testing.T) {
+	if err := testConfig(); err != nil {
+		t.Fatalf("could not create config %v", err)
+	}
+	cases := []struct {
+		env      string
+		get      func() string
+		fromFile string
+	}{
+		{"MPHOTOS_DB_PASSWORD", DbPassword, "password"},
+		{"MPHOTOS_AUTH_PASSWORD", AuthPassword, "password"},
+		{"MPHOTOS_GOOGLE_CLIENTSECRET", GoogleClientSecret, "clientSecret"},
+		{"MPHOTOS_SESSION_AUTHKEY", SessionAuthcKey, "authKey"},
+		{"MPHOTOS_SESSION_ENCKEY", SessionEncKey, "encKey"},
+	}
+	for _, c := range cases {
+		t.Run(c.env, func(t *testing.T) {
+			if got := c.get(); got != c.fromFile {
+				t.Errorf("unset: expected file value %q got %q", c.fromFile, got)
+			}
+			t.Setenv(c.env, "")
+			if got := c.get(); got != c.fromFile {
+				t.Errorf("empty: expected file value %q got %q", c.fromFile, got)
+			}
+			t.Setenv(c.env, "from-env")
+			if got := c.get(); got != "from-env" {
+				t.Errorf("set: expected from-env got %q", got)
+			}
+		})
+	}
+}

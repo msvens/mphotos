@@ -12,6 +12,13 @@ in the `mphotos-svelte` / `mphotos-ui` frontends.
 
 ### Fixed
 
+- `MPHOTOS_*` environment variables now override `config.yaml` for the server and
+  all CLI commands (`MPHOTOS_DB_PASSWORD`, `MPHOTOS_AUTH_PASSWORD`,
+  `MPHOTOS_GOOGLE_CLIENTSECRET`, `MPHOTOS_SESSION_AUTHKEY`, `MPHOTOS_SESSION_ENCKEY`, …:
+  the key upper-cased with `.` as `_`). Before, only the tests honoured them. An unset
+  or empty variable falls back to the file, so existing configs keep working and
+  secrets can move to a systemd `EnvironmentFile=`. **Frontend impact:** none.
+
 - Ended import jobs are now removed from memory 10 minutes after they finish; before,
   every Drive sync and local video upload stayed in the job table until a restart.
   **Frontend impact:** none (well past the last poll).
